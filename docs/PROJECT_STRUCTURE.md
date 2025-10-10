@@ -5,14 +5,20 @@
 ```
 cepwallet/
 │
-├── 📄 01_README.md                       # Ana proje açıklaması
-├── 📄 09_ROADMAP.md                      # Geliştirme yol haritası
-├── 📄 GETTING_STARTED.md                 # Hızlı başlangıç rehberi
-├── 📄 TECHNICAL_ARCHITECTURE.md          # Teknik mimari detayları
-├── 📄 HARDWARE_DEVELOPMENT.md            # Özel hardware rehberi
+├── 📄 README.md                          # Ana proje açıklaması
+├── 📄 QUICKSTART.md                      # Hızlı başlangıç
 ├── 📄 LICENSE                            # GPL v3 lisans
 ├── 📄 CONTRIBUTING.md                    # Katkıda bulunma rehberi
 ├── 📄 CHANGELOG.md                       # Versiyon değişiklikleri
+│
+├── 📁 docs/                              # Dokümantasyon
+│   ├── 📄 INDEX.md                       # Dokümantasyon indeksi
+│   ├── 📄 GETTING_STARTED.md             # Detaylı başlangıç rehberi
+│   ├── 📄 ARCHITECTURE.md                # Teknik mimari detayları
+│   ├── 📄 PRIVACY_FEATURES.md            # Kohaku entegrasyonu
+│   ├── 📄 HARDWARE.md                    # Özel hardware rehberi
+│   ├── 📄 PROJECT_STRUCTURE.md           # Bu dosya
+│   └── 📄 ROADMAP.md                     # Geliştirme yol haritası
 │
 ├── 📁 desktop/                           # Desktop uygulama (Electron)
 │   ├── 📄 package.json
