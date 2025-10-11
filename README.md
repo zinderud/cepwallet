@@ -293,44 +293,7 @@ Detaylı roadmap: [docs/ROADMAP.md](docs/ROADMAP.md)
 
 ---
 
-## 💰 Maliyet Analizi
-
-### Yaklaşım 1: Trezor Hardware + Özel Uygulama ⭐ ÖNERİLİR
-
-| Faz | Maliyet | Süre |
-|-----|---------|------|
-| MVP Development | $30K-$40K | 3-4 ay |
-| Advanced Features | $20K-$30K | 2-3 ay |
-| Mobile App | $15K-$25K | 2-3 ay |
-| Testing & Launch | $10K-$15K | 1-2 ay |
-| **TOPLAM** | **$75K-$110K** | **8-12 ay** |
-
-**Avantajlar:**
-- ✅ Kanıtlanmış güvenli hardware
-- ✅ Hızlı pazar girişi
-- ✅ Düşük risk
-- ✅ Trezor ekosisteminden yararlanma
-
-### Yaklaşım 2: Özel Hardware Geliştirme
-
-| Faz | Maliyet | Süre |
-|-----|---------|------|
-| Hardware Design | $40K-$60K | 3-4 ay |
-| Firmware Development | $50K-$80K | 4-6 ay |
-| Software Development | $75K-$110K | 8-12 ay |
-| Testing & Certification | $30K-$50K | 3-6 ay |
-| **TOPLAM** | **$195K-$300K** | **18-28 ay** |
-
-**Avantajlar:**
-- ✅ Tam kontrol
-- ✅ Özel branding
-- ✅ Özel özellikler
-- ✅ Daha yüksek kar marjı
-
-Detaylı analiz: [docs/HARDWARE.md](docs/HARDWARE.md)
-
----
-
+ 
 ## 🔒 Güvenlik
 
 - **Hardware Isolation**: Private key'ler hiçbir zaman cihazdan çıkmaz
