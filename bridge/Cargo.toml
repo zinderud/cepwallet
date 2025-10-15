@@ -19,10 +19,23 @@ bytes = "1.5"
 # USB communication (for Trezor)
 libusb = "0.3"
 hidapi = "2.4"
+rusb = "0.9"
+
+# Trezor communication
+trezor-client = "0.1"
+hidapi-sys = "0.1"
 
 # Protocol definitions
 prost = "0.12"
 prost-build = "0.12"
+
+# Crypto utilities
+sha2 = "0.10"
+hmac = "0.12"
+bip39 = "0.10"
+bip32 = "0.5"
+hex = "0.4"
+keccak = "0.1"
 
 [dev-dependencies]
 tokio-test = "0.4"

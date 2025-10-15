@@ -130,4 +130,17 @@ export function validatePrivateKey(pk: string): boolean {
   }
 }
 
-export const cryptoVersion = '0.1.0';
+export default {
+  hashKeccak256,
+  hexToBytes,
+  bytesToHex,
+  pubkeyToAddress,
+  toChecksumAddress,
+  validateAddress,
+  weiToEth,
+  ethToWei,
+  gweiToWei,
+  weiToGwei,
+  getAddressFromHash,
+  validatePrivateKey,
+};

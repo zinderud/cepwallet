@@ -12,6 +12,10 @@ mod device;
 mod messages;
 mod handlers;
 mod session;
+mod trezor;
+mod transaction;
+
+use trezor::TrezorManager;
 
 use session::Session;
 
@@ -34,12 +38,14 @@ pub struct BridgeResponse {
 
 pub struct BridgeServer {
     sessions: Arc<Mutex<Vec<Session>>>,
+    trezor: Arc<TrezorManager>,
 }
 
 impl BridgeServer {
     fn new() -> Self {
         BridgeServer {
             sessions: Arc::new(Mutex::new(Vec::new())),
+            trezor: Arc::new(TrezorManager::new(5000)),
         }
     }
 
@@ -170,6 +176,38 @@ impl BridgeServer {
                         id: msg.id.clone(),
                         status: "success".to_string(),
                         result: Some(result),
+                        error: None,
+                    },
+                    Err(e) => BridgeResponse {
+                        id: msg.id.clone(),
+                        status: "error".to_string(),
+                        result: None,
+                        error: Some(e.to_string()),
+                    },
+                }
+            }
+            "connect_device" => {
+                match self.trezor.connect().await {
+                    Ok(device) => BridgeResponse {
+                        id: msg.id.clone(),
+                        status: "success".to_string(),
+                        result: Some(serde_json::to_value(device).unwrap_or(Value::Null)),
+                        error: None,
+                    },
+                    Err(e) => BridgeResponse {
+                        id: msg.id.clone(),
+                        status: "error".to_string(),
+                        result: None,
+                        error: Some(format!("Connection failed: {}", e)),
+                    },
+                }
+            }
+            "disconnect_device" => {
+                match self.trezor.disconnect().await {
+                    Ok(_) => BridgeResponse {
+                        id: msg.id.clone(),
+                        status: "success".to_string(),
+                        result: Some(json!({ "disconnected": true })),
                         error: None,
                     },
                     Err(e) => BridgeResponse {

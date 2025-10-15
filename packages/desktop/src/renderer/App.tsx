@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { Account, WalletState } from '@cepwallet/shared';
 import { Dashboard } from './components/Dashboard';
 import { Sidebar } from './components/Sidebar';
+import { ConnectDevice } from './components/ConnectDevice';
 import './App.css';
 
 export const App: React.FC = () => {
@@ -17,6 +18,7 @@ export const App: React.FC = () => {
   });
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showDeviceConnection, setShowDeviceConnection] = useState(true);
 
   useEffect(() => {
     const initWallet = async () => {
@@ -25,6 +27,7 @@ export const App: React.FC = () => {
         if (cepwallet?.wallet) {
           const status = await cepwallet.wallet.getStatus();
           setWalletState(status);
+          setShowDeviceConnection(!status.connected);
         }
       } catch (error) {
         console.error('Failed to initialize wallet:', error);
@@ -37,21 +40,11 @@ export const App: React.FC = () => {
     };
 
     initWallet();
-
-    const cepwallet = (window as any).cepwallet;
-    if (cepwallet?.on) {
-      cepwallet.on('wallet-state-changed', (_: any, newState: WalletState) => {
-        setWalletState(newState);
-      });
-    }
-
-    return () => {
-      const cepwallet = (window as any).cepwallet;
-      if (cepwallet?.off) {
-        cepwallet.off('wallet-state-changed', () => {});
-      }
-    };
   }, []);
+
+  if (showDeviceConnection) {
+    return <ConnectDevice onConnect={() => setShowDeviceConnection(false)} />;
+  }
 
   return (
     <div className="app">

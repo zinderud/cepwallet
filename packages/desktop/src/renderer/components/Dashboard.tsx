@@ -10,6 +10,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ state }) => {
     return (
       <div className="loading">
         <div className="loading-spinner" />
+        <p>Loading wallet...</p>
       </div>
     );
   }
@@ -30,6 +31,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ state }) => {
 
       {state.error && (
         <div className="error-message">
+          <span className="error-icon">⚠️</span>
           {state.error}
         </div>
       )}
@@ -40,29 +42,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ state }) => {
           <div className="account-list">
             {state.accounts.map((account, idx) => (
               <div
-                key={account.id}
+                key={idx}
                 className={`account-card ${
-                  state.selectedAccount?.id === account.id ? 'active' : ''
+                  state.selectedAccount === account.address ? 'active' : ''
                 }`}
               >
-                <div className="account-name">
-                  {account.name || `Account ${idx + 1}`}
-                </div>
-                <div className="account-address">
-                  {account.address.substring(0, 6)}...{account.address.substring(-4)}
+                <div className="account-info">
+                  <div className="account-name">
+                    {account.name || `Account ${idx + 1}`}
+                  </div>
+                  <div className="account-address">
+                    {account.address.substring(0, 6)}...{account.address.substring(38)}
+                  </div>
                 </div>
                 <div className="account-balance">
-                  {account.balance.formatted} ETH
+                  <div className="balance-amount">{account.balance} ETH</div>
+                  <div className="balance-usd">~$0.00</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       ) : (
-        <div className="accounts-section">
-          <div className="error-message">
-            No accounts found. Connect your device to start.
-          </div>
+        <div className="no-accounts">
+          <p>No accounts found. Connect your device to continue.</p>
         </div>
       )}
     </div>

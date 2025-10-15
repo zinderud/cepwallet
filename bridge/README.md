@@ -136,8 +136,55 @@ Mock device responses in tests for CI/CD environments.
 
 ## Module Structure
 
-- **main.rs** - WebSocket server, message routing (230 lines)
-- **device.rs** - USB/HID device communication (50 lines, stub)
-- **handlers.rs** - Transaction/message signing (80 lines, stub)
+- **main.rs** - WebSocket server, message routing (250 lines)
+- **trezor.rs** - Trezor Manager, device communication (300 lines)
+  - `TrezorManager` - Device connection and operations
+  - `DerivationPath` - BIP-44 HD wallet paths
+  - `PublicKeyResponse` - Public key and address info
+  - `SignatureResponse` - Transaction signature
+  - `MessageSignatureResponse` - Message signature
+- **transaction.rs** - Transaction and message types (NEW - 350 lines)
+  - `EthereumTransaction` - Signing transactions with validation
+  - `SignableMessage` - EIP-191 message signing support
+  - Fee calculation, format validation
+- **handlers.rs** - Request handlers (150 lines, UPDATED)
+  - `get_public_key()` - Retrieve public key
+  - `sign_transaction()` - Sign Ethereum transaction
+  - `sign_message()` - Sign arbitrary message
+  - Validation functions
+- **device.rs** - USB/HID abstraction (30 lines, deprecated)
 - **session.rs** - Connection session management (30 lines)
 - **messages.rs** - Message type definitions (20 lines)
+
+## PHASE 1 Implementation
+
+### Step 1: Trezor Integration ✅ (NEW)
+
+**TrezorManager Features:**
+- `connect()` - Device detection and connection
+- `disconnect()` - Clean disconnect
+- `get_device_info()` - Firmware, model info
+- `get_public_key(path)` - HD wallet derivation (BIP-44)
+- `sign_transaction(path, data)` - Transaction signing
+- `sign_message(path, message)` - Message signing
+- **Security:** Private keys NEVER leave device
+
+**Supported Paths:**
+```
+Ethereum: m/44'/60'/0'/0/0 (standard)
+Custom: m/44'/coin_type'/account'/change/address_index
+```
+
+### Message Handling
+
+**New Messages:**
+- `connect_device` - Initiate connection
+  - Response: `{ model, firmware, serial_number, connected }`
+
+- `disconnect_device` - Close connection
+  - Response: `{ disconnected: true }`
+
+**Existing Messages (Updated):**
+- `get_public_key` - Now uses Trezor integration
+- `sign_transaction` - Uses Trezor signing
+- `sign_message` - Uses Trezor signing
