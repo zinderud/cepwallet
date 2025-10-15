@@ -1,51 +1,626 @@
 # CepWallet - Teknik Mimari Detayları
 
-## 📐 Sistem Mimarisi Derinlemesine
+## 🏛️ Sistem Mimarisi: 3-Katman Modeli
 
-### 1. Katmanlı Mimari
+CepWallet **3 ana katmanı** koordine ederek çalışır:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ PRESENTATION LAYER (UI)                                      │
-├─────────────────────────────────────────────────────────────┤
-│ - Electron App (Desktop)                                     │
-│ - React Native App (Mobile)                                  │
-│ - Chromium Embedded Browser                                  │
-└─────────────────────────────────────────────────────────────┘
-                          ↓↑
-┌─────────────────────────────────────────────────────────────┐
-│ APPLICATION LAYER                                            │
-├─────────────────────────────────────────────────────────────┤
-│ - Wallet Management (Account, Balance, History)             │
-│ - Transaction Builder                                        │
-│ - Web3 Provider                                              │
-│ - DApp Detector & Injector                                   │
-└─────────────────────────────────────────────────────────────┘
-                          ↓↑
-┌─────────────────────────────────────────────────────────────┐
-│ INTEGRATION LAYER                                            │
-├─────────────────────────────────────────────────────────────┤
-│ - Hardware Bridge/Daemon                                     │
-│ - Blockchain RPC Client                                      │
-│ - Token/NFT Discovery Services                               │
-└─────────────────────────────────────────────────────────────┘
-                          ↓↑
-┌─────────────────────────────────────────────────────────────┐
-│ HARDWARE LAYER                                               │
-├─────────────────────────────────────────────────────────────┤
-│ - USB/Bluetooth Communication                                │
-│ - Firmware Protocol                                          │
-│ - Secure Element                                             │
-└─────────────────────────────────────────────────────────────┘
-                          ↓↑
-┌─────────────────────────────────────────────────────────────┐
-│ EXTERNAL SERVICES                                            │
-├─────────────────────────────────────────────────────────────┤
-│ - Blockchain Nodes (Ethereum, BSC, Polygon, etc.)           │
-│ - Price Feeds (CoinGecko, CoinMarketCap)                    │
-│ - Token Lists (Uniswap, Trust Wallet)                       │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                 LAYER 3: APPLICATION (Desktop App)              │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │ React + Electron                                          │  │
+│  │ ├─ Wallet Dashboard       ├─ DApp Browser                │  │
+│  │ ├─ Transaction UI         ├─ Web3 Injector              │  │
+│  │ └─ Settings               └─ Account Management          │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                           ↓↑ IPC                                 │
+│  ┌─── Electron Main Process ────────────────────────────────┐  │
+│  │ • Window Management     • Bridge WebSocket Client         │  │
+│  │ • IPC Handlers          • Web3 Provider Implementation    │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                           ↓↑ WebSocket
+┌─────────────────────────────────────────────────────────────────┐
+│              LAYER 2: BRIDGE (Hardware Communication)            │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │ Rust Daemon (localhost:8000)                              │  │
+│  │ ├─ WebSocket Server       ├─ USB Device Handler           │  │
+│  │ ├─ Message Protocol       ├─ Protobuf Serialization      │  │
+│  │ └─ Crypto Operations      └─ Session Management          │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                           ↓↑ USB
+┌─────────────────────────────────────────────────────────────────┐
+│          LAYER 1: HARDWARE (Trezor + Kohaku Integration)        │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │ Trezor Device (USB/HID)                                   │  │
+│  │ ├─ BIP-32/39/44 HD Wallet   ├─ Transaction Signing        │  │
+│  │ ├─ Private Key Storage      ├─ Message Verification       │  │
+│  │ ├─ Secure Element (ATECC608A) ├─ Firmware Updates        │  │
+│  │ └─ Recovery Phrase Management  └─ PIN Protection          │  │
+│  │                                                             │  │
+│  │ Kohaku Privacy Layer (Ethereu Integration)                │  │
+│  │ ├─ RAILGUN Protocol         ├─ Zero-Knowledge Proofs     │  │
+│  │ ├─ Privacy Pools            ├─ Viewing Keys              │  │
+│  │ └─ Shielded Operations      └─ Note Tree Management       │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+### 🔄 İletişim Protokolü Akışı
+
+```
+USER ACTION:
+   "Send 1 ETH Privately"
+         ↓
+   ┌──────────────────────────────────────────────────┐
+   │ LAYER 3 - APP (React)                            │
+   │ • Shields 1 ETH to RAILGUN pool (Kohaku)        │
+   │ • Prepares private transfer tx                    │
+   │ • Sends to Bridge via WebSocket                  │
+   └──────────────────────────────────────────────────┘
+         ↓ WebSocket JSON
+   ┌──────────────────────────────────────────────────┐
+   │ LAYER 2 - BRIDGE (Rust)                         │
+   │ • Converts JSON to Protobuf                       │
+   │ • Prepares USB HID packets                        │
+   │ • Sends to Trezor device                          │
+   └──────────────────────────────────────────────────┘
+         ↓ USB/HID Protocol
+   ┌──────────────────────────────────────────────────┐
+   │ LAYER 1 - HARDWARE (Trezor)                      │
+   │ • Displays tx details on secure screen            │
+   │ • Asks user PIN (if not already verified)        │
+   │ • Signs transaction with private key (never leaves device)  │
+   │ • Returns signature (v, r, s components)         │
+   └──────────────────────────────────────────────────┘
+         ↑ USB/HID Signature
+   ┌──────────────────────────────────────────────────┐
+   │ LAYER 2 - BRIDGE (Rust)                         │
+   │ • Converts Protobuf to JSON                       │
+   │ • Broadcasts to Ethereum node                     │
+   └──────────────────────────────────────────────────┘
+         ↑ JSON-RPC Response
+   ┌──────────────────────────────────────────────────┐
+   │ LAYER 3 - APP (React)                            │
+   │ • Shows "Transaction Sent" confirmation           │
+   │ • Displays tx hash and block explorer link        │
+   └──────────────────────────────────────────────────┘
+```
+
+---
+
+## 🏗️ Detaylı Katman Mimarisi
+
+### LAYER 3: Application (Desktop App)
+
+**Konum:** `packages/desktop/`
+
+**İçeriği:**
+- **Electron Main Process** (`src/main/index.ts`)
+  - Window yönetimi
+  - IPC message routing
+  - System tray integrasyonu
+  - Auto-update mekanizması
+
+- **React Renderer** (`src/renderer/`)
+  - Dashboard component'leri
+  - Transaction UI
+  - Settings paneli
+  - DApp browser
+
+- **Web3 Provider** (`src/main/web3-provider.ts`)
+  - EIP-1193 standard implementation
+  - Request signing ve validation
+  - Wallet detection (metamask compatibility)
+
+**Teknoloji Stack:**
+```typescript
+// package.json dependencies
+"dependencies": {
+  "react": "^18.2.0",
+  "react-dom": "^18.2.0",
+  "electron": "^28.0.0",
+  "ethers": "^6.10.0",        // Web3 library
+  "zustand": "^4.4.0",         // State management
+  "@cepwallet/shared": "*"      // Shared types & utils
+}
+```
+
+**IPC Communication Example:**
+```typescript
+// Renderer → Main
+ipcRenderer.send('trezor:sign-transaction', {
+  to: '0x...',
+  value: '1000000000000000000',  // 1 ETH in wei
+  data: '0x...'
+});
+
+// Main → Renderer
+ipcMain.on('trezor:sign-transaction', async (event, tx) => {
+  const bridge = new BridgeClient('ws://localhost:8000');
+  const signature = await bridge.signTransaction(tx);
+  event.reply('trezor:sign-result', signature);
+});
+```
+
+---
+
+### LAYER 2: Bridge (Rust Daemon)
+
+**Konum:** `bridge/` (standalone Rust project)
+
+**Port:** localhost:21325 (WebSocket)
+
+**Sorumlulukları:**
+1. **USB Device Communication** - Trezor ile USB/HID iletişimi
+2. **Protocol Translation** - WebSocket JSON ↔ USB Protobuf
+3. **Message Queueing** - Concurrent request handling
+4. **Error Recovery** - Device disconnect/reconnect
+5. **Session Management** - Multi-client support
+
+**Teknoloji Stack:**
+```toml
+# Cargo.toml dependencies
+[dependencies]
+tokio = { version = "1", features = ["full"] }        # Async runtime
+tokio-tungstenite = "0.21"                            # WebSocket
+rusb = "0.9"                                           # USB library
+hidapi = "2.0"                                         # USB HID
+prost = "0.12"                                         # Protobuf
+serde_json = "1"                                       # JSON
+```
+
+**WebSocket API Example:**
+```json
+// Client → Bridge (Sign Transaction)
+{
+  "method": "ethereum_signTransaction",
+  "id": "msg-uuid-123",
+  "params": {
+    "bip44_path": "m/44'/60'/0'/0/0",
+    "tx": {
+      "to": "0x742d35Cc6634C0532925a3b844Bc0e8a5f4Ec3c6",
+      "value": "1000000000000000000",
+      "data": "0x",
+      "chainId": 1
+    }
+  }
+}
+
+// Bridge → Client (Signature Response)
+{
+  "result": {
+    "v": "0x1b",
+    "r": "0x123abc...",
+    "s": "0x456def...",
+    "txHash": "0x789ghi..."
+  },
+  "id": "msg-uuid-123"
+}
+```
+
+**Multi-Client Handling:**
+```rust
+// bridge/src/main.rs
+async fn handle_connection(
+    stream: TcpStream,
+    device: Arc<Mutex<HardwareDevice>>,
+) {
+    let ws_stream = accept_async(stream).await?;
+    let (mut write, mut read) = ws_stream.split();
+    
+    let session_id = Uuid::new_v4();
+    
+    while let Some(msg) = read.next().await {
+        let response = process_message(msg?, &device, session_id).await;
+        write.send(response).await?;
+    }
+}
+```
+
+---
+
+### LAYER 1: Hardware & Privacy
+
+#### A. Trezor Hardware Wallet
+
+**İletişim Protokolü:**
+```
+USB HID Protocol (64-byte frames)
+┌──────────────┬────────────────────────────────┐
+│ Frame Type   │ Payload (63 bytes)              │
+│ (1 byte)     │                                 │
+├──────────────┼────────────────────────────────┤
+│ 0x3F         │ Protobuf-encoded message        │
+│ (data frame) │ (continuation)                  │
+└──────────────┴────────────────────────────────┘
+```
+
+**Trezor'a Gönderilen Mesajlar:**
+```protobuf
+// Ethereum Transaction Signing
+message EthereumSignTx {
+  repeated uint32 address_n = 1;    // Path: m/44'/60'/0'/0/0
+  bytes nonce = 2;                   // Account nonce
+  bytes gas_price = 3;               // Gas price (wei)
+  bytes gas_limit = 4;               // Gas limit
+  bytes to = 5;                      // Recipient address
+  bytes value = 6;                   // Transfer amount
+  bytes data = 7;                    // Contract data
+  uint32 chain_id = 8;               // Mainnet (1) vs Testnet (11155111)
+}
+
+// Response: Signature
+message EthereumTxSignature {
+  bytes signature_v = 1;             // Recovery ID
+  bytes signature_r = 2;             // Signature component
+  bytes signature_s = 3;             // Signature component
+}
+```
+
+**BIP-44 Derivation Path:**
+```
+m / purpose / coin_type / account / change / address_index
+  /   44'   /    60'    /   0'    /   0   /     0
+                                           (first address)
+
+Örnek:
+- m/44'/60'/0'/0/0  → First Ethereum account (most common)
+- m/44'/60'/1'/0/0  → Second account
+- m/44'/60'/0'/1/0  → Change address
+```
+
+#### B. Kohaku Privacy Layer
+
+**RAILGUN Shield/Unshield Flow:**
+```
+                    ┌─────────────────┐
+                    │ Public Ethereum │
+                    │  (user address) │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │ RAILGUN Shield  │  (converts to private)
+                    │ (deposit)       │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼──────────────┐
+                    │ Private RAILGUN Pool  │
+                    │ (shielded balance)    │
+                    └────────┬──────────────┘
+                             │
+                    ┌────────▼─────────────┐
+                    │ Private Transfer     │  (ZK proof)
+                    │ (0x000 recipient)    │
+                    └────────┬─────────────┘
+                             │
+                    ┌────────▼──────────────┐
+                    │ RAILGUN Unshield     │  (converts to public)
+                    │ (withdrawal)         │
+                    └────────┬──────────────┘
+                             │
+                    ┌────────▼─────────────┐
+                    │ Public Ethereum     │
+                    │ (recipient address) │
+                    └─────────────────────┘
+```
+
+**Kohaku Type Tanımları:**
+```typescript
+// packages/shared/src/types/kohaku.ts
+
+// Shield işlemi (public → private)
+export interface ShieldOperation {
+  token: string;              // Token contract address
+  amount: BigNumber;          // Amount to shield
+  recipientShield: string;    // Recipient's 0x-prefixed RAILGUN address
+  senderToken?: string;       // Alternative sender token (e.g., wrapped)
+}
+
+// Private transfer (private → private)
+export interface PrivateTransfer {
+  to: string;                 // Recipient RAILGUN address
+  amount: BigNumber;          // Private amount (hidden in proof)
+  token: string;
+  fee?: BigNumber;            // Network fee
+}
+
+// Unshield işlemi (private → public)
+export interface UnshieldOperation {
+  token: string;
+  amount: BigNumber;
+  senderShield: string;       // Sender's RAILGUN address
+  recipient: string;          // Public Ethereum address
+}
+
+// Privacy Pool (compliance)
+export interface PrivacyPoolConfig {
+  tier: 'tier1' | 'tier2';    // Compliance tier
+  allowlist?: string[];       // Allowed destinations
+}
+```
+
+---
+
+## 🔐 Security Architecture
+
+### 1. Private Key Management
+
+```
+┌──────────────────────────────────────────┐
+│  TREZOR HARDWARE WALLET                  │
+│  ┌──────────────────────────────────────┐│
+│  │ Secure Enclave (ATECC608A)           ││
+│  │ ├─ Private Keys (NEVER EXPORTED)     ││
+│  │ ├─ Key Derivation (BIP-32)           ││
+│  │ ├─ Transaction Signing               ││
+│  │ └─ Recovery Phrase Verification      ││
+│  └──────────────────────────────────────┘│
+│                                          │
+│  Private Key Never Leaves Device!       │
+│  ✓ USB Communication: Encrypted         │
+│  ✓ Signing: Done on device              │
+│  ✓ Only signature returned to app       │
+└──────────────────────────────────────────┘
+```
+
+### 2. Transaction Verification
+
+```typescript
+// Trezor → Bridge → App verification flow
+
+// 1. User initiates transaction
+const tx = {
+  to: '0x742d35Cc6634C0532925a3b844Bc0e8a5f4Ec3c6',
+  value: ethers.parseEther('1.0'),
+  data: '0x',
+  gasLimit: 21000,
+  gasPrice: ethers.parseUnits('20', 'gwei')
+};
+
+// 2. Trezor displays on secure screen
+//    User sees: "Send 1 ETH to 0x742d..."
+//    User confirms with PIN
+
+// 3. Trezor signs (private key used)
+const signature = {
+  v: 27,
+  r: '0x...',
+  s: '0x...'
+};
+
+// 4. App reconstructs transaction
+const signedTx = ethers.Transaction.from({
+  ...tx,
+  signature: signature,
+  from: userAddress  // Recovered from signature
+});
+
+// 5. Broadcast to network
+const txHash = await provider.broadcastTransaction(
+  signedTx.serialized
+);
+```
+
+### 3. Kohaku Privacy Guarantees
+
+```
+┌──────────────────────────────────────┐
+│ PRIVACY PROPERTIES (RAILGUN v3.0)    │
+├──────────────────────────────────────┤
+│ ✓ Sender Privacy                     │
+│   └─ Transaction sender hidden       │
+│                                      │
+│ ✓ Recipient Privacy                  │
+│   └─ Recipient address hidden        │
+│                                      │
+│ ✓ Amount Privacy                     │
+│   └─ Transfer amount hidden          │
+│                                      │
+│ ✓ On-Chain Privacy                   │
+│   └─ Only ZK proof visible           │
+│                                      │
+│ ✓ Zero-Knowledge Proof               │
+│   └─ Proving knowledge without       │
+│       revealing information          │
+└──────────────────────────────────────┘
+```
+
+---
+
+## 📊 Component Interaction Diagram
+
+```
+┌─────────────────────────────────────────────────────┐
+│ DESKTOP APP (Electron + React)                      │
+│ ┌───────────┬──────────────┬────────────────────┐  │
+│ │ Dashboard │ Transaction  │ DApp Browser       │  │
+│ │ Component │ Builder      │ (Web3 injected)    │  │
+│ └─────┬─────┴────┬─────────┴────────┬───────────┘  │
+│       │          │                  │              │
+│ ┌─────▼──────────▼──────────────────▼───────────┐  │
+│ │ Wallet Management Service (React Hooks)       │  │
+│ │ • useWallet() - Account state                 │  │
+│ │ • useBridge() - Bridge connection             │  │
+│ │ • useTransactions() - Tx history              │  │
+│ └──────────┬──────────────────────────────────┬─┘  │
+└────────────┼──────────────────────────────────┼────┘
+             │                                  │
+             │ IPC Messages (JSON)              │
+             ▼                                  │
+┌────────────────────────────────────────────────┐
+│ ELECTRON MAIN PROCESS                          │
+│ • IPC Handlers                                 │
+│ • Bridge Client (WebSocket)                    │
+│ • Web3 Provider                                │
+│ • System Integration                           │
+└────────────┬──────────────────────────────────┘
+             │
+             │ WebSocket JSON
+             ▼
+┌────────────────────────────────────────────────┐
+│ RUST BRIDGE (localhost:21325)                  │
+│ • Protocol Translation (JSON ↔ Protobuf)      │
+│ • USB Device Communication                     │
+│ • Session Management                           │
+│ • Error Handling & Recovery                    │
+└────────────┬──────────────────────────────────┘
+             │
+             │ USB HID Protocol
+             ▼
+┌────────────────────────────────────────────────┐
+│ TREZOR HARDWARE + KOHAKU                       │
+│ • Secure Element (ATECC608A)                   │
+│ • BIP-44 Key Derivation                        │
+│ • Transaction Signing                          │
+│ • RAILGUN Privacy Operations                   │
+└────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔄 Data Flow Examples
+
+### Örnek 1: Normal ETH Transfer
+
+```typescript
+// 1. User inputs in React UI
+const transfer = {
+  to: '0x742d35Cc6634C0532925a3b844Bc0e8a5f4Ec3c6',
+  amount: ethers.parseEther('1.0')
+};
+
+// 2. Transaction Builder prepares tx
+const tx = await walletManager.buildTransaction({
+  to: transfer.to,
+  value: transfer.amount,
+  gasLimit: 21000,
+  gasPrice: await provider.getGasPrice()
+});
+
+// 3. IPC message to Main process
+window.electron.send('trezor:sign-tx', tx);
+
+// 4. Main process forwards to Bridge
+const bridge = new BridgeClient();
+const signature = await bridge.signTransaction(tx);
+
+// 5. Bridge sends to Trezor via USB
+// [Trezor displays tx on screen, user confirms]
+
+// 6. Signature returns to App
+const signedTx = ethers.Transaction.from({
+  ...tx,
+  signature: signature
+});
+
+// 7. Broadcast
+const txHash = await provider.broadcastTransaction(signedTx.serialized);
+console.log(`Sent! Hash: ${txHash}`);
+```
+
+### Örnek 2: Kohaku Shield Operation
+
+```typescript
+// 1. User wants to shield 10 USDC privately
+const shield = {
+  token: USDC_ADDRESS,      // 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+  amount: ethers.parseUnits('10', 6),
+  recipient: railgunAddress  // 0x...
+};
+
+// 2. App prepares Shield transaction
+const tx = await kohakuManager.createShieldTx(shield);
+
+// 3. Trezor signs (same flow as normal transfer)
+const signature = await bridge.signTransaction(tx);
+
+// 4. Transaction broadcast (USDC locked in RAILGUN pool)
+const txHash = await provider.broadcastTransaction(signedTx.serialized);
+
+// 5. RAILGUN pool now holds 10 USDC as shielded balance
+console.log(`Shielded! User can now make private transfers`);
+```
+
+---
+
+## ⚡ Performance Considerations
+
+| Operasyon | Latency | Aşamalar |
+|-----------|---------|----------|
+| Get Public Key | 500ms | Bridge → Device → Bridge |
+| Sign Simple Tx | 3-5s | Bridge → Device → User Confirm → Sign → Bridge |
+| Sign Kohaku Op | 5-10s | Same + ZK Proof generation |
+| Broadcast to Network | 1-2s | RPC call |
+| Block Confirmation | 12-15s | Network (Ethereum) |
+| **Total (simple transfer)** | **18-22s** | Start to confirmation |
+| **Total (kohaku shield)** | **20-27s** | Start to confirmation |
+
+---
+
+## 🧪 Testing Architecture
+
+```
+┌─────────────────────────────────────┐
+│ UNIT TESTS                          │
+│ ├─ Type definitions (TypeScript)    │
+│ ├─ Utility functions (Jest)         │
+│ ├─ Crypto operations (Node.js)      │
+│ └─ Bridge protocol (Rust/Tokio)     │
+└─────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────┐
+│ INTEGRATION TESTS                   │
+│ ├─ App ↔ Bridge communication       │
+│ ├─ Bridge ↔ Trezor Emulator         │
+│ ├─ Transaction signing flow         │
+│ └─ Error recovery scenarios         │
+└─────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────┐
+│ E2E TESTS (Playwright)              │
+│ ├─ Full transaction flow            │
+│ ├─ Trezor device simulation         │
+│ ├─ UI interactions                  │
+│ └─ Error scenarios                  │
+└─────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────┐
+│ MANUAL TESTING                      │
+│ ├─ Real Trezor device               │
+│ ├─ Ethereum testnet (Sepolia)       │
+│ ├─ Gas estimation accuracy          │
+│ └─ UI/UX verification               │
+└─────────────────────────────────────┘
+```
+
+---
+
+## 📋 Migration Plan (Current → Faz 1)
+
+```
+FAZ 0 (Bu hafta):
+├─ ✓ Architecture defined
+├─ ✓ Setup documentation
+├─ Package.json files
+├─ Basic TypeScript types
+└─ Build pipeline ready
+
+FAZ 1 (2-3 hafta):
+├─ @cepwallet/shared complete
+├─ Electron window + React components
+├─ Bridge basic WebSocket
+├─ Trezor mock device testing
+└─ GitHub Actions CI/CD
+
+FAZ 2 (4-6 hafta):
+├─ Kohaku integration
+├─ RAILGUN shield/transfer
+├─ Privacy Pools
+└─ Full E2E testing
+```
+
+Bu dokümantasyon güncellenmeye devam edecek! 🚀
 
 ---
 
