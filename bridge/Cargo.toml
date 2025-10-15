@@ -1,0 +1,36 @@
+[package]
+name = "cepwallet-bridge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+tokio-tungstenite = "0.21"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+log = "0.4"
+env_logger = "0.11"
+anyhow = "1.0"
+thiserror = "1.0"
+futures = "0.3"
+bytes = "1.5"
+
+# USB communication (for Trezor)
+libusb = "0.3"
+hidapi = "2.4"
+
+# Protocol definitions
+prost = "0.12"
+prost-build = "0.12"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[[bin]]
+name = "cepwallet-bridge"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
