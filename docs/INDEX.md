@@ -40,6 +40,80 @@ CepWallet, **Trezor hardware wallet** güvenliği ile **Ethereum Foundation'ın 
 
 ### 📁 Detaylı Dokümantasyon (docs/)
 
+#### [DOCUMENTATION_REVIEW.md](DOCUMENTATION_REVIEW.md)
+**Kim okumalı:** Proje yöneticileri, dokümantasyon yazarları  
+**Süre:** 15-20 dakika  
+**İçerik:**
+- Mevcut dokümantasyon kalite değerlendirmesi
+- Eksik dosyalar listesi
+- İyileştirme önerileri (6 yeni dosya)
+- Kalite metrikleri ve hedefler
+- Action items ve timeline
+
+**Ne zaman okunmalı:** Dokümantasyon iyileştirmesi planlarken 📊
+
+---
+
+#### [DOCUMENTATION_ACTION_PLAN.md](DOCUMENTATION_ACTION_PLAN.md)
+**Kim okumalı:** Dokümantasyon yazarları, dev lead'ler  
+**Süre:** 10-15 dakika  
+**İçerik:**
+- Tamamlanan aksiyonlar
+- Kalıp yapılacaklar (6 dosya)
+- Zaman çizelgesi (6-8 hafta)
+- Detaylı checklist
+- Başarı kriterleri
+
+**Ne zaman okunmalı:** Dokümantasyon iyileştirme roadmap'i planlarken 🗺️
+
+---
+
+#### [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md) ✨ YENİ
+**Kim okumalı:** Proje yöneticileri, tüm geliştiriciler  
+**Süre:** 20-30 dakika  
+**İçerik:**
+- Faz 0 (Proje Kurulumu) detaylı takvimi
+- Günlük yapılacaklar listesi
+- Checkpoint'ler ve onay süreçleri
+- Risk yönetimi matrisi
+- Başarı metrikleri
+- Haftalık takvim (15-19 Ekim 2025)
+- Kontrol noktaları ve tamamlanma kriterleri
+
+**Ne zaman okunmalı:** Projeyi uygulamaya başlarken (İŞTE BAŞLADIĞIMIZ YER!) 🚀
+
+---
+
+#### [TREZOR_KOHAKU_INTEGRATION.md](TREZOR_KOHAKU_INTEGRATION.md) ✨ YENİ
+**Kim okumalı:** Backend geliştiriciler, sistem mimarları  
+**Süre:** 45-60 dakika  
+**Önkoşul:** Trezor + Kohaku temel bilgisi  
+**İçerik:**
+- 3 katmanlı entegrasyon mimarisi
+- Shield → Transfer → Unshield akışları
+- Güvenlik ve gizlilik modeli
+- Kod implementasyonu örnekleri (TypeScript)
+- Sık sorulan sorular
+
+**Ne zaman okunmalı:** Trezor + Kohaku entegrasyonunu kodlarken ⚙️
+
+---
+
+#### [SETUP_CI_CD.md](SETUP_CI_CD.md) ✨ YENİ
+**Kim okumalı:** DevOps, QA, backend geliştiricileri  
+**Süre:** 60-90 dakika  
+**Önkoşul:** GitHub Actions, Docker, pytest bilgisi  
+**İçerik:**
+- GitHub Actions 4 workflow'u (lint, test, e2e, build)
+- Local development setup
+- Jest, Playwright, Trezor emulator testleri
+- Build ve distribution pipeline
+- Monitoring entegrasyonu (Sentry, OpenTelemetry)
+
+**Ne zaman okunmalı:** CI/CD pipeline kurulumu veya test stratejisini öğrenirken 🚀
+
+---
+
 #### [GETTING_STARTED.md](GETTING_STARTED.md)
 **Kim okumalı:** Geliştiriciler  
 **Süre:** 30-45 dakika  

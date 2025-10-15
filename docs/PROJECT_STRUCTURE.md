@@ -1,152 +1,238 @@
 # CepWallet - Proje Yapısı
 
-## 📁 Dizin Organizasyonu
+## 🏗️ Monorepo Mimarisi (pnpm Workspace)
+
+CepWallet, **pnpm workspaces** kullanarak 3 bağımsız modülü yönetir:
 
 ```
-cepwallet/
+cepwallet/                                    # Root monorepo
 │
-├── 📄 README.md                          # Ana proje açıklaması
-├── 📄 QUICKSTART.md                      # Hızlı başlangıç
-├── 📄 LICENSE                            # GPL v3 lisans
-├── 📄 CONTRIBUTING.md                    # Katkıda bulunma rehberi
-├── 📄 CHANGELOG.md                       # Versiyon değişiklikleri
+├── 📄 pnpm-workspace.yaml                   # Workspace tanımı
+├── 📄 package.json                          # Root package (shared deps)
+├── 📄 tsconfig.json                         # Root TypeScript config
+├── 📄 eslint.config.js                      # Root ESLint config
+├── 📄 jest.config.js                        # Root Jest config
+├── 📄 Cargo.toml                            # Rust Bridge for native
 │
-├── 📁 docs/                              # Dokümantasyon
-│   ├── 📄 INDEX.md                       # Dokümantasyon indeksi
-│   ├── 📄 GETTING_STARTED.md             # Detaylı başlangıç rehberi
-│   ├── 📄 ARCHITECTURE.md                # Teknik mimari detayları
-│   ├── 📄 PRIVACY_FEATURES.md            # Kohaku entegrasyonu
-│   ├── 📄 HARDWARE.md                    # Özel hardware rehberi
-│   ├── 📄 PROJECT_STRUCTURE.md           # Bu dosya
-│   └── 📄 ROADMAP.md                     # Geliştirme yol haritası
+├── 📄 README.md                             # Ana proje açıklaması
+├── 📄 QUICKSTART.md                         # Hızlı başlangıç
+├── 📄 LICENSE                               # GPL v3 lisans
+├── 📄 CONTRIBUTING.md                       # Katkıda bulunma rehberi
+├── 📄 CHANGELOG.md                          # Versiyon değişiklikleri
 │
-├── 📁 desktop/                           # Desktop uygulama (Electron)
-│   ├── 📄 package.json
-│   ├── 📄 tsconfig.json
-│   ├── 📄 webpack.config.js
+├── 📁 docs/                                 # Dokümantasyon
+│   ├── 📄 INDEX.md                          # Dokümantasyon indeksi
+│   ├── 📄 GETTING_STARTED.md                # Detaylı başlangıç rehberi
+│   ├── 📄 ARCHITECTURE.md                   # Teknik mimari detayları
+│   ├── 📄 PROJECT_STRUCTURE.md              # Bu dosya
+│   ├── 📄 PRIVACY_FEATURES.md               # Kohaku entegrasyonu
+│   ├── 📄 HARDWARE.md                       # Hardware rehberi
+│   ├── 📄 ROADMAP.md                        # Geliştirme yol haritası
+│   ├── 📄 TREZOR_KOHAKU_INTEGRATION.md      # Entegrasyon detayları
+│   ├── 📄 SETUP_CI_CD.md                    # CI/CD pipeline
+│   └── 📁 kohaku/                           # Kohaku özel dokümantasyon
+│       ├── 📄 README.md
+│       ├── 📄 RAILGUN_INTEGRATION.md
+│       ├── 📄 WALLET_OPERATIONS.md
+│       └── ...
+│
+├── 📁 packages/                             # pnpm workspaces
 │   │
-│   ├── 📁 electron/                      # Electron main process
-│   │   ├── main.js                       # Ana process
-│   │   ├── preload.js                    # Preload script
-│   │   ├── browser-manager.js            # Web browser yönetimi
-│   │   ├── web3-handler.js               # Web3 request handler
-│   │   └── ipc-handlers.js               # IPC communication
-│   │
-│   ├── 📁 src/                           # React frontend
-│   │   ├── index.tsx                     # Entry point
-│   │   ├── App.tsx                       # Ana komponent
-│   │   ├── App.css
+│   ├── 📁 shared/                           # Ortak TypeScript utility'ler
+│   │   ├── 📄 package.json
+│   │   ├── 📄 tsconfig.json
 │   │   │
-│   │   ├── 📁 components/
-│   │   │   ├── 📁 Wallet/
-│   │   │   │   ├── WalletDashboard.tsx
-│   │   │   │   ├── AccountList.tsx
-│   │   │   │   ├── Balance.tsx
-│   │   │   │   ├── TransactionHistory.tsx
-│   │   │   │   └── SendTransaction.tsx
+│   │   ├── 📁 src/
+│   │   │   ├── � types/
+│   │   │   │   ├── wallet.ts                # Wallet type tanımları
+│   │   │   │   ├── transaction.ts           # Transaction types
+│   │   │   │   ├── bridge.ts                # Bridge protocol types
+│   │   │   │   ├── kohaku.ts                # Kohaku/RAILGUN types
+│   │   │   │   └── index.ts                 # Export all
 │   │   │   │
-│   │   │   ├── 📁 Browser/
-│   │   │   │   ├── DAppBrowser.tsx
-│   │   │   │   ├── AddressBar.tsx
-│   │   │   │   ├── Tabs.tsx
-│   │   │   │   └── Bookmarks.tsx
+│   │   │   ├── 📁 utils/
+│   │   │   │   ├── ethereum.ts              # ethers.js helpers
+│   │   │   │   ├── formatting.ts            # Address/amount formatting
+│   │   │   │   ├── validation.ts            # Input validation
+│   │   │   │   ├── constants.ts             # Global constants
+│   │   │   │   ├── errors.ts                # Error definitions
+│   │   │   │   └── index.ts
 │   │   │   │
-│   │   │   ├── 📁 Device/
-│   │   │   │   ├── DeviceStatus.tsx
-│   │   │   │   ├── DeviceConnect.tsx
-│   │   │   │   ├── TransactionConfirm.tsx
-│   │   │   │   └── FirmwareUpdate.tsx
+│   │   │   ├── 📁 crypto/
+│   │   │   │   ├── keys.ts                  # Key derivation (BIP-32/39/44)
+│   │   │   │   ├── signing.ts               # Signing algorithms
+│   │   │   │   ├── zk.ts                    # ZK proof utilities
+│   │   │   │   └── index.ts
 │   │   │   │
-│   │   │   ├── 📁 Settings/
-│   │   │   │   ├── GeneralSettings.tsx
-│   │   │   │   ├── NetworkSettings.tsx
-│   │   │   │   ├── SecuritySettings.tsx
-│   │   │   │   └── About.tsx
+│   │   │   ├── 📁 bridge/
+│   │   │   │   ├── protocol.ts              # Bridge message protocol
+│   │   │   │   ├── serialization.ts         # Protobuf serialization
+│   │   │   │   └── index.ts
 │   │   │   │
-│   │   │   └── 📁 Common/
-│   │   │       ├── Button.tsx
-│   │   │       ├── Input.tsx
-│   │   │       ├── Modal.tsx
-│   │   │       └── Loader.tsx
+│   │   │   ├── 📁 kohaku/
+│   │   │   │   ├── railgun.ts               # RAILGUN operations
+│   │   │   │   ├── privacy-pools.ts         # Privacy Pool utils
+│   │   │   │   ├── humanizer.ts             # Transaction humanizer
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── 📁 rpc/
+│   │   │   │   ├── eip1193.ts               # EIP-1193 provider standard
+│   │   │   │   ├── web3.ts                  # ethers.js provider
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   └── index.ts                     # Main export
 │   │   │
-│   │   ├── 📁 services/
-│   │   │   ├── bridge-client.ts          # Bridge WebSocket client
-│   │   │   ├── wallet-manager.ts         # Cüzdan yönetimi
-│   │   │   ├── blockchain-rpc.ts         # RPC client
-│   │   │   ├── web3-provider.ts          # Custom Web3 provider
-│   │   │   ├── token-service.ts          # ERC-20 token işlemleri
-│   │   │   ├── nft-service.ts            # NFT işlemleri
-│   │   │   └── price-service.ts          # Fiyat feed
+│   │   ├── 📁 __tests__/
+│   │   │   ├── utils.test.ts
+│   │   │   ├── crypto.test.ts
+│   │   │   └── kohaku.test.ts
 │   │   │
-│   │   ├── 📁 hooks/
-│   │   │   ├── useBridge.ts              # Bridge connection hook
-│   │   │   ├── useWallet.ts              # Wallet state hook
-│   │   │   ├── useWeb3.ts                # Web3 hook
-│   │   │   └── useTokens.ts              # Token listesi hook
-│   │   │
-│   │   ├── 📁 utils/
-│   │   │   ├── ethereum.ts               # Ethereum utils
-│   │   │   ├── formatting.ts             # Format helpers
-│   │   │   ├── validation.ts             # Input validation
-│   │   │   └── constants.ts              # Sabitler
-│   │   │
-│   │   ├── 📁 types/
-│   │   │   ├── wallet.d.ts
-│   │   │   ├── transaction.d.ts
-│   │   │   ├── token.d.ts
-│   │   │   └── bridge.d.ts
-│   │   │
-│   │   └── 📁 assets/
-│   │       ├── images/
-│   │       ├── icons/
-│   │       └── fonts/
+│   │   └── 📄 README.md
 │   │
-│   ├── 📁 public/
-│   │   ├── index.html
-│   │   ├── icon.png
-│   │   └── manifest.json
+│   ├── 📁 desktop/                          # Desktop uygulama (Electron)
+│   │   ├── 📄 package.json
+│   │   ├── 📄 tsconfig.json
+│   │   ├── 📄 webpack.config.js
+│   │   ├── 📄 electron-builder.yml          # Electron Builder config
+│   │   │
+│   │   ├── 📁 src/
+│   │   │   ├── 📁 main/                     # Electron main process
+│   │   │   │   ├── index.ts                 # Entry point
+│   │   │   │   ├── window.ts                # Window management
+│   │   │   │   ├── ipc.ts                   # IPC handlers
+│   │   │   │   ├── bridge-client.ts         # Bridge WebSocket client
+│   │   │   │   └── web3-provider.ts         # Web3 EIP-1193 provider
+│   │   │   │
+│   │   │   ├── 📁 preload/                  # Preload script (security)
+│   │   │   │   ├── index.ts
+│   │   │   │   └── context-bridge.ts
+│   │   │   │
+│   │   │   ├── 📁 renderer/                 # React frontend
+│   │   │   │   ├── index.tsx                # Entry point
+│   │   │   │   ├── App.tsx                  # Root component
+│   │   │   │   ├── App.css
+│   │   │   │   │
+│   │   │   │   ├── 📁 components/
+│   │   │   │   │   ├── 📁 Wallet/
+│   │   │   │   │   │   ├── Dashboard.tsx
+│   │   │   │   │   │   ├── AccountList.tsx
+│   │   │   │   │   │   ├── Balance.tsx
+│   │   │   │   │   │   ├── TransactionHistory.tsx
+│   │   │   │   │   │   ├── SendTransaction.tsx
+│   │   │   │   │   │   └── ShieldToken.tsx   # Kohaku shield UI
+│   │   │   │   │   │
+│   │   │   │   │   ├── 📁 Browser/
+│   │   │   │   │   │   ├── DAppBrowser.tsx
+│   │   │   │   │   │   ├── AddressBar.tsx
+│   │   │   │   │   │   ├── Tabs.tsx
+│   │   │   │   │   │   ├── Bookmarks.tsx
+│   │   │   │   │   │   └── Web3Request.tsx   # Web3 request UI
+│   │   │   │   │   │
+│   │   │   │   │   ├── 📁 Device/
+│   │   │   │   │   │   ├── Status.tsx
+│   │   │   │   │   │   ├── Connect.tsx
+│   │   │   │   │   │   ├── TransactionConfirm.tsx
+│   │   │   │   │   │   └── FirmwareUpdate.tsx
+│   │   │   │   │   │
+│   │   │   │   │   ├── 📁 Settings/
+│   │   │   │   │   │   ├── General.tsx
+│   │   │   │   │   │   ├── Network.tsx
+│   │   │   │   │   │   ├── Security.tsx
+│   │   │   │   │   │   └── About.tsx
+│   │   │   │   │   │
+│   │   │   │   │   └── 📁 Common/
+│   │   │   │   │       ├── Button.tsx
+│   │   │   │   │       ├── Input.tsx
+│   │   │   │   │       ├── Modal.tsx
+│   │   │   │   │       └── Loading.tsx
+│   │   │   │   │
+│   │   │   │   ├── 📁 hooks/
+│   │   │   │   │   ├── useBridge.ts
+│   │   │   │   │   ├── useWallet.ts
+│   │   │   │   │   ├── useWeb3.ts
+│   │   │   │   │   └── useKohaku.ts          # Kohaku hook
+│   │   │   │   │
+│   │   │   │   ├── 📁 stores/
+│   │   │   │   │   ├── wallet.ts             # Zustand wallet store
+│   │   │   │   │   ├── ui.ts                 # UI state
+│   │   │   │   │   ├── bridge.ts             # Bridge connection state
+│   │   │   │   │   └── index.ts
+│   │   │   │   │
+│   │   │   │   ├── 📁 pages/
+│   │   │   │   │   ├── Dashboard.tsx
+│   │   │   │   │   ├── Transactions.tsx
+│   │   │   │   │   └── Settings.tsx
+│   │   │   │   │
+│   │   │   │   ├── 📁 types/
+│   │   │   │   │   └── index.ts
+│   │   │   │   │
+│   │   │   │   └── 📁 assets/
+│   │   │   │       ├── icons/
+│   │   │   │       ├── images/
+│   │   │   │       └── styles/
+│   │   │   │
+│   │   │   └── 📁 utils/
+│   │   │       ├── ipc-client.ts             # IPC communication
+│   │   │       ├── bridge-api.ts             # Bridge REST API
+│   │   │       └── logger.ts
+│   │   │
+│   │   ├── 📁 public/
+│   │   │   ├── index.html
+│   │   │   ├── icon.icns                    # macOS icon
+│   │   │   ├── icon.ico                     # Windows icon
+│   │   │   └── icon.png                     # Generic icon
+│   │   │
+│   │   ├── 📁 build/                        # Build output (generated)
+│   │   │   ├── mac/
+│   │   │   ├── win/
+│   │   │   └── linux/
+│   │   │
+│   │   └── � README.md
 │   │
-│   └── 📁 build/                         # Build output
-│       ├── mac/
-│       ├── win/
-│       └── linux/
+│   └── �📁 bridge/                           # Hardware bridge (Rust)
+│       ├── 📄 Cargo.toml
+│       ├── 📄 Cargo.lock
+│       │
+│       ├── 📁 src/
+│       │   ├── main.rs                      # Entry point
+│       │   ├── lib.rs
+│       │   ├── device.rs                    # USB device communication
+│       │   ├── protocol.rs                  # Message protocol
+│       │   ├── server.rs                    # WebSocket server
+│       │   ├── handlers.rs                  # Request handlers
+│       │   ├── crypto.rs                    # Crypto operations
+│       │   └── error.rs                     # Error types
+│       │
+│       ├── 📁 proto/
+│       │   ├── messages.proto               # Protobuf schema
+│       │   └── build.rs                     # Protobuf compilation
+│       │
+│       ├── 📁 tests/
+│       │   ├── device_integration.rs
+│       │   └── protocol.rs
+│       │
+│       └── 📄 README.md
 │
-├── 📁 bridge/                            # Hardware bridge daemon
-│   ├── 📄 Cargo.toml                     # Rust project
-│   ├── 📄 Cargo.lock
+├── 📁 .github/                              # GitHub configuration
+│   ├── � workflows/
+│   │   ├── lint.yml                         # ESLint + Prettier
+│   │   ├── test.yml                         # Unit tests (Jest + Cargo test)
+│   │   ├── e2e.yml                          # Playwright + Emulator
+│   │   └── build.yml                        # Build desktop + mobile
 │   │
-│   ├── 📁 src/
-│   │   ├── main.rs                       # Entry point
-│   │   ├── device.rs                     # Device communication
-│   │   ├── protocol.rs                   # Protocol handler
-│   │   ├── server.rs                     # WebSocket server
-│   │   └── crypto.rs                     # Crypto operations
-│   │
-│   ├── 📁 proto/
-│   │   └── messages.proto                # Protocol Buffer definitions
-│   │
-│   └── 📁 target/                        # Rust build output
-│       ├── debug/
-│       └── release/
+│   └── 📁 ISSUE_TEMPLATE/
+│       ├── bug_report.md
+│       └── feature_request.md
 │
-├── 📁 mobile/                            # Mobile apps (React Native)
-│   ├── 📄 package.json
-│   ├── 📄 app.json
-│   │
-│   ├── 📁 ios/                           # iOS specific
-│   │   ├── Podfile
-│   │   └── CepWallet.xcodeproj
-│   │
-│   ├── 📁 android/                       # Android specific
-│   │   ├── build.gradle
-│   │   └── app/
-│   │
-│   └── 📁 src/
-│       ├── App.tsx
-│       ├── 📁 screens/
-│       ├── 📁 components/
-│       ├── 📁 services/
-│       └── 📁 navigation/
+├── 📁 .vscode/                              # VS Code settings
+│   ├── settings.json                        # Workspace settings
+│   ├── extensions.json                      # Recommended extensions
+│   └── launch.json                          # Debug configuration
+│
+├── � .gitignore
+├── 📄 .prettierrc
+├── 📄 tsconfig.json                         # Root TypeScript config
+└── � turbo.json                            # Turbo build cache (optional)
 │
 ├── 📁 firmware/                          # Özel hardware firmware
 │   ├── 📄 README.md
@@ -448,7 +534,329 @@ npm run test:all
 
 ---
 
-## 📊 Kod İstatistikleri (Tahmini)
+---
+
+## � pnpm Workspace Yapılandırması
+
+### `pnpm-workspace.yaml`
+
+```yaml
+packages:
+  - 'packages/*'
+  - 'bridge'
+
+catalogs:
+  default:
+    # TypeScript & Build Tools
+    typescript: '^5.3.0'
+    webpack: '^5.89.0'
+    webpack-dev-server: '^4.15.0'
+    
+    # React & Electron
+    react: '^18.2.0'
+    react-dom: '^18.2.0'
+    electron: '^28.0.0'
+    
+    # Web3 & Blockchain
+    ethers: '^6.10.0'
+    '@ethereum/kohaku': '^1.0.0'
+    '@railgun-community/engine': '^3.0.0'
+    
+    # Utilities
+    zustand: '^4.4.0'
+    axios: '^1.6.0'
+    
+    # Testing
+    jest: '^29.7.0'
+    '@testing-library/react': '^14.0.0'
+    vitest: '^0.34.0'
+```
+
+### `package.json` (Root)
+
+```json
+{
+  "name": "cepwallet",
+  "version": "0.1.0",
+  "description": "Privacy-First Hardware Wallet with Kohaku",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "install:all": "pnpm install",
+    "build": "pnpm -r build",
+    "build:shared": "pnpm -F @cepwallet/shared build",
+    "build:desktop": "pnpm -F @cepwallet/desktop build",
+    "dev:desktop": "pnpm -F @cepwallet/desktop dev",
+    "dev:bridge": "pnpm -F bridge dev",
+    "start:bridge": "cd packages/bridge && cargo run",
+    "test": "pnpm -r test",
+    "test:desktop": "pnpm -F @cepwallet/desktop test",
+    "test:e2e": "pnpm -F @cepwallet/desktop test:e2e",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "type-check": "pnpm -r type-check",
+    "clean": "pnpm -r clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.2.0"
+  }
+}
+```
+
+### `packages/shared/package.json`
+
+```json
+{
+  "name": "@cepwallet/shared",
+  "version": "0.1.0",
+  "description": "Shared TypeScript utilities",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./types": "./dist/types/index.js",
+    "./utils": "./dist/utils/index.js",
+    "./crypto": "./dist/crypto/index.js",
+    "./kohaku": "./dist/kohaku/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "ethers": "^6.10.0",
+    "@ethereum/kohaku": "^1.0.0",
+    "@railgun-community/engine": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0"
+  }
+}
+```
+
+### `packages/desktop/package.json`
+
+```json
+{
+  "name": "@cepwallet/desktop",
+  "version": "0.1.0",
+  "description": "CepWallet Desktop Application",
+  "main": "dist/main.js",
+  "homepage": "./",
+  "scripts": {
+    "dev": "concurrently \"npm run react-dev\" \"wait-on http://localhost:3000 && npm run electron-dev\"",
+    "react-dev": "webpack serve --mode development",
+    "electron-dev": "electron dist/main.js",
+    "build": "pnpm build:shared && npm run build:react && npm run build:electron",
+    "build:react": "webpack --mode production",
+    "build:electron": "tsc --project src/main",
+    "dist": "electron-builder",
+    "test": "jest",
+    "test:e2e": "playwright test",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist build out"
+  },
+  "dependencies": {
+    "@cepwallet/shared": "workspace:*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "electron-squirrel-startup": "^1.1.0",
+    "zustand": "^4.4.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.6.0",
+    "typescript": "^5.3.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.0",
+    "webpack-dev-server": "^4.15.0",
+    "concurrently": "^8.2.0"
+  }
+}
+```
+
+### `packages/bridge/Cargo.toml`
+
+```toml
+[package]
+name = "cepwallet-bridge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.21"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+prost = "0.12"
+tonic = "0.11"
+rusb = "0.9"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+sha2 = "0.10"
+curve25519-dalek = "4.1"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[[bin]]
+name = "cepwallet-bridge"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+```
+
+---
+
+## 🔗 Workspace İlişkileri
+
+```
+┌─────────────────────────────────────┐
+│    ROOT (pnpm-workspace.yaml)       │
+│  • TypeScript config                │
+│  • ESLint + Prettier config         │
+│  • Jest config                      │
+│  • GitHub Actions workflows         │
+└──────────────┬──────────────────────┘
+               │
+       ┌───────┼───────┐
+       │       │       │
+    SHARED  DESKTOP  BRIDGE
+    (TypeScript) (Electron+React) (Rust)
+       │       │       │
+       └───────┴───────┘
+           ↓
+      Built Applications
+```
+
+### Dependency Graph
+
+```
+desktop/
+├── depends on: @cepwallet/shared
+├── depends on: ethers.js
+├── depends on: @ethereum/kohaku
+└── depends on: bridge (WebSocket connection)
+
+shared/
+├── provides: types/
+├── provides: utils/
+├── provides: crypto/
+├── provides: kohaku/
+└── provides: rpc/
+
+bridge/
+├── written in: Rust
+├── communicates with: Trezor (USB)
+├── serves: WebSocket API
+└── listens on: localhost:8000 (default)
+```
+
+---
+
+## 📋 Workspace Komutları
+
+### Build
+
+```bash
+# Build everything
+pnpm build
+
+# Build only shared package
+pnpm build:shared
+
+# Build desktop with shared dependency
+pnpm -F @cepwallet/desktop build
+
+# Filter recursively
+pnpm -r build --filter="@cepwallet/*"
+
+# Build with dependencies
+pnpm build --filter="@cepwallet/desktop..."
+```
+
+### Development
+
+```bash
+# Watch mode for shared
+pnpm -F @cepwallet/shared dev
+
+# Run desktop dev server + Electron
+pnpm dev:desktop
+
+# Run bridge dev server
+pnpm dev:bridge
+
+# Run both in parallel (requires tmux or concurrently)
+pnpm dev
+```
+
+### Testing
+
+```bash
+# Test everything
+pnpm test
+
+# Test specific workspace
+pnpm -F @cepwallet/desktop test
+
+# Test with coverage
+pnpm -F @cepwallet/shared test -- --coverage
+
+# Watch mode
+pnpm -F @cepwallet/shared test -- --watch
+```
+
+### Maintenance
+
+```bash
+# Update dependencies
+pnpm update
+
+# Add dependency to workspace
+pnpm -F @cepwallet/shared add lodash
+
+# Add dev dependency
+pnpm -F @cepwallet/desktop add -D @testing-library/react
+
+# Install peer dependencies
+pnpm install --force
+
+# Clean node_modules
+pnpm clean
+pnpm install
+```
+
+---
+
+## �📊 Kod İstatistikleri (Tahmini)
+
+````
 
 ```
 Desktop App:

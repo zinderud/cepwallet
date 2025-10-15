@@ -2,152 +2,496 @@
 
 ## 🚀 Hızlı Başlangıç
 
-Bu rehber, Trezor hardware wallet kullanarak CepWallet sisteminin prototipini oluşturmanız için adım adım talimatlar içerir.
+Bu rehber, **pnpm workspace** kullanarak CepWallet'i geliştirme ortamında ayarlamanız için adım adım talimatlar içerir. Yaklaşık **30-45 dakika** sürer.
 
 ---
 
 ## 📋 Ön Gereksinimler
 
 ### Donanım
-- [ ] **Trezor One** veya **Trezor Model T** (test için)
+- [ ] **Trezor One**, **Trezor Model T**, veya **Trezor Safe 3** (test için)
 - [ ] USB kablo
 - [ ] Geliştirme bilgisayarı (Windows/macOS/Linux)
 
 ### Yazılım
-- [ ] **Node.js** 18+ ve npm
-- [ ] **Rust** 1.70+ (Bridge için)
-- [ ] **Git**
-- [ ] **VS Code** veya tercih ettiğiniz IDE
+- [ ] **Node.js** 18+ (https://nodejs.org)
+- [ ] **pnpm** 8.0+ (`npm install -g pnpm`)
+- [ ] **Rust** 1.70+ (Bridge için - https://rustup.rs/)
+- [ ] **Git** (https://git-scm.com)
+- [ ] **VS Code** (https://code.visualstudio.com) - Önerilir
 
-### API Keys
-- [ ] **Infura** veya **Alchemy** hesabı (Ethereum RPC için)
-- [ ] **Etherscan** API key (opsiyonel, tx history için)
+### İnternet Hizmetleri
+- [ ] **Infura** veya **Alchemy** hesabı (Ethereum RPC)
+  - Kaydol: https://infura.io veya https://www.alchemy.com
+  - API key'i elde et (sonra kullanacağız)
 
 ---
 
-## 🛠️ Kurulum Adımları
+## ⚙️ Adım 1: Gerekli Yazılımları Kur
 
-### 1. Trezor Cihazı Hazırlama
+### 1.1 pnpm Kurulumu
 
 ```bash
-# Trezor Bridge'i yükle (cihaz iletişimi için)
-# macOS:
-brew install trezor-bridge
+# pnpm global olarak yükle
+npm install -g pnpm
 
-# Linux:
-wget https://data.trezor.io/bridge/2.0.33/trezor-bridge_2.0.33_amd64.deb
-sudo dpkg -i trezor-bridge_2.0.33_amd64.deb
+# Sürümü doğrula (8.0+ olmalı)
+pnpm --version
 
-# Windows:
-# https://data.trezor.io/bridge/2.0.33/trezor-bridge-2.0.33-win32-install.exe
+# OPTIONAL: pnpm için shell completion
+pnpm install-completion
 ```
 
-**Trezor Kurulumu:**
-1. Trezor'u bilgisayara bağla
-2. https://trezor.io/start adresine git
-3. Firmware güncellemesi yap
-4. Yeni cüzdan oluştur veya geri yükle
-5. Recovery phrase'i güvenli bir yere kaydet (24 kelime)
-6. PIN ayarla
-
-### 2. Proje Klasör Yapısını Oluşturma
+### 1.2 Rust Kurulumu (Bridge için)
 
 ```bash
+# Rust installer'ını indir ve çalıştır
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Source'u güncelle
+source $HOME/.cargo/env
+
+# Sürümü doğrula
+rustc --version  # 1.70+ olmalı
+cargo --version
+
+# OPTIONAL: Rust optimization flags
+rustup update
+```
+
+### 1.3 Node.js Versiyonu Kontrol Et
+
+```bash
+node --version    # 18.0+ olmalı
+npm --version
+
+# OPTIONAL: nvm ile version yönetimine geçebilirsin
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 18
+nvm use 18
+```
+
+---
+
+## 📁 Adım 2: Proje Klasörünü Setup Et
+
+### 2.1 Repository'yi Clone Et
+
+```bash
+# Proje klasörüne git
+cd /Users/muratonurkaradeniz/workspace/sade/code
+
+# Repository'yi clone et
+git clone https://github.com/zinderud/cepwallet.git
+cd cepwallet
+
+# Yapı doğrula
+ls -la  # görmelisin: packages/, docs/, .github/, vb.
+```
+
+### 2.2 pnpm Workspace'i Başlat
+
+```bash
+# Root klasörden çalış
 cd /Users/muratonurkaradeniz/workspace/sade/code/cepwallet
 
-# Ana dizinleri oluştur
-mkdir -p desktop/{electron,src,public}
-mkdir -p desktop/src/{components,services,hooks,utils}
-mkdir -p desktop/src/components/{Wallet,Browser,Device}
-mkdir -p bridge/src
-mkdir -p docs
+# 1. pnpm-workspace.yaml oluştur (eğer yoksa)
+cat > pnpm-workspace.yaml << 'EOF'
+packages:
+  - 'packages/*'
+  - 'bridge'
+EOF
+
+# 2. Root package.json'u oluştur/doğrula
+# (ayrı bir bölüm olacak - PROJECT_STRUCTURE.md'ye bak)
+
+# 3. Tüm bağımlılıkları yükle
+pnpm install
+
+# Yüklemeyi doğrula
+ls -la node_modules/.pnpm  # pnpm cache görünmelidir
 ```
 
-### 3. Desktop App Kurulumu (Electron + React)
+### 2.3 Workspace Klasörlerini Oluştur
 
 ```bash
-cd desktop
+# packages/ klasörleri için alt dizinler
+mkdir -p packages/shared/src/{types,utils,crypto,kohaku,rpc,bridge}
+mkdir -p packages/shared/__tests__
+mkdir -p packages/shared/dist
 
-# package.json oluştur
-npm init -y
+mkdir -p packages/desktop/src/{main,preload,renderer,utils}
+mkdir -p packages/desktop/public
+mkdir -p packages/desktop/build
 
-# Gerekli paketleri yükle
-npm install --save \
-  react \
-  react-dom \
-  @trezor/connect-web \
-  ethers \
-  electron
-
-# Dev dependencies
-npm install --save-dev \
-  @types/react \
-  @types/react-dom \
-  @types/node \
-  typescript \
-  electron-builder \
-  webpack \
-  webpack-cli \
-  webpack-dev-server \
-  html-webpack-plugin \
-  ts-loader \
-  css-loader \
-  style-loader
-
-# TypeScript config
-npx tsc --init
+mkdir -p bridge/src
+mkdir -p bridge/proto
+mkdir -p bridge/tests
 ```
 
-**package.json scripts:**
+---
+
+## 🔌 Adım 3: Trezor Kurulumu
+
+### 3.1 Trezor Bridge Yükle
+
+**macOS:**
+```bash
+brew install trezor-bridge
+# Başlat: launchctl start io.trezor.bridge
+```
+
+**Linux (Debian/Ubuntu):**
+```bash
+wget https://data.trezor.io/bridge/2.0.33/trezor-bridge_2.0.33_amd64.deb
+sudo dpkg -i trezor-bridge_2.0.33_amd64.deb
+```
+
+**Windows:**
+- https://data.trezor.io/bridge/2.0.33/trezor-bridge-2.0.33-win32-install.exe adresinden indir
+- Exe'yi çalıştır ve yüklemeyi tamamla
+
+### 3.2 Trezor Cihazını Hazırla
+
+```bash
+# Trezor'u USB'ye bağla
+
+# Web arayüzüne git: https://suite.trezor.io
+# VEYA CLI ile:
+
+npm install -g @trezor/trezor-suite
+
+# Adımlar:
+# 1. "Get Started" / "Başla"'yı tıkla
+# 2. Firmware'i güncelle (varsa)
+# 3. "Yeni cüzdan oluştur" veya "Geri yükle" seçeneğini seç
+# 4. Ekranda gösterilen 24 kelimelik recovery phrase'i YÖNETİYLE YERLERE YAZ
+# 5. PIN ayarla (geliştirme için: 1234)
+# 6. Setup tamamlandı!
+
+# Kontrol et (CLI):
+npm install -g @trezor/connect-web
+# Trezor bağlı mı kontrol et
+```
+
+### 3.3 Test Et
+
+```bash
+# Browser'da test et
+# https://trezor.io/learn/a/where-to-find-my-xpub-address
+# Trezor'u bağlı tutup testa tıkla
+# Cihazda onay verdiğinde başarılı oldu
+
+# Adres öğren (ilk hesap)
+# Bu adresi not et (sonra test işlemleri için kullanacağız)
+```
+
+---
+
+## 📦 Adım 4: Workspace Paketlerini Kur
+
+### 4.1 Root Package.json Oluştur
+
+Dosya: `package.json` (root)
+
 ```json
 {
-  "name": "cepwallet-desktop",
+  "name": "cepwallet",
   "version": "0.1.0",
-  "main": "electron/main.js",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
   "scripts": {
-    "dev": "webpack serve --mode development",
-    "build": "webpack --mode production",
-    "electron": "electron .",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "install:all": "pnpm install",
+    "build": "pnpm -r build",
+    "build:shared": "pnpm -F @cepwallet/shared build",
+    "build:desktop": "pnpm -F @cepwallet/desktop build",
+    "dev": "concurrently \"pnpm dev:desktop\" \"pnpm dev:bridge\"",
+    "dev:desktop": "pnpm -F @cepwallet/desktop dev",
+    "dev:bridge": "pnpm -F bridge dev",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm -r clean"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "typescript": "^5.3.0",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0"
   }
 }
 ```
 
-### 4. Basit Electron Main Process
+### 4.2 @cepwallet/shared Setup
 
-Dosya: `desktop/electron/main.js`
+```bash
+cd packages/shared
 
-```javascript
-const { app, BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
+# package.json oluştur
+pnpm init
 
-let mainWindow;
-
-function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
-
-  // Development modunda
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:3000');
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+# Güncelle:
+cat > package.json << 'EOF'
+{
+  "name": "@cepwallet/shared",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "ethers": "^6.10.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0"
   }
 }
+EOF
 
-app.whenReady().then(createWindow);
+# Bağımlılıkları yükle (root'tan)
+cd ../..
+pnpm install
+```
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+### 4.3 @cepwallet/desktop Setup
+
+```bash
+cd packages/desktop
+
+# package.json oluştur
+pnpm init
+
+# Güncelle (aşağıya bakıncıya kadar şimdilik basic version):
+pnpm add electron react react-dom ethers
+pnpm add -D @types/react @types/node typescript webpack webpack-cli webpack-dev-server
+```
+
+### 4.4 Bridge (Rust) Setup
+
+```bash
+cd bridge
+
+# Cargo.toml oluştur
+cargo init --name cepwallet-bridge
+
+# Bağımlılıkları ekle
+cargo add tokio --features full
+cargo add tokio-tungstenite
+cargo add serde serde_json
+```
+
+---
+
+## 🚀 Adım 5: İlk Çalıştırma
+
+### 5.1 Shared Package'i Build Et
+
+```bash
+pnpm build:shared
+
+# Doğrula
+ls packages/shared/dist/  # index.js ve index.d.ts görmelidir
+```
+
+### 5.2 Bridge'i Başlat (Terminal 1)
+
+```bash
+cd bridge
+cargo run
+
+# Output şöyle olmalı:
+# Compiling cepwallet-bridge v0.1.0
+# Finished...
+# Listening on ws://localhost:8000
+```
+
+### 5.3 Desktop App'ı Başlat (Terminal 2)
+
+```bash
+cd packages/desktop
+pnpm dev
+
+# Webpack dev server başlatmalı
+# http://localhost:3000 açılmalı
+
+# Yeni bir terminal açıp (Terminal 3):
+cd packages/desktop
+pnpm electron
+
+# Electron penceresi açılmalı
+```
+
+### 5.4 Trezor'u Bağla
+
+```bash
+# Trezor'u USB'ye bağla
+# Desktop app'ında "Connect Device" butonuna tıkla
+# Trezor cihazında onay ver
+# Hesaplar görüntülenmeli
+```
+
+---
+
+## 🧪 Adım 6: İlk Test İşlemi
+
+### 6.1 Test Ağında (Ethereum Sepolia)
+
+```bash
+# Sepolia test ETH elde et
+# https://sepoliafaucet.com adresine git
+# Trezor'dan aldığın adresi gir
+# Birkaç dakika bekle (ETH gelmeli)
+
+# İşlem gönder
+# 1. "Send" butonuna tıkla
+# 2. Test ETH miktarını gir
+# 3. Alıcı adresi: 0x742d35Cc6634C0532925a3b844Bc0e8a5f4Ec3c6
+# 4. İşlemi gönder
+# 5. Trezor'da onay ver
+# 6. Block Explorer'da işlem sorgula:
+#    https://sepolia.etherscan.io/tx/[TX_HASH]
+```
+
+### 6.2 Kohaku Shield İşlemi (Faz 2'de)
+
+```bash
+# Faz 1'de bu kullanılamaz
+# Faz 2'de adım adım rehber eklenecek
+# Şimdilik normal ETH transferi test et
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Problem: "pnpm: command not found"
+
+```bash
+# Çözüm: Global kurulumu kontrol et
+npm install -g pnpm
+
+# VEYA npm kullanıcı cache'ini temizle
+npm cache clean --force
+npm install -g pnpm@latest
+```
+
+### Problem: "Trezor bağlantı bulunamadı"
+
+```bash
+# 1. Bridge servisi çalışıyor mu?
+ps aux | grep trezor-bridge
+
+# 2. macOS'te başlat:
+launchctl start io.trezor.bridge
+
+# 3. Linux'te başlat:
+sudo systemctl start trezor-bridge
+
+# 4. Trezor'u USB'den çıkart ve yeniden tak
+```
+
+### Problem: Webpack "entry point not found"
+
+```bash
+# Çözüm: TypeScript dosyalarını oluştur
+touch packages/desktop/src/index.tsx
+touch packages/desktop/src/App.tsx
+touch packages/desktop/src/main/index.ts
+```
+
+### Problem: "Cannot find module '@cepwallet/shared'"
+
+```bash
+# Çözüm 1: Workspace linkage'ini kontrol et
+pnpm install
+
+# Çözüm 2: pnpm-workspace.yaml'ı doğrula
+cat pnpm-workspace.yaml
+
+# Çözüm 3: node_modules yeniden kur
+pnpm clean
+pnpm install
+```
+
+### Problem: Bridge Rust compile error
+
+```bash
+# Çözüm: Rust toolchain güncellemesi
+rustup update
+rustup update nightly
+
+# Cargo cache temizle
+cargo clean
+cargo build
+```
+
+---
+
+## ✅ Başarı Kontrolü
+
+Aşağıdaki tüm adımları tamamladıysan, hazırsın! ✅
+
+- [ ] pnpm kuruldu (`pnpm --version`)
+- [ ] Node.js 18+ kuruldu (`node --version`)
+- [ ] Rust kuruldu (`rustc --version`)
+- [ ] Repository clone edildi
+- [ ] `pnpm install` başarılı oldu
+- [ ] Trezor Bridge çalışıyor
+- [ ] Trezor cihazı bağlı ve hazır
+- [ ] Bridge WebSocket sunucusu çalışıyor (`cargo run`)
+- [ ] Desktop app başlıyor (`pnpm dev:desktop`)
+- [ ] Electron penceresi açılıyor
+- [ ] Trezor'a bağlanabiliyor
+- [ ] İlk işlem gönderilebildi
+
+---
+
+## 📚 Sonraki Adımlar
+
+### Hemen Sonra
+1. **ARCHITECTURE.md** oku - Sistem mimarisi
+2. **TREZOR_KOHAKU_INTEGRATION.md** oku - Entegrasyon detayları
+3. **packages/shared** TypeScript types'ı yazmeye başla
+
+### Faz 1 (Geliştiriciler)
+1. Wallet Dashboard UI bileşenleri oluştur
+2. Bridge WebSocket client'ı tamamla
+3. Trezor Connect entegrasyonunu genişlet
+4. Unit tests yaz (Jest)
+
+### Faz 2 (Privacy)
+1. Kohaku entegrasyonunu ekle
+2. RAILGUN Shield işlemini uygula
+3. Privacy Pool desteğini ekle
+4. Humanizer başlat
+
+---
+
+## 📖 İlgili Belgeler
+
+| Belge | Açıklama |
+|-------|----------|
+| [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | Proje dosya organizasyonu |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Teknik sistem mimarisi |
+| [TREZOR_KOHAKU_INTEGRATION.md](TREZOR_KOHAKU_INTEGRATION.md) | Entegrasyon detayları |
+| [SETUP_CI_CD.md](SETUP_CI_CD.md) | CI/CD pipeline kurulumu |
+| [HARDWARE.md](HARDWARE.md) | Trezor hardware rehberi |
+| [PRIVACY_FEATURES.md](PRIVACY_FEATURES.md) | Kohaku privacy özellikleri |
+
+Sorularınız mı var? [CONTRIBUTING.md](../CONTRIBUTING.md) dosyasına bakın veya issue açın! 🎉
+
+````
     app.quit();
   }
 });

@@ -24,224 +24,183 @@
 
 ---
 
-### 🟡 Faz 1: MVP - Trezor Entegrasyonu (Şu An)
-**Süre:** 4-6 hafta
-**Hedef:** Çalışan prototip
+### 🟡 Faz 1: Çekirdek Masaüstü Uygulaması (Şu An)
+**Süre:** 4-6 hafta  
+**Hedef:** Trezor destekli çalışan masaüstü prototip
 
-#### Hafta 1-2: Desktop App Temelleri
-- [ ] Electron + React projesi kurulumu
-- [ ] Trezor Connect entegrasyonu
-- [ ] Temel UI/UX tasarımı
-- [ ] Wallet bağlantısı ve hesap görüntüleme
-- [ ] Bakiye ve işlem geçmişi
+#### Çalışma Paketleri
+- [ ] Electron + React + TypeScript çalışma alanı (pnpm workspace, Webpack/Tailwind)
+- [ ] `@trezor/connect` ile cihaz bağlantısı, adres listesi ve EIP-1559 imzalama
+- [ ] Wallet dashboard ve temel UX (hesap listesi, bakiye, işlem geçmişi)
+- [ ] Railgun hesabı oluşturma ve not senkronizasyonu için temel servis katmanı
+- [ ] Emulator/sahte cihaz testi için Trezor Bridge ve `trezor-user-env` pipeline'ı
+- [ ] Jest/Testing Library + Playwright başlangıç testi, GitHub Actions CI şablonu
 
-#### Hafta 3-4: Web3 Browser
-- [ ] BrowserView entegrasyonu
-- [ ] Web3 provider injection
-- [ ] DApp detector implementasyonu
-- [ ] Uniswap test entegrasyonu
-- [ ] İşlem onay ekranları
-
-#### Hafta 5-6: Test ve İyileştirme
-- [ ] Beta test kullanıcıları
-- [ ] Bug fix
-- [ ] UI/UX iyileştirmeleri
-- [ ] Dokümantasyon güncellemesi
-- [ ] İlk release (v0.1.0)
+#### Araçlar & Bağımlılıklar
+- Electron 28+, React 18, TypeScript 5, Tailwind, pnpm
+- `@trezor/connect-web`, `ethers@^6`, Jest, Testing Library, Playwright, ESLint/Prettier
+- Sentry (opsiyonel), GitHub Actions, Husky + lint-staged
 
 **Deliverables:**
-- ✅ Windows/macOS/Linux desktop app
-- ✅ Trezor hardware wallet desteği
-- ✅ Basic Web3 browser
-- ✅ Uniswap, OpenSea gibi major dApps desteği
+- ✅ macOS/Windows/Linux için çalışan dev build
+- ✅ Trezor cihazıyla adres alma ve imzalama akışı
+- ✅ Shield/Unshield mock’larıyla privacy seviyeleri UI iskeleti
+- ✅ CI’de lint/test/build adımları ve güncel kurulum dokümantasyonu
 
 ---
 
-### 🔵 Faz 2: Gelişmiş Özellikler
-**Süre:** 6-8 hafta
-**Hedef:** Production-ready uygulama
+### 🔵 Faz 2: Privacy Katmanı ve Web3 Tarayıcı
+**Süre:** 6-8 hafta  
+**Hedef:** Üretime hazır gizlilik katmanı ve dApp browser
 
-#### Multi-Chain Desteği
-- [ ] Ethereum mainnet
-- [ ] Binance Smart Chain (BSC)
-- [ ] Polygon (MATIC)
-- [ ] Avalanche (AVAX)
-- [ ] Arbitrum & Optimism (L2s)
-- [ ] Network switching UI
+#### Çalışma Paketleri
+- [ ] Railgun üretim entegrasyonu (shield/transfer/unshield, batch işlemler, adapt contracts)
+- [ ] Privacy Pools üyeliği ve compliance proof akışı
+- [ ] `kohaku-commons` humanizer/errorHumanizer ile işlem açıklamaları
+- [ ] BrowserView tabanlı dApp tarayıcısı, EIP-1193 provider injection, izin/önizleme UI’sı
+- [ ] Not/Merkle senkronizasyon servisi (Rust bridge veya Node mikroservis)
+- [ ] Gizlilik seviyeleri (Public/RAILGUN/Privacy Pool) için state yönetimi ve testler
 
-#### Token ve NFT Yönetimi
-- [ ] ERC-20 token detection
-- [ ] Custom token ekleme
-- [ ] Token transfer
-- [ ] NFT görüntüleme (ERC-721, ERC-1155)
-- [ ] NFT transfer
-- [ ] Token metadata caching
-
-#### DeFi Entegrasyonları
-- [ ] Swap aggregator (1inch, Paraswap)
-- [ ] Lending protocols (Aave, Compound)
-- [ ] Staking interfaces
-- [ ] Yield farming dashboard
-- [ ] Portfolio tracker
-
-#### Güvenlik Özellikleri
-- [ ] Transaction simulation (preview)
-- [ ] Phishing detection
-- [ ] Address book
-- [ ] Malicious contract warning
-- [ ] Rate limiting
+#### Araçlar & Bağımlılıklar
+- `@ethereum/kohaku`, `@ethereum/kohaku-commons`, `@ethereum/kohaku-extension` (seçmeli)
+- `snarkjs`, `circomlibjs`, `@lifi/sdk`, Graph/altgraph (isteğe bağlı)
+- Redis/SQLite cache, Storybook/Ladle, PostHog (anonim analytics)
 
 **Deliverables:**
-- ✅ Multi-chain wallet
-- ✅ Complete DeFi toolkit
-- ✅ Enhanced security features
-- ✅ v1.0.0 release
+- ✅ Privacy seviyeleriyle çalışan işlem akışları (mainnet destekli)
+- ✅ dApp browser beta, Uniswap/RAILGUN demo entegrasyonları
+- ✅ Compliance rapor çıktıları ve humanized transaction özetleri
+- ✅ Privacy ve Web3 katmanını kapsayan otomasyon testleri
 
 ---
 
-### 🟢 Faz 3: Platform Genişletme
-**Süre:** 8-10 hafta
-**Hedef:** Multi-platform desteği
+### 🟢 Faz 3: Çoklu Platform ve Bridge Servisi
+**Süre:** 8-10 hafta  
+**Hedef:** Platform genişletme, köprü servisinin yeniden yazılması
 
-#### iOS App
-- [ ] React Native veya Flutter
-- [ ] WalletConnect integration
-- [ ] Bluetooth LE support (opsiyonel)
-- [ ] App Store yayını
+#### Çalışma Paketleri
+- [ ] Rust tabanlı bridge daemon (USB/WebUSB, Protocol Buffers, çoklu cihaz desteği)
+- [ ] React Native mobil companion (WalletConnect v2, BLE/USB OTG araştırması)
+- [ ] Backend izleme ve loglama (OpenTelemetry, Prometheus/Grafana, Sentry release health)
+- [ ] Özel RPC/light client stratejisi, gizli log senkronizasyon pipeline’ı
+- [ ] Güvenlik süreçleri (threat modeling, donanım olay loglaması, firmware update dokümantasyonu)
 
-#### Android App
-- [ ] React Native veya Flutter
-- [ ] USB OTG support
-- [ ] WalletConnect integration
-- [ ] Google Play yayını
-
-#### Browser Extension (Opsiyonel)
-- [ ] Chrome extension
-- [ ] Firefox add-on
-- [ ] Edge extension
-- [ ] Hardware wallet connector
-
-#### Advanced Bridge
-- [ ] Rust-based bridge daemon
-- [ ] WebUSB support
-- [ ] Multiple device support
-- [ ] Better error handling
+#### Araçlar & Bağımlılıklar
+- Rust 1.70+, Tokio, Tonic/Prost, WebUSB API
+- React Native, Expo/EAS, WalletConnect v2 SDK
+- Fly.io/Render, Loki, Grafana, 1Password/Vault ile secrets yönetimi
 
 **Deliverables:**
-- ✅ iOS ve Android apps
-- ✅ Browser extensions
-- ✅ Enhanced bridge service
-- ✅ v2.0.0 release
+- ✅ Bridge daemon beta ve API dokümanı (OpenAPI/Protobuf)
+- ✅ iOS/Android companion prototipleri, WalletConnect köprüsü
+- ✅ Operasyon runbook’ları, monitoring panelleri ve güvenlik prosedürleri
+- ✅ Production staging ortamı
 
 ---
 
-### 🟣 Faz 4: Özel Hardware (Opsiyonel)
-**Süre:** 6-12 ay
-**Hedef:** Branded hardware wallet
+### 🟣 Faz 4: Ürünleştirme ve Genişleme
+**Süre:** 10-12 hafta  
+**Hedef:** v1.0.0 release candidate ve kurumsal hazırlık
 
-#### Hardware Tasarım
-- [ ] Schematic design
-- [ ] PCB layout
-- [ ] Case design (3D modeling)
-- [ ] BOM preparation
-- [ ] Prototype production
+#### Çalışma Paketleri
+- [ ] Çoklu zincir desteği (Ethereum, BSC, Polygon, Avalanche, Arbitrum, Optimism) ve ağ anahtarlama UI’sı
+- [ ] Token/NFT otomatik keşfi, DeFi dashboard (pozisyon, APY, alarm sistemi)
+- [ ] Transaction simulation, risk skoru, adres defteri, rate limiting
+- [ ] Electron builder ile dağıtım, kod imzalama, otomatik güncelleyici
+- [ ] Legal/compliance paketleri (privacy policy, raporlama, regülasyon danışmanlığı)
+- [ ] Genişletilmiş GTM ve topluluk programları (beta → GA)
 
-#### Firmware Development
-- [ ] Trezor firmware fork
-- [ ] Board-specific adaptations
-- [ ] Custom features
-- [ ] Security hardening
-- [ ] Firmware testing
-
-#### Production
-- [ ] Manufacturer selection
-- [ ] Small batch production (100-1000 units)
-- [ ] Quality control process
-- [ ] Certification (CE, FCC)
-- [ ] Packaging design
-
-#### Distribution
-- [ ] E-commerce setup
-- [ ] Marketing materials
-- [ ] Support documentation
-- [ ] Firmware update system
+#### Araçlar & Bağımlılıklar
+- Electron Builder, Code Signing, Auto-Updater
+- Risk/Simulation için Tenderly/Blocknative veya benzeri
+- Marketing automation (HubSpot, Customer.io), Notion/Linear proje yönetimi
 
 **Deliverables:**
-- ✅ CepWallet branded hardware
-- ✅ Custom firmware
-- ✅ Production pipeline
-- ✅ Distribution channels
+- ✅ v1.0.0 release candidate ve dağıtım pipeline’ı
+- ✅ DeFi & multi-chain modülleri, gelişmiş güvenlik özellikleri
+- ✅ Kurumsal compliance paketleri ve destek dokümanları
+- ✅ GA lansmanı için GTM materyalleri
 
 ---
 
 ## 🛠️ Teknik Stack
 
-### Current (Faz 1-2)
+### Faz 1-2 Odaklı Teknolojiler
 ```
 Frontend:
 ├── Electron 28+
 ├── React 18+
 ├── TypeScript 5+
-└── Tailwind CSS
+├── Tailwind CSS
+└── pnpm workspaces (opsiyonel Nx/Turborepo)
 
-Web3:
+Quality Tooling:
+├── Jest & Testing Library
+├── Playwright
+├── ESLint, Prettier, Husky
+└── GitHub Actions CI (lint/test/build)
+
+Web3 & Privacy:
 ├── ethers.js 6+
 ├── @trezor/connect-web
-└── WalletConnect v2
+├── @ethereum/kohaku & kohaku-commons
+└── snarkjs, circomlibjs
 
-Backend/Bridge:
-├── Node.js (Electron main process)
-└── WebSocket (Trezor Bridge)
-
-Hardware:
-└── Trezor One / Model T
+Observability:
+├── Sentry / LogRocket
+└── PostHog (anonim analytics)
 ```
 
-### Future (Faz 3-4)
+### Faz 3-4 İçin Genişleyen Stack
 ```
-Mobile:
-├── React Native / Flutter
-└── WalletConnect SDK
+Bridge & Backend:
+├── Rust (Tokio, Tonic/Prost)
+├── Protocol Buffers / gRPC-Web
+├── WebUSB & HID API entegrasyonu
+└── Fly.io / Render / Railway dağıtımları
 
-Bridge:
-├── Rust
-├── Protocol Buffers
-└── WebUSB
+Mobil & Client:
+├── React Native + Expo/EAS
+├── WalletConnect v2 SDK
+└── BLE / USB OTG araştırması
 
-Custom Hardware:
-├── STM32F4 MCU
-├── ATECC608A Secure Element
-├── C/C++ Firmware
-└── Trezor Core fork
+DevOps & İzleme:
+├── OpenTelemetry, Prometheus, Grafana, Loki
+├── 1Password / HashiCorp Vault ile secrets
+└── Storybook/Ladle, Chromatic görsel testler
+
+Güvenlik & Simülasyon:
+├── Tenderly / Blocknative (tx simulation)
+└── Dependabot, snyk, npm audit
 ```
 
 ---
 
 ## 📊 Milestone Targets
 
-### Q1 2024 (Ocak - Mart)
-- [x] Proje başlangıcı ve araştırma
-- [ ] MVP tamamlanması
-- [ ] İlk beta release
-- [ ] 10-20 test kullanıcısı
+### Q4 2025 (Ekim - Aralık)
+- [x] Faz 0 araştırma ve planlama çıktıları
+- [ ] Faz 1 dev build (Trezor entegrasyonu, CI pipeline)
+- [ ] 5-10 erken beta kullanıcısı
+- [ ] Emulator tabanlı regression testleri
 
-### Q2 2024 (Nisan - Haziran)
-- [ ] Faz 2 özellikleri
-- [ ] v1.0.0 production release
-- [ ] Marketing başlangıcı
-- [ ] 100+ aktif kullanıcı
+### Q1 2026 (Ocak - Mart)
+- [ ] Faz 2 privacy & dApp browser GA
+- [ ] Compliance raporlama ve humanizer deliverable’ları
+- [ ] 50+ aktif kullanıcı, ilk topluluk programı
+- [ ] Documentation & developer portal güncellemesi
 
-### Q3 2024 (Temmuz - Eylül)
-- [ ] Mobile apps release
-- [ ] Browser extensions
-- [ ] 1,000+ kullanıcı
-- [ ] Community building
+### Q2 2026 (Nisan - Haziran)
+- [ ] Bridge daemon beta + mobil companion prototipleri
+- [ ] Monitoring & incident response runbook’ları
+- [ ] WalletConnect entegrasyonlu limited beta
+- [ ] 250+ aktif kullanıcı
 
-### Q4 2024 (Ekim - Aralık)
-- [ ] Özel hardware değerlendirmesi
-- [ ] Partnership görüşmeleri
-- [ ] Fundraising (eğer gerekirse)
-- [ ] 10,000+ kullanıcı hedefi
+### Q3 2026 (Temmuz - Eylül)
+- [ ] Faz 4 v1.0.0 release candidate
+- [ ] Çoklu zincir & DeFi dashboard completions
+- [ ] Transaction simulation ve risk skorlaması yayınlanması
+- [ ] 1,000+ aktif kullanıcı ve 10+ entegrasyon ortağı
 
 ---
 
