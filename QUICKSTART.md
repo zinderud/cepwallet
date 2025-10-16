@@ -14,20 +14,23 @@
 ---
 
 ### 💻 Kod Yazmaya Başlamak
-**Süre: 30-45 dakika**
+**Süre: 20-30 dakika**
 
 #### Adım 1: Gerekli Araçları Kurun
 ```bash
 # Node.js 18+ kurulu olmalı
 node --version
 
-# Trezor Bridge'i kurun (cihaz iletişimi için)
+# pnpm kurulumu
+npm install -g pnpm
+
+# Rust kurulumu (Tauri için gerekli)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+
+# Trezor Bridge (opsiyonel, gerçek cihaz kullanıyorsanız)
 # macOS:
 brew install trezor-bridge
-
-# Linux:
-wget https://data.trezor.io/bridge/2.0.33/trezor-bridge_2.0.33_amd64.deb
-sudo dpkg -i trezor-bridge_2.0.33_amd64.deb
 ```
 
 #### Adım 2: Projeyi Klonlayın
@@ -36,18 +39,20 @@ git clone https://github.com/zinderud/cepwallet.git
 cd cepwallet
 ```
 
-#### Adım 3: Desktop App'i Başlatın
+#### Adım 3: Tauri App'i Başlatın
 ```bash
-cd desktop
-npm install
-npm run dev
+# Bağımlılıkları kur
+pnpm install
+
+# Tauri development server'ı başlat
+pnpm tauri dev
 ```
 
-#### Adım 4: Trezor'u Bağlayın
-1. Trezor cihazınızı USB ile bağlayın
-2. CepWallet uygulamasında "Connect Device" tıklayın
-3. Trezor'da PIN girin
-4. İşlem yapabilirsiniz!
+#### Adım 4: Uygulamayı Test Edin
+1. Tauri penceresi otomatik açılacak
+2. React frontend localhost:5173'te çalışıyor
+3. Mock Trezor implementasyonu hazır
+4. "Connect Wallet" butonunu test edebilirsiniz!
 
 **Detaylı rehber:** [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)
 
@@ -127,50 +132,42 @@ cepwallet/
 
 ## 💡 Hızlı Komutlar
 
-### Development
+### Development (Tauri 2.x)
 ```bash
-# Desktop app (Electron)
-cd desktop
-npm install
-npm run dev
+# Tauri desktop app
+pnpm install
+pnpm tauri dev           # Full stack (Vite + Rust)
+pnpm dev                 # Frontend only (Vite)
 
-# Mobile app (React Native)
-cd mobile
-npm install
-npm run ios    # iOS
-npm run android # Android
-
-# Hardware bridge (Rust)
-cd bridge
-cargo build
-cargo run
+# Rust backend
+cd src-tauri
+cargo check              # Check code
+cargo test               # Run tests
+cargo build --release    # Production build
 ```
 
 ### Testing
 ```bash
-# Desktop tests
-cd desktop
-npm test
+# Type checking
+pnpm tsc --noEmit
 
-# E2E tests
-npm run test:e2e
+# Rust tests
+cd src-tauri
+cargo test
 
-# Trezor emulator ile test
-./scripts/test-with-emulator.sh
+# Frontend tests (future)
+pnpm test
 ```
 
-### Build
+### Build (Production)
 ```bash
-# Desktop build
-cd desktop
-npm run build:mac      # macOS
-npm run build:win      # Windows
-npm run build:linux    # Linux
+# Build for current platform
+pnpm tauri build
 
-# Mobile build
-cd mobile
-npm run build:ios
-npm run build:android
+# Platform-specific builds
+pnpm tauri build --target aarch64-apple-darwin      # macOS ARM64
+pnpm tauri build --target x86_64-pc-windows-msvc    # Windows
+pnpm tauri build --target x86_64-unknown-linux-gnu  # Linux
 ```
 
 ---
