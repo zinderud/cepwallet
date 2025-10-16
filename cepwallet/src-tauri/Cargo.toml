@@ -1,0 +1,43 @@
+[package]
+name = "cepwallet"
+version = "0.1.0"
+description = "Privacy-First Hardware Wallet with Ethereum & Kohaku Integration"
+authors = ["CepWallet Contributors"]
+license = "GPL-3.0"
+repository = "https://github.com/zinderud/cepwallet"
+edition = "2021"
+rust-version = "1.70"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+tauri = { version = "1.5", features = ["shell-open"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Hardware dependencies
+hidapi = { version = "2.4", features = ["linux-static-hidraw"] }
+
+# Ethereum dependencies
+ethers = { version = "2.0", features = ["legacy"] }
+
+# Crypto dependencies
+sha2 = "0.10"
+ripemd = "0.1"
+hex = "0.4"
+bs58 = "0.5"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "z"
+strip = true

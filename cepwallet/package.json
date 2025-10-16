@@ -1,0 +1,65 @@
+{
+  "name": "cepwallet",
+  "version": "0.1.0",
+  "description": "Privacy-First Hardware Wallet with Ethereum & Kohaku Integration using Tauri",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "preinstall": "node -e \"const fs=require('fs');!fs.existsSync('pnpm-workspace.yaml')&&console.log('Run: pnpm install from root')\"",
+    "build": "pnpm -r build",
+    "build:shared": "pnpm -F @cepwallet/shared build",
+    "build:desktop": "pnpm -F @cepwallet/desktop build",
+    "build:bridge": "pnpm -F bridge build",
+    "dev": "concurrently \"pnpm dev:desktop\" \"pnpm dev:bridge\" -n desktop,bridge",
+    "dev:desktop": "pnpm -F @cepwallet/desktop dev",
+    "dev:bridge": "pnpm -F bridge dev",
+    "start": "pnpm dev:desktop",
+    "test": "pnpm -r test",
+    "test:shared": "pnpm -F @cepwallet/shared test",
+    "test:desktop": "pnpm -F @cepwallet/desktop test",
+    "test:e2e": "pnpm -F @cepwallet/desktop test:e2e",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "type-check": "pnpm -r type-check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "pnpm -r clean && pnpm clean",
+    "clean:node_modules": "pnpm -r clean && rm -rf node_modules pnpm-lock.yaml",
+    "prepare": "husky install",
+    "precommit": "lint-staged",
+    "tauri": "tauri dev"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.0",
+    "tauri": "^1.0.0"
+  },
+  "keywords": [
+    "ethereum",
+    "wallet",
+    "trezor",
+    "hardware-wallet",
+    "privacy",
+    "kohaku",
+    "railgun",
+    "zero-knowledge",
+    "web3",
+    "tauri"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zinderud/cepwallet.git"
+  },
+  "homepage": "https://github.com/zinderud/cepwallet",
+  "bugs": "https://github.com/zinderud/cepwallet/issues",
+  "license": "GPL-3.0",
+  "author": "CepWallet Contributors"
+}

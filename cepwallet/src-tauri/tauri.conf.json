@@ -1,0 +1,28 @@
+{
+  "package": {
+    "productName": "CepWallet",
+    "version": "0.1.0",
+    "description": "Privacy-First Hardware Wallet with Ethereum & Kohaku Integration",
+    "author": "CepWallet Contributors",
+    "license": "GPL-3.0",
+    "tauri": {
+      "bundle": {
+        "identifier": "com.zinderud.cepwallet",
+        "icon": [
+          "icons/icon.png"
+        ],
+        "resources": [],
+        "category": "Utility"
+      },
+      "updater": {
+        "active": true
+      },
+      "systemTray": {
+        "icon": "icons/icon.png"
+      },
+      "allowlist": {
+        "all": true
+      }
+    }
+  }
+}

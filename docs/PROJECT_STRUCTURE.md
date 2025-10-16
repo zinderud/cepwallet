@@ -1,8 +1,8 @@
-# CepWallet - Proje Yapısı
+# CepWallet - Proje Yapısı (Tauri)
 
-## 🏗️ Monorepo Mimarisi (pnpm Workspace)
+## 🏗️ Tauri Monorepo Mimarisi
 
-CepWallet, **pnpm workspaces** kullanarak 3 bağımsız modülü yönetir:
+CepWallet, **Tauri framework** ile **pnpm workspaces** kullanarak modern bir mimari sunar:
 
 ```
 cepwallet/                                    # Root monorepo
@@ -11,8 +11,6 @@ cepwallet/                                    # Root monorepo
 ├── 📄 package.json                          # Root package (shared deps)
 ├── 📄 tsconfig.json                         # Root TypeScript config
 ├── 📄 eslint.config.js                      # Root ESLint config
-├── 📄 jest.config.js                        # Root Jest config
-├── 📄 Cargo.toml                            # Rust Bridge for native
 │
 ├── 📄 README.md                             # Ana proje açıklaması
 ├── 📄 QUICKSTART.md                         # Hızlı başlangıç
@@ -23,80 +21,128 @@ cepwallet/                                    # Root monorepo
 ├── 📁 docs/                                 # Dokümantasyon
 │   ├── 📄 INDEX.md                          # Dokümantasyon indeksi
 │   ├── 📄 GETTING_STARTED.md                # Detaylı başlangıç rehberi
-│   ├── 📄 ARCHITECTURE.md                   # Teknik mimari detayları
+│   ├── 📄 ARCHITECTURE.md                   # Teknik mimari (Tauri)
 │   ├── 📄 PROJECT_STRUCTURE.md              # Bu dosya
 │   ├── 📄 PRIVACY_FEATURES.md               # Kohaku entegrasyonu
 │   ├── 📄 HARDWARE.md                       # Hardware rehberi
 │   ├── 📄 ROADMAP.md                        # Geliştirme yol haritası
 │   ├── 📄 TREZOR_KOHAKU_INTEGRATION.md      # Entegrasyon detayları
-│   ├── 📄 SETUP_CI_CD.md                    # CI/CD pipeline
 │   └── 📁 kohaku/                           # Kohaku özel dokümantasyon
 │       ├── 📄 README.md
 │       ├── 📄 RAILGUN_INTEGRATION.md
-│       ├── 📄 WALLET_OPERATIONS.md
-│       └── ...
+│       └── 📄 WALLET_OPERATIONS.md
+│
+├── 📁 src-tauri/                            # ⭐ Tauri Rust Backend
+│   ├── 📄 Cargo.toml                        # Rust dependencies
+│   ├── 📄 tauri.conf.json                   # Tauri configuration
+│   ├── 📄 build.rs                          # Build script
+│   │
+│   ├── 📁 icons/                            # App icons
+│   │   ├── 32x32.png
+│   │   ├── 128x128.png
+│   │   ├── icon.icns                        # macOS
+│   │   └── icon.ico                         # Windows
+│   │
+│   └── 📁 src/                              # Rust source code
+│       ├── 📄 main.rs                       # Tauri entry point
+│       ├── 📄 commands.rs                   # Tauri IPC handlers
+│       ├── 📄 error.rs                      # Error types
+│       │
+│       ├── 📁 hardware/                     # Hardware integration
+│       │   ├── 📄 mod.rs
+│       │   ├── 📄 trezor.rs                 # Trezor manager
+│       │   ├── 📄 device.rs                 # USB device management
+│       │   └── 📄 session.rs                # Session management
+│       │
+│       ├── 📁 crypto/                       # Cryptographic operations
+│       │   ├── 📄 mod.rs
+│       │   ├── 📄 signing.rs                # Transaction signing
+│       │   ├── 📄 keys.rs                   # Key derivation (BIP-32/39/44)
+│       │   └── 📄 privacy.rs                # Kohaku/RAILGUN
+│       │
+│       └── 📁 utils/
+│           ├── 📄 mod.rs
+│           └── 📄 ethereum.rs               # Ethereum utilities
 │
 ├── 📁 packages/                             # pnpm workspaces
 │   │
-│   ├── 📁 shared/                           # Ortak TypeScript utility'ler
+│   ├── 📁 desktop/                          # ⭐ React Frontend
 │   │   ├── 📄 package.json
 │   │   ├── 📄 tsconfig.json
+│   │   ├── 📄 vite.config.ts                # Vite configuration
 │   │   │
-│   │   ├── 📁 src/
-│   │   │   ├── � types/
-│   │   │   │   ├── wallet.ts                # Wallet type tanımları
-│   │   │   │   ├── transaction.ts           # Transaction types
-│   │   │   │   ├── bridge.ts                # Bridge protocol types
-│   │   │   │   ├── kohaku.ts                # Kohaku/RAILGUN types
-│   │   │   │   └── index.ts                 # Export all
-│   │   │   │
-│   │   │   ├── 📁 utils/
-│   │   │   │   ├── ethereum.ts              # ethers.js helpers
-│   │   │   │   ├── formatting.ts            # Address/amount formatting
-│   │   │   │   ├── validation.ts            # Input validation
-│   │   │   │   ├── constants.ts             # Global constants
-│   │   │   │   ├── errors.ts                # Error definitions
-│   │   │   │   └── index.ts
-│   │   │   │
-│   │   │   ├── 📁 crypto/
-│   │   │   │   ├── keys.ts                  # Key derivation (BIP-32/39/44)
-│   │   │   │   ├── signing.ts               # Signing algorithms
-│   │   │   │   ├── zk.ts                    # ZK proof utilities
-│   │   │   │   └── index.ts
-│   │   │   │
-│   │   │   ├── 📁 bridge/
-│   │   │   │   ├── protocol.ts              # Bridge message protocol
-│   │   │   │   ├── serialization.ts         # Protobuf serialization
-│   │   │   │   └── index.ts
-│   │   │   │
-│   │   │   ├── 📁 kohaku/
-│   │   │   │   ├── railgun.ts               # RAILGUN operations
-│   │   │   │   ├── privacy-pools.ts         # Privacy Pool utils
-│   │   │   │   ├── humanizer.ts             # Transaction humanizer
-│   │   │   │   └── index.ts
-│   │   │   │
-│   │   │   ├── 📁 rpc/
-│   │   │   │   ├── eip1193.ts               # EIP-1193 provider standard
-│   │   │   │   ├── web3.ts                  # ethers.js provider
-│   │   │   │   └── index.ts
-│   │   │   │
-│   │   │   └── index.ts                     # Main export
+│   │   ├── 📁 public/                       # Static assets
+│   │   │   └── favicon.ico
 │   │   │
-│   │   ├── 📁 __tests__/
-│   │   │   ├── utils.test.ts
-│   │   │   ├── crypto.test.ts
-│   │   │   └── kohaku.test.ts
-│   │   │
-│   │   └── 📄 README.md
+│   │   └── 📁 src/
+│   │       ├── 📄 main.tsx                  # React entry point
+│   │       ├── 📄 App.tsx                   # Root component
+│   │       │
+│   │       ├── 📁 components/               # React components
+│   │       │   ├── 📁 Wallet/
+│   │       │   │   ├── Dashboard.tsx
+│   │       │   │   ├── TransactionList.tsx
+│   │       │   │   ├── AddressBook.tsx
+│   │       │   │   └── SendForm.tsx
+│   │       │   │
+│   │       │   ├── 📁 Hardware/
+│   │       │   │   ├── TrezorConnect.tsx
+│   │       │   │   ├── DeviceStatus.tsx
+│   │       │   │   └── DeviceInfo.tsx
+│   │       │   │
+│   │       │   └── 📁 Settings/
+│   │       │       ├── NetworkConfig.tsx
+│   │       │       └── PrivacySettings.tsx
+│   │       │
+│   │       ├── 📁 hooks/                    # Custom React hooks
+│   │       │   ├── useWallet.ts
+│   │       │   ├── useTrezor.ts
+│   │       │   ├── useTransactions.ts
+│   │       │   └── useKohaku.ts
+│   │       │
+│   │       ├── 📁 store/                    # Zustand stores
+│   │       │   ├── walletStore.ts
+│   │       │   ├── deviceStore.ts
+│   │       │   └── uiStore.ts
+│   │       │
+│   │       ├── 📁 utils/                    # Frontend utilities
+│   │       │   ├── tauriApi.ts              # ⭐ Tauri API wrappers
+│   │       │   ├── formatting.ts
+│   │       │   └── validation.ts
+│   │       │
+│   │       ├── 📁 types/
+│   │       │   └── index.ts                 # TypeScript types
+│   │       │
+│   │       └── 📁 styles/
+│   │           └── globals.css              # Tailwind CSS
 │   │
-│   ├── 📁 desktop/                          # Desktop uygulama (Electron)
-│   │   ├── 📄 package.json
-│   │   ├── 📄 tsconfig.json
-│   │   ├── 📄 webpack.config.js
-│   │   ├── 📄 electron-builder.yml          # Electron Builder config
-│   │   │
-│   │   ├── 📁 src/
-│   │   │   ├── 📁 main/                     # Electron main process
+│   └── 📁 shared/                           # Ortak TypeScript utility'ler
+│       ├── 📄 package.json
+│       ├── 📄 tsconfig.json
+│       │
+│       └── 📁 src/
+│           ├── 📁 types/
+│           │   ├── wallet.ts                # Wallet type tanımları
+│           │   ├── transaction.ts           # Transaction types
+│           │   ├── device.ts                # Device types
+│           │   └── kohaku.ts                # Kohaku/RAILGUN types
+│           │
+│           ├── � utils/
+│           │   ├── ethereum.ts              # ethers.js helpers
+│           │   ├── formatting.ts            # Address/amount formatting
+│           │   ├── validation.ts            # Input validation
+│           │   └── constants.ts             # Global constants
+│           │
+│           └── � crypto/
+│               ├── keys.ts                  # Key derivation utils
+│               └── zk.ts                    # ZK proof utilities
+│
+└── 📁 .github/                              # GitHub Actions CI/CD
+    └── 📁 workflows/
+        ├── build.yml                        # Build workflow
+        ├── test.yml                         # Test workflow
+        └── release.yml                      # Release workflow
+```
 │   │   │   │   ├── index.ts                 # Entry point
 │   │   │   │   ├── window.ts                # Window management
 │   │   │   │   ├── ipc.ts                   # IPC handlers

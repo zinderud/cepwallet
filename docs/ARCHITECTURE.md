@@ -1,36 +1,40 @@
 # CepWallet - Teknik Mimari Detayları
 
-## 🏛️ Sistem Mimarisi: 3-Katman Modeli
+## 🏛️ Sistem Mimarisi: Tauri İkili Katman Modeli
 
-CepWallet **3 ana katmanı** koordine ederek çalışır:
+CepWallet **Tauri framework** kullanarak modern, güvenli ve performanslı bir mimari sunar:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                 LAYER 3: APPLICATION (Desktop App)              │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │ React + Electron                                          │  │
-│  │ ├─ Wallet Dashboard       ├─ DApp Browser                │  │
-│  │ ├─ Transaction UI         ├─ Web3 Injector              │  │
-│  │ └─ Settings               └─ Account Management          │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│                           ↓↑ IPC                                 │
-│  ┌─── Electron Main Process ────────────────────────────────┐  │
-│  │ • Window Management     • Bridge WebSocket Client         │  │
-│  │ • IPC Handlers          • Web3 Provider Implementation    │  │
-│  └───────────────────────────────────────────────────────────┘  │
+│                    TAURI APPLICATION                             │
+│                                                                   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              FRONTEND (WebView)                          │   │
+│  │  ┌────────────────────────────────────────────────────┐  │   │
+│  │  │ React + TypeScript                                 │  │   │
+│  │  │ ├─ Wallet Dashboard    ├─ DApp Browser            │  │   │
+│  │  │ ├─ Transaction UI      ├─ Web3 Integration        │  │   │
+│  │  │ └─ Settings            └─ Account Management      │  │   │
+│  │  └────────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                           ↓↑ Tauri IPC (Native)                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              BACKEND (Rust Core)                         │   │
+│  │  ┌────────────────────────────────────────────────────┐  │   │
+│  │  │ src-tauri/                                         │  │   │
+│  │  │ ├─ Tauri Commands (IPC Handlers)                  │  │   │
+│  │  │ ├─ Hardware Communication (USB/HID)               │  │   │
+│  │  │ ├─ Trezor Integration                             │  │   │
+│  │  │ ├─ Crypto Operations                              │  │   │
+│  │  │ ├─ Transaction Signing                            │  │   │
+│  │  │ └─ Session Management                             │  │   │
+│  │  └────────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                           ↓↑ USB/HID Protocol                    │
 └─────────────────────────────────────────────────────────────────┘
-                           ↓↑ WebSocket
+                           ↓↑
 ┌─────────────────────────────────────────────────────────────────┐
-│              LAYER 2: BRIDGE (Hardware Communication)            │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │ Rust Daemon (localhost:8000)                              │  │
-│  │ ├─ WebSocket Server       ├─ USB Device Handler           │  │
-│  │ ├─ Message Protocol       ├─ Protobuf Serialization      │  │
-│  │ └─ Crypto Operations      └─ Session Management          │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│                           ↓↑ USB
-┌─────────────────────────────────────────────────────────────────┐
-│          LAYER 1: HARDWARE (Trezor + Kohaku Integration)        │
+│          HARDWARE LAYER (Trezor + Kohaku Integration)           │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │ Trezor Device (USB/HID)                                   │  │
 │  │ ├─ BIP-32/39/44 HD Wallet   ├─ Transaction Signing        │  │
@@ -38,7 +42,7 @@ CepWallet **3 ana katmanı** koordine ederek çalışır:
 │  │ ├─ Secure Element (ATECC608A) ├─ Firmware Updates        │  │
 │  │ └─ Recovery Phrase Management  └─ PIN Protection          │  │
 │  │                                                             │  │
-│  │ Kohaku Privacy Layer (Ethereu Integration)                │  │
+│  │ Kohaku Privacy Layer (Ethereum Integration)               │  │
 │  │ ├─ RAILGUN Protocol         ├─ Zero-Knowledge Proofs     │  │
 │  │ ├─ Privacy Pools            ├─ Viewing Keys              │  │
 │  │ └─ Shielded Operations      └─ Note Tree Management       │  │
@@ -46,28 +50,28 @@ CepWallet **3 ana katmanı** koordine ederek çalışır:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 🔄 İletişim Protokolü Akışı
+### 🔄 İletişim Protokolü Akışı (Tauri Native IPC)
 
 ```
 USER ACTION:
    "Send 1 ETH Privately"
          ↓
    ┌──────────────────────────────────────────────────┐
-   │ LAYER 3 - APP (React)                            │
+   │ FRONTEND (React/TypeScript)                      │
    │ • Shields 1 ETH to RAILGUN pool (Kohaku)        │
    │ • Prepares private transfer tx                    │
-   │ • Sends to Bridge via WebSocket                  │
+   │ • Calls: await invoke('sign_transaction', {...}) │
    └──────────────────────────────────────────────────┘
-         ↓ WebSocket JSON
+         ↓ Tauri IPC (Native - Zero Overhead)
    ┌──────────────────────────────────────────────────┐
-   │ LAYER 2 - BRIDGE (Rust)                         │
-   │ • Converts JSON to Protobuf                       │
+   │ BACKEND (Rust - src-tauri/)                      │
+   │ • #[tauri::command] sign_transaction()           │
    │ • Prepares USB HID packets                        │
-   │ • Sends to Trezor device                          │
+   │ • Sends to Trezor device via hidapi               │
    └──────────────────────────────────────────────────┘
          ↓ USB/HID Protocol
    ┌──────────────────────────────────────────────────┐
-   │ LAYER 1 - HARDWARE (Trezor)                      │
+   │ HARDWARE (Trezor)                                 │
    │ • Displays tx details on secure screen            │
    │ • Asks user PIN (if not already verified)        │
    │ • Signs transaction with private key (never leaves device)  │
@@ -75,104 +79,252 @@ USER ACTION:
    └──────────────────────────────────────────────────┘
          ↑ USB/HID Signature
    ┌──────────────────────────────────────────────────┐
-   │ LAYER 2 - BRIDGE (Rust)                         │
-   │ • Converts Protobuf to JSON                       │
+   │ BACKEND (Rust)                                    │
+   │ • Receives signature from Trezor                  │
    │ • Broadcasts to Ethereum node                     │
+   │ • Returns Result<String> (tx hash)               │
    └──────────────────────────────────────────────────┘
-         ↑ JSON-RPC Response
+         ↑ Tauri IPC Response
    ┌──────────────────────────────────────────────────┐
-   │ LAYER 3 - APP (React)                            │
+   │ FRONTEND (React)                                  │
    │ • Shows "Transaction Sent" confirmation           │
    │ • Displays tx hash and block explorer link        │
    └──────────────────────────────────────────────────┘
+```
+
+### 🎯 Tauri IPC Avantajları
+
+**Eski Mimari (Electron + WebSocket):**
+```
+React → Electron IPC → WebSocket Client → WebSocket Server (Bridge) → USB
+~5-10ms latency, 2 process, karmaşık error handling
+```
+
+**Yeni Mimari (Tauri):**
+```
+React → Tauri IPC (Native) → USB
+~0.1-0.5ms latency, 1 process, type-safe
 ```
 
 ---
 
 ## 🏗️ Detaylı Katman Mimarisi
 
-### LAYER 3: Application (Desktop App)
+### FRONTEND LAYER: React Application
 
-**Konum:** `packages/desktop/`
+**Konum:** `packages/desktop/src/`
+
+**Teknolojiler:**
+- **React 18** + **TypeScript** - UI framework
+- **Vite** - Hızlı build tool
+- **Zustand** - State management
+- **TanStack Query** - Async state management
+- **Tailwind CSS** - Styling
+- **@tauri-apps/api** - Native IPC
 
 **İçeriği:**
-- **Electron Main Process** (`src/main/index.ts`)
-  - Window yönetimi
-  - IPC message routing
-  - System tray integrasyonu
-  - Auto-update mekanizması
-
-- **React Renderer** (`src/renderer/`)
-  - Dashboard component'leri
-  - Transaction UI
-  - Settings paneli
-  - DApp browser
-
-- **Web3 Provider** (`src/main/web3-provider.ts`)
-  - EIP-1193 standard implementation
-  - Request signing ve validation
-  - Wallet detection (metamask compatibility)
-
-**Teknoloji Stack:**
-```typescript
-// package.json dependencies
-"dependencies": {
-  "react": "^18.2.0",
-  "react-dom": "^18.2.0",
-  "electron": "^28.0.0",
-  "ethers": "^6.10.0",        // Web3 library
-  "zustand": "^4.4.0",         // State management
-  "@cepwallet/shared": "*"      // Shared types & utils
-}
+```
+packages/desktop/src/
+├── components/          # React components
+│   ├── Wallet/
+│   │   ├── Dashboard.tsx
+│   │   ├── TransactionList.tsx
+│   │   └── AddressBook.tsx
+│   ├── Hardware/
+│   │   ├── TrezorConnect.tsx
+│   │   └── DeviceStatus.tsx
+│   └── Settings/
+│       └── NetworkConfig.tsx
+│
+├── hooks/              # Custom React hooks
+│   ├── useWallet.ts
+│   ├── useTrezor.ts
+│   └── useTransactions.ts
+│
+├── store/              # Zustand stores
+│   ├── walletStore.ts
+│   └── uiStore.ts
+│
+├── utils/              # Tauri API wrappers
+│   └── tauriApi.ts     # invoke() wrappers
+│
+├── App.tsx
+└── main.tsx
 ```
 
-**IPC Communication Example:**
+**Tauri IPC Communication Example:**
 ```typescript
-// Renderer → Main
-ipcRenderer.send('trezor:sign-transaction', {
-  to: '0x...',
-  value: '1000000000000000000',  // 1 ETH in wei
-  data: '0x...'
-});
+// packages/desktop/src/utils/tauriApi.ts
+import { invoke } from '@tauri-apps/api/tauri';
 
-// Main → Renderer
-ipcMain.on('trezor:sign-transaction', async (event, tx) => {
-  const bridge = new BridgeClient('ws://localhost:8000');
-  const signature = await bridge.signTransaction(tx);
-  event.reply('trezor:sign-result', signature);
-});
+export interface DeviceInfo {
+  model: string;
+  label?: string;
+  firmware_version: string;
+  vendor: string;
+}
+
+export const tauriApi = {
+  // Device Commands
+  connectDevice: () => 
+    invoke<DeviceInfo>('connect_device'),
+  
+  disconnectDevice: () => 
+    invoke<void>('disconnect_device'),
+  
+  // Transaction Commands
+  signTransaction: (path: string, tx: TransactionRequest) => 
+    invoke<string>('sign_transaction', { path, tx }),
+  
+  // Wallet Commands
+  getAddress: (path: string) => 
+    invoke<string>('get_address', { path }),
+};
+
+// Usage in React Component
+const { device, connect } = useTrezor();
+
+const handleConnect = async () => {
+  const deviceInfo = await tauriApi.connectDevice();
+  console.log('Connected:', deviceInfo);
+};
 ```
 
 ---
 
-### LAYER 2: Bridge (Rust Daemon)
+### BACKEND LAYER: Rust Core (Tauri)
 
-**Konum:** `bridge/` (standalone Rust project)
-
-**Port:** localhost:21325 (WebSocket)
+**Konum:** `src-tauri/`
 
 **Sorumlulukları:**
-1. **USB Device Communication** - Trezor ile USB/HID iletişimi
-2. **Protocol Translation** - WebSocket JSON ↔ USB Protobuf
-3. **Message Queueing** - Concurrent request handling
-4. **Error Recovery** - Device disconnect/reconnect
-5. **Session Management** - Multi-client support
+1. **Native IPC Handlers** - Tauri commands
+2. **USB Device Communication** - Trezor ile doğrudan iletişim
+3. **Hardware Security** - Secure element access
+4. **Transaction Signing** - Signature orchestration
+5. **Session Management** - Device state tracking
 
 **Teknoloji Stack:**
 ```toml
-# Cargo.toml dependencies
+# src-tauri/Cargo.toml
 [dependencies]
-tokio = { version = "1", features = ["full"] }        # Async runtime
-tokio-tungstenite = "0.21"                            # WebSocket
-rusb = "0.9"                                           # USB library
-hidapi = "2.0"                                         # USB HID
-prost = "0.12"                                         # Protobuf
-serde_json = "1"                                       # JSON
+tauri = { version = "1.5", features = ["shell-open"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Hardware
+hidapi = { version = "2.4", features = ["linux-static-hidraw"] }
+trezor-client = "0.1"
+
+# Ethereum
+ethers = { version = "2.0", features = ["legacy"] }
+alloy = { version = "0.1", features = ["full"] }
 ```
 
-**WebSocket API Example:**
-```json
-// Client → Bridge (Sign Transaction)
+**Dosya Yapısı:**
+```
+src-tauri/
+├── src/
+│   ├── main.rs           # Tauri entry point
+│   ├── commands.rs       # Tauri command handlers
+│   ├── error.rs          # Error types
+│   │
+│   ├── hardware/         # Hardware integration
+│   │   ├── mod.rs
+│   │   ├── trezor.rs     # Trezor manager (eski bridge'den)
+│   │   └── device.rs     # USB device management
+│   │
+│   ├── crypto/           # Cryptographic operations
+│   │   ├── mod.rs
+│   │   ├── signing.rs
+│   │   └── keys.rs
+│   │
+│   └── utils/
+│       └── mod.rs
+│
+├── Cargo.toml
+├── tauri.conf.json       # Tauri configuration
+└── build.rs
+```
+
+**Tauri Commands Example:**
+```rust
+// src-tauri/src/commands.rs
+use tauri::State;
+use std::sync::Mutex;
+
+pub struct AppState {
+    pub trezor: Mutex<Option<TrezorManager>>,
+}
+
+#[tauri::command]
+pub async fn connect_device(state: State<'_, AppState>) -> Result<DeviceInfo, String> {
+    let manager = TrezorManager::new(5000)
+        .map_err(|e| e.to_string())?;
+    
+    let device_info = manager.connect().await
+        .map_err(|e| e.to_string())?;
+    
+    let mut trezor = state.trezor.lock().unwrap();
+    *trezor = Some(manager);
+    
+    Ok(device_info)
+}
+
+#[tauri::command]
+pub async fn sign_transaction(
+    state: State<'_, AppState>,
+    path: String,
+    tx: TransactionRequest,
+) -> Result<String, String> {
+    let trezor = state.trezor.lock().unwrap();
+    let manager = trezor.as_ref()
+        .ok_or("Device not connected")?;
+    
+    manager.sign_transaction(&path, tx).await
+        .map_err(|e| e.to_string())
+}
+
+// Main entry point
+fn main() {
+    tauri::Builder::default()
+        .manage(AppState {
+            trezor: Mutex::new(None),
+        })
+        .invoke_handler(tauri::generate_handler![
+            connect_device,
+            disconnect_device,
+            sign_transaction,
+            get_address,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+```
+
+**Type-Safe IPC:**
+```rust
+// Rust tarafında tanımlanan tipler otomatik olarak
+// TypeScript'e çevrilebilir (ts-rs crate ile)
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DeviceInfo {
+    pub model: String,
+    pub label: Option<String>,
+    pub firmware_version: String,
+    pub vendor: String,
+}
+
+// TypeScript'de:
+// interface DeviceInfo {
+//   model: string;
+//   label?: string;
+//   firmware_version: string;
+//   vendor: string;
+// }
+```
 {
   "method": "ethereum_signTransaction",
   "id": "msg-uuid-123",

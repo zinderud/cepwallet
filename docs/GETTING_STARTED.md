@@ -1,8 +1,8 @@
-# CepWallet - Başlangıç Rehberi
+# CepWallet - Başlangıç Rehberi (Tauri)
 
 ## 🚀 Hızlı Başlangıç
 
-Bu rehber, **pnpm workspace** kullanarak CepWallet'i geliştirme ortamında ayarlamanız için adım adım talimatlar içerir. Yaklaşık **30-45 dakika** sürer.
+Bu rehber, **Tauri framework** kullanarak CepWallet'i geliştirme ortamında ayarlamanız için adım adım talimatlar içerir. Yaklaşık **15-20 dakika** sürer.
 
 ---
 
@@ -16,7 +16,7 @@ Bu rehber, **pnpm workspace** kullanarak CepWallet'i geliştirme ortamında ayar
 ### Yazılım
 - [ ] **Node.js** 18+ (https://nodejs.org)
 - [ ] **pnpm** 8.0+ (`npm install -g pnpm`)
-- [ ] **Rust** 1.70+ (Bridge için - https://rustup.rs/)
+- [ ] **Rust** 1.70+ (https://rustup.rs/)
 - [ ] **Git** (https://git-scm.com)
 - [ ] **VS Code** (https://code.visualstudio.com) - Önerilir
 
@@ -42,7 +42,7 @@ pnpm --version
 pnpm install-completion
 ```
 
-### 1.2 Rust Kurulumu (Bridge için)
+### 1.2 Rust Kurulumu (Tauri Backend için)
 
 ```bash
 # Rust installer'ını indir ve çalıştır
@@ -55,49 +55,135 @@ source $HOME/.cargo/env
 rustc --version  # 1.70+ olmalı
 cargo --version
 
-# OPTIONAL: Rust optimization flags
-rustup update
-```
+# Tauri için sistem bağımlılıkları (macOS)
+# Tauri CLI otomatik kontrol edecek
 
-### 1.3 Node.js Versiyonu Kontrol Et
+# Linux için ek paketler:
+# sudo apt update
+# sudo apt install libwebkit2gtk-4.0-dev \
+#   build-essential \
+#   curl \
+#   wget \
+#   libssl-dev \
+#   libgtk-3-dev \
+#   libayatana-appindicator3-dev \
+#   librsvg2-dev \
+#   libusb-1.0-0-dev
 
-```bash
-node --version    # 18.0+ olmalı
-npm --version
-
-# OPTIONAL: nvm ile version yönetimine geçebilirsin
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-nvm install 18
-nvm use 18
+# Windows için:
+# WebView2 otomatik yüklenecek
 ```
 
 ---
 
-## 📁 Adım 2: Proje Klasörünü Setup Et
+## 📁 Adım 2: Projeyi Klonla ve Kur
 
 ### 2.1 Repository'yi Clone Et
 
 ```bash
 # Proje klasörüne git
-cd /Users/muratonurkaradeniz/workspace/sade/code
+cd ~/workspace
 
 # Repository'yi clone et
 git clone https://github.com/zinderud/cepwallet.git
 cd cepwallet
 
 # Yapı doğrula
-ls -la  # görmelisin: packages/, docs/, .github/, vb.
+ls -la  # görmelisin: packages/, docs/, src-tauri/, vb.
 ```
 
-### 2.2 pnpm Workspace'i Başlat
+### 2.2 Bağımlılıkları Kur
 
 ```bash
-# Root klasörden çalış
-cd /Users/muratonurkaradeniz/workspace/sade/code/cepwallet
+# Root klasörden tüm bağımlılıkları kur
+pnpm install
 
-# 1. pnpm-workspace.yaml oluştur (eğer yoksa)
-cat > pnpm-workspace.yaml << 'EOF'
-packages:
+# Bu komut:
+# 1. Root package.json bağımlılıklarını kurar
+# 2. packages/desktop/ bağımlılıklarını kurar
+# 3. packages/shared/ bağımlılıklarını kurar
+# 4. Tauri CLI'yi kurar (@tauri-apps/cli)
+
+# Kurulum başarılı mı kontrol et
+pnpm list --depth 0
+```
+
+### 2.3 Tauri'yi Kontrol Et
+
+```bash
+# Tauri CLI kurulu mu?
+pnpm tauri --version
+
+# Tauri sistem gereksinimlerini kontrol et
+pnpm tauri info
+
+# Çıktı şöyle olmalı:
+# [✓] Environment
+#   - OS: macOS / Windows / Linux
+#   - Rust: 1.70+
+#   - Node: 18+
+#   - pnpm: 8+
+# [✓] Packages
+#   - tauri: 1.5.x
+#   - tauri-cli: 1.5.x
+```
+
+---
+
+## � Adım 3: Uygulamayı Çalıştır
+
+### 3.1 Development Modu (TEK KOMUT!)
+
+```bash
+# Root klasörden çalıştır
+pnpm tauri dev
+
+# Bu komut:
+# 1. Rust backend'i derler (src-tauri/)
+# 2. React frontend'i başlatır (packages/desktop/)
+# 3. Tauri window açar
+# 4. Hot reload aktif (hem Rust hem React)
+
+# İlk çalıştırmada biraz uzun sürebilir (Rust compile)
+# Sonraki çalıştırmalar çok hızlı olur
+```
+
+**Beklenen Çıktı:**
+```
+   Compiling cepwallet v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 45.2s
+  
+  VITE v4.5.0  ready in 1234 ms
+  
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  
+  Tauri app started on http://localhost:1430
+```
+
+### 3.2 Trezor'u Bağla ve Test Et
+
+1. **Trezor cihazını USB'ye tak**
+2. **Trezor Suite'i kapat** (eğer açıksa)
+3. **CepWallet'te "Connect Device" butonuna tıkla**
+4. **PIN gir** (Trezor ekranında)
+5. **Başarılı!** Device bilgileri görünmeli
+
+### 3.3 Production Build (Dağıtım)
+
+```bash
+# Tüm platformlar için build
+pnpm tauri build
+
+# Sadece current platform
+pnpm tauri build --target current
+
+# Çıktılar:
+# macOS:   src-tauri/target/release/bundle/macos/CepWallet.app
+#          src-tauri/target/release/bundle/dmg/CepWallet_0.1.0_x64.dmg
+# Windows: src-tauri/target/release/bundle/msi/CepWallet_0.1.0_x64.msi
+# Linux:   src-tauri/target/release/bundle/appimage/CepWallet_0.1.0_amd64.AppImage
+```
   - 'packages/*'
   - 'bridge'
 EOF
