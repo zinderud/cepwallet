@@ -18,6 +18,7 @@ pub mod zkproof;
 pub mod types;
 pub mod contracts;
 pub mod ffi;
+pub mod wallet;
 
 pub use railgun::RailgunManager;
 pub use privacy_pools::PrivacyPoolManager;
@@ -25,6 +26,7 @@ pub use zkproof::{ZKProofGenerator, ProofType};
 pub use types::{PrivacyLevel, ShieldedTransaction, PrivacyPoolOperation};
 pub use contracts::{RailgunContracts, CommonTokens};
 pub use ffi::{generate_proof, generate_shield_proof, generate_transfer_proof, generate_unshield_proof};
+pub use wallet::{create_railgun_wallet, get_shield_private_key, WalletCreateResponse, ShieldKeyResponse};
 
 use crate::error::{CepWalletError, Result};
 

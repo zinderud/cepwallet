@@ -331,36 +331,40 @@ async function main() {
     }
     
     const params = JSON.parse(args[0]);
-    const { proofType, ...proofParams } = params;
+    const { operation, ...operationParams } = params;
     
-    console.log(`[ProofGen] Starting proof generation: ${proofType}`);
+    console.log(`[ProofGen] Operation: ${operation}`);
     
-    // Initialize SDK
-    await initRailgun(proofParams.chainId || 1);
-    
-    // Generate proof based on type
+    // Handle different operations
     let result;
-    switch (proofType) {
-      case PROOF_TYPES.SHIELD:
-        result = await generateShieldProof(proofParams);
-        break;
-      case PROOF_TYPES.TRANSFER:
-        result = await generateTransferProof(proofParams);
-        break;
-      case PROOF_TYPES.UNSHIELD:
-        result = await generateUnshieldProof(proofParams);
-        break;
-      default:
-        throw new Error(`Unknown proof type: ${proofType}`);
+    
+    if (operation === 'createWallet') {
+      result = await createWallet(operationParams);
+    } else if (operation === 'getShieldPrivateKey') {
+      result = await getShieldPrivateKey(operationParams);
+    } else {
+      // Proof generation operations
+      // Initialize SDK for proof operations
+      await initRailgun(operationParams.chainId || 1);
+      
+      switch (operation) {
+        case PROOF_TYPES.SHIELD:
+          result = await generateShieldProof(operationParams);
+          break;
+        case PROOF_TYPES.TRANSFER:
+          result = await generateTransferProof(operationParams);
+          break;
+        case PROOF_TYPES.UNSHIELD:
+          result = await generateUnshieldProof(operationParams);
+          break;
+        default:
+          throw new Error(`Unknown operation: ${operation}`);
+      }
     }
     
     // Output result as JSON
     console.log('[ProofGen] Success!');
-    console.log(JSON.stringify({
-      success: true,
-      proof: result.proof,
-      publicInputs: result.publicInputs,
-    }));
+    console.log(JSON.stringify(result));
     
     process.exit(0);
   } catch (error) {
@@ -383,5 +387,104 @@ module.exports = {
   generateShieldProof,
   generateTransferProof,
   generateUnshieldProof,
+  createWallet,
+  getShieldPrivateKey,
   PROOF_TYPES,
 };
+
+/**
+ * Create a new RAILGUN wallet
+ * 
+ * @param {Object} params
+ * @param {string} params.encryptionKey - 32-byte hex string for wallet encryption
+ * @param {string} params.mnemonic - Optional mnemonic (if not provided, generates new one)
+ * @returns {Object} { railgunWalletId, railgunAddress, mnemonic }
+ */
+async function createWallet(params) {
+  console.log('[WalletMgmt] Creating RAILGUN wallet...');
+  
+  try {
+    const { createRailgunWallet } = require('@railgun-community/wallet');
+    
+    // Validate encryption key (must be 32 bytes / 64 hex chars)
+    if (!params.encryptionKey || params.encryptionKey.length !== 66) { // 0x + 64 chars
+      throw new Error('Encryption key must be 32 bytes (66 hex chars with 0x prefix)');
+    }
+    
+    const mnemonic = params.mnemonic || generateMnemonic();
+    
+    // Create wallet
+    const walletInfo = await createRailgunWallet(
+      params.encryptionKey,
+      mnemonic,
+      undefined // creationBlockNumbers (optional)
+    );
+    
+    if (!walletInfo) {
+      throw new Error('Failed to create RAILGUN wallet');
+    }
+    
+    console.log('[WalletMgmt] Wallet created ✓');
+    console.log('  Wallet ID:', walletInfo.id);
+    console.log('  Address:', walletInfo.railgunAddress);
+    
+    return {
+      success: true,
+      railgunWalletId: walletInfo.id,
+      railgunAddress: walletInfo.railgunAddress,
+      mnemonic: mnemonic,
+    };
+    
+  } catch (error) {
+    console.error('[WalletMgmt] Wallet creation failed:', error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Get shield private key for a RAILGUN address
+ * This is used for shield operations
+ * 
+ * @param {Object} params
+ * @param {string} params.railgunWalletId - RAILGUN wallet ID
+ * @returns {Object} { shieldPrivateKey }
+ */
+async function getShieldPrivateKey(params) {
+  console.log('[WalletMgmt] Getting shield private key...');
+  
+  try {
+    const { getShieldPrivateKeySignature } = require('@railgun-community/wallet');
+    
+    // Get shield private key for this wallet
+    const shieldPrivateKey = await getShieldPrivateKeySignature(
+      params.railgunWalletId
+    );
+    
+    console.log('[WalletMgmt] Shield private key retrieved ✓');
+    
+    return {
+      success: true,
+      shieldPrivateKey: shieldPrivateKey,
+    };
+    
+  } catch (error) {
+    console.error('[WalletMgmt] Failed to get shield private key:', error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Generate a random mnemonic phrase
+ * @returns {string} 12-word mnemonic
+ */
+function generateMnemonic() {
+  const bip39 = require('bip39');
+  return bip39.generateMnemonic(128); // 12 words
+}
+

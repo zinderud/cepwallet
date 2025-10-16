@@ -17,6 +17,8 @@ use commands::{
     initialize_privacy, is_privacy_ready, shield_transaction, unshield_transaction,
     private_transfer, get_shielded_balance, join_privacy_pool, exit_privacy_pool,
     privacy_pool_swap, generate_zk_proof, estimate_proof_time,
+    // RAILGUN Wallet Management
+    create_railgun_wallet, get_shield_key,
 };
 use tokio::sync::Mutex;
 
@@ -53,6 +55,9 @@ fn main() {
             privacy_pool_swap,
             generate_zk_proof,
             estimate_proof_time,
+            // RAILGUN Wallet Management
+            create_railgun_wallet,
+            get_shield_key,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

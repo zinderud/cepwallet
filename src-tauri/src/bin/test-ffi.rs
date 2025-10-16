@@ -21,11 +21,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         chain_id: Some(11155111),
         token: Some("0x0000000000000000000000000000000000000000".to_string()),
         amount: Some("1000000000000000000".to_string()),
-        commitment: Some("0xabcd1234".to_string()),
+        commitment: None,
+        shield_private_key: Some(format!("0x{}", "0".repeat(64))),
         merkle_root: None,
         nullifier: None,
         output_commitment: None,
-        recipient: None,
+        recipient: Some("0zk1234test".to_string()),
+        railgun_wallet_id: None,
+        encryption_key: None,
     };
 
     let json = serde_json::to_string(&request)?;

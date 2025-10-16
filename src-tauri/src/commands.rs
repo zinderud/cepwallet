@@ -407,3 +407,48 @@ pub fn estimate_proof_time(proof_type: String) -> Result<u64, String> {
 
     Ok(time)
 }
+
+// ============================================================================
+// RAILGUN WALLET MANAGEMENT COMMANDS
+// ============================================================================
+
+/// Create a new RAILGUN wallet
+#[tauri::command]
+pub async fn create_railgun_wallet(
+    encryption_key: String,
+    mnemonic: Option<String>,
+) -> Result<serde_json::Value, String> {
+    use crate::privacy::wallet;
+    
+    let response = wallet::create_railgun_wallet(
+        &encryption_key,
+        mnemonic.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+    
+    Ok(serde_json::json!({
+        "success": true,
+        "railgunWalletId": response.railgun_wallet_id,
+        "railgunAddress": response.railgun_address,
+        "mnemonic": response.mnemonic,
+    }))
+}
+
+/// Get shield private key for a RAILGUN wallet
+#[tauri::command]
+pub async fn get_shield_key(
+    railgun_wallet_id: String,
+) -> Result<serde_json::Value, String> {
+    use crate::privacy::wallet;
+    
+    let response = wallet::get_shield_private_key(&railgun_wallet_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    
+    Ok(serde_json::json!({
+        "success": true,
+        "shieldPrivateKey": response.shield_private_key,
+    }))
+}
+
