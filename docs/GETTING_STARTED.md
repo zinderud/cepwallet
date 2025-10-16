@@ -1,589 +1,1175 @@
-# CepWallet - Başlangıç Rehberi (Tauri)
+# CepWallet - Başlangıç Rehberi# CepWallet - Başlangıç Rehberi (Tauri)
 
-## 🚀 Hızlı Başlangıç
 
-Bu rehber, **Tauri framework** kullanarak CepWallet'i geliştirme ortamında ayarlamanız için adım adım talimatlar içerir. Yaklaşık **15-20 dakika** sürer.
+
+**Son Güncelleme:** 17 Ekim 2025  ## 🚀 Hızlı Başlangıç
+
+**Tauri Sürümü:** 2.8.5  
+
+**Mimari:** Flat Structure (src/ + src-tauri/)Bu rehber, **Tauri framework** kullanarak CepWallet'i geliştirme ortamında ayarlamanız için adım adım talimatlar içerir. Yaklaşık **15-20 dakika** sürer.
+
+
+
+> **Not:** Bu doküman Tauri 2.x için güncellenmiştir. Eski Electron/monorepo yapısı artık kullanılmamaktadır.---
+
+
+
+---## 📋 Ön Gereksinimler
+
+
+
+## 🚀 Hızlı Başlangıç (TL;DR)### Donanım
+
+- [ ] **Trezor One**, **Trezor Model T**, veya **Trezor Safe 3** (test için)
+
+```bash- [ ] USB kablo
+
+# 1. Projeyi klonla- [ ] Geliştirme bilgisayarı (Windows/macOS/Linux)
+
+git clone https://github.com/zinderud/cepwallet.git
+
+cd cepwallet### Yazılım
+
+- [ ] **Node.js** 18+ (https://nodejs.org)
+
+# 2. Bağımlılıkları yükle- [ ] **pnpm** 8.0+ (`npm install -g pnpm`)
+
+pnpm install- [ ] **Rust** 1.70+ (https://rustup.rs/)
+
+- [ ] **Git** (https://git-scm.com)
+
+# 3. Çalıştır!- [ ] **VS Code** (https://code.visualstudio.com) - Önerilir
+
+pnpm tauri dev
+
+```### İnternet Hizmetleri
+
+- [ ] **Infura** veya **Alchemy** hesabı (Ethereum RPC)
+
+İşte bu kadar! Tauri penceresi açılmalı ve uygulama çalışmalı.  - Kaydol: https://infura.io veya https://www.alchemy.com
+
+  - API key'i elde et (sonra kullanacağız)
+
+---
 
 ---
 
 ## 📋 Ön Gereksinimler
 
-### Donanım
-- [ ] **Trezor One**, **Trezor Model T**, veya **Trezor Safe 3** (test için)
-- [ ] USB kablo
-- [ ] Geliştirme bilgisayarı (Windows/macOS/Linux)
-
-### Yazılım
-- [ ] **Node.js** 18+ (https://nodejs.org)
-- [ ] **pnpm** 8.0+ (`npm install -g pnpm`)
-- [ ] **Rust** 1.70+ (https://rustup.rs/)
-- [ ] **Git** (https://git-scm.com)
-- [ ] **VS Code** (https://code.visualstudio.com) - Önerilir
-
-### İnternet Hizmetleri
-- [ ] **Infura** veya **Alchemy** hesabı (Ethereum RPC)
-  - Kaydol: https://infura.io veya https://www.alchemy.com
-  - API key'i elde et (sonra kullanacağız)
-
----
-
 ## ⚙️ Adım 1: Gerekli Yazılımları Kur
+
+Aşağıdaki yazılımların sisteminizde kurulu olması gerekir:
 
 ### 1.1 pnpm Kurulumu
 
-```bash
-# pnpm global olarak yükle
-npm install -g pnpm
+### Zorunlu
+
+- **Node.js** `18.x` veya üzeri ([nodejs.org](https://nodejs.org))```bash
+
+- **pnpm** `8.x` veya üzeri (npm yerine)# pnpm global olarak yükle
+
+- **Rust** `1.70` veya üzeri ([rust-lang.org](https://www.rust-lang.org/tools/install))npm install -g pnpm
+
+- **Git** ([git-scm.com](https://git-scm.com))
 
 # Sürümü doğrula (8.0+ olmalı)
-pnpm --version
 
-# OPTIONAL: pnpm için shell completion
-pnpm install-completion
+### Platform Bağımlılıklarıpnpm --version
+
+
+
+**macOS:**# OPTIONAL: pnpm için shell completion
+
+- Xcode Command Line Tools: `xcode-select --install`pnpm install-completion
+
 ```
 
-### 1.2 Rust Kurulumu (Tauri Backend için)
+**Linux (Debian/Ubuntu):**
 
-```bash
-# Rust installer'ını indir ve çalıştır
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```bash### 1.2 Rust Kurulumu (Tauri Backend için)
 
-# Source'u güncelle
-source $HOME/.cargo/env
+sudo apt update
 
-# Sürümü doğrula
-rustc --version  # 1.70+ olmalı
+sudo apt install libwebkit2gtk-4.0-dev \```bash
+
+  build-essential \# Rust installer'ını indir ve çalıştır
+
+  curl \curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+  wget \
+
+  libssl-dev \# Source'u güncelle
+
+  libgtk-3-dev \source $HOME/.cargo/env
+
+  libayatana-appindicator3-dev \
+
+  librsvg2-dev# Sürümü doğrula
+
+```rustc --version  # 1.70+ olmalı
+
 cargo --version
 
-# Tauri için sistem bağımlılıkları (macOS)
-# Tauri CLI otomatik kontrol edecek
+**Windows:**
 
-# Linux için ek paketler:
-# sudo apt update
-# sudo apt install libwebkit2gtk-4.0-dev \
+- Visual Studio Build Tools 2019 veya üzeri# Tauri için sistem bağımlılıkları (macOS)
+
+- WebView2 (genellikle Windows 10/11'de hazır)# Tauri CLI otomatik kontrol edecek
+
+
+
+### İsteğe Bağlı# Linux için ek paketler:
+
+- **VS Code** + Rust Analyzer + Tauri eklentileri# sudo apt update
+
+- **Trezor Suite** (Trezor test için - cihaz kullanırken kapatmalısınız)# sudo apt install libwebkit2gtk-4.0-dev \
+
 #   build-essential \
-#   curl \
-#   wget \
-#   libssl-dev \
-#   libgtk-3-dev \
-#   libayatana-appindicator3-dev \
-#   librsvg2-dev \
-#   libusb-1.0-0-dev
 
-# Windows için:
+---#   curl \
+
+#   wget \
+
+## ⚙️ Adım 1: Gerekli Yazılımları Kur#   libssl-dev \
+
+#   libgtk-3-dev \
+
+### 1.1 pnpm Kur#   libayatana-appindicator3-dev \
+
+#   librsvg2-dev \
+
+```bash#   libusb-1.0-0-dev
+
+# pnpm'i global olarak yükle
+
+npm install -g pnpm# Windows için:
+
 # WebView2 otomatik yüklenecek
-```
+
+# Sürümü doğrula (8.0+ olmalı)```
+
+pnpm --version
 
 ---
 
-## 📁 Adım 2: Projeyi Klonla ve Kur
+# OPTIONAL: Shell completion
+
+pnpm install-completion## 📁 Adım 2: Projeyi Klonla ve Kur
+
+```
 
 ### 2.1 Repository'yi Clone Et
 
+### 1.2 Rust Kur
+
 ```bash
-# Proje klasörüne git
-cd ~/workspace
+
+```bash# Proje klasörüne git
+
+# Rust installer'ını indir ve çalıştırcd ~/workspace
+
+curl --proto='=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Repository'yi clone et
-git clone https://github.com/zinderud/cepwallet.git
-cd cepwallet
 
-# Yapı doğrula
-ls -la  # görmelisin: packages/, docs/, src-tauri/, vb.
+# Shell'i yeniden başlat veya:git clone https://github.com/zinderud/cepwallet.git
+
+source $HOME/.cargo/envcd cepwallet
+
+
+
+# Sürümü doğrula (1.70+ olmalı)# Yapı doğrula
+
+rustc --versionls -la  # görmelisin: src/, src-tauri/, docs/, package.json, vb.
+
+cargo --version```
+
 ```
 
 ### 2.2 Bağımlılıkları Kur
 
-```bash
-# Root klasörden tüm bağımlılıkları kur
-pnpm install
+### 1.3 Tauri Sistem Gereksinimlerini Kontrol Et
 
-# Bu komut:
-# 1. Root package.json bağımlılıklarını kurar
+```bash
+
+```bash# Root klasörden tüm bağımlılıkları kur (frontend + Tauri)
+
+# Önce projeyi klonla (gerekli çünkü package.json lazım)pnpm install
+
+git clone https://github.com/zinderud/cepwallet.git
+
+cd cepwallet# Bu komut:
+
+pnpm install# 1. Root package.json bağımlılıklarını kurar
+
 # 2. packages/desktop/ bağımlılıklarını kurar
-# 3. packages/shared/ bağımlılıklarını kurar
-# 4. Tauri CLI'yi kurar (@tauri-apps/cli)
 
-# Kurulum başarılı mı kontrol et
-pnpm list --depth 0
+# Tauri sistem bilgilerini kontrol et# 3. packages/shared/ bağımlılıklarını kurar
+
+pnpm tauri info# 4. Tauri CLI'yi kurar (@tauri-apps/cli)
+
+
+
+# Beklenen çıktı:# Kurulum başarılı mı kontrol et
+
+# [✓] Environmentpnpm list --depth 0
+
+#   - OS: macOS / Windows / Linux```
+
+#   - Rust: 1.70+
+
+#   - Node: 18+### 2.3 Tauri'yi Kontrol Et
+
+#   - pnpm: 8+
+
+# [✓] Packages```bash
+
+#   - @tauri-apps/api: 2.x# Tauri CLI kurulu mu?
+
+#   - @tauri-apps/cli: 2.xpnpm tauri --version
+
 ```
-
-### 2.3 Tauri'yi Kontrol Et
-
-```bash
-# Tauri CLI kurulu mu?
-pnpm tauri --version
 
 # Tauri sistem gereksinimlerini kontrol et
-pnpm tauri info
 
-# Çıktı şöyle olmalı:
+---pnpm tauri info
+
+
+
+## 📦 Adım 2: Projeyi Klonla ve Kur# Çıktı şöyle olmalı:
+
 # [✓] Environment
-#   - OS: macOS / Windows / Linux
+
+### 2.1 Repository'yi Clone Et#   - OS: macOS / Windows / Linux
+
 #   - Rust: 1.70+
-#   - Node: 18+
-#   - pnpm: 8+
-# [✓] Packages
-#   - tauri: 1.5.x
+
+```bash#   - Node: 18+
+
+# Repository'yi clone et#   - pnpm: 8+
+
+git clone https://github.com/zinderud/cepwallet.git# [✓] Packages
+
+cd cepwallet#   - tauri: 1.5.x
+
 #   - tauri-cli: 1.5.x
-```
 
----
+# Yapı doğrula```
 
-## � Adım 3: Uygulamayı Çalıştır
+ls -la  # görmelisin: src/, src-tauri/, docs/, package.json, vb.
 
-### 3.1 Development Modu (TEK KOMUT!)
+```---
 
-```bash
+
+
+### 2.2 Bağımlılıkları Kur## � Adım 3: Uygulamayı Çalıştır
+
+
+
+```bash### 3.1 Development Modu (TEK KOMUT!)
+
+# Root klasörden tüm bağımlılıkları kur (frontend + Tauri)
+
+pnpm install```bash
+
 # Root klasörden çalıştır
-pnpm tauri dev
 
-# Bu komut:
-# 1. Rust backend'i derler (src-tauri/)
+# Bu komut:pnpm tauri dev
+
+# 1. Frontend bağımlılıklarını kurar (React, TypeScript, Vite)
+
+# 2. Tauri CLI'yi kurar (@tauri-apps/cli)# Bu komut:
+
+# 3. Tauri API'sini kurar (@tauri-apps/api)# 1. Rust backend'i derler (src-tauri/)
+
 # 2. React frontend'i başlatır (packages/desktop/)
-# 3. Tauri window açar
-# 4. Hot reload aktif (hem Rust hem React)
+
+# Kurulum başarılı mı kontrol et# 3. Tauri window açar
+
+pnpm list --depth 0# 4. Hot reload aktif (hem Rust hem React)
+
+```
 
 # İlk çalıştırmada biraz uzun sürebilir (Rust compile)
-# Sonraki çalıştırmalar çok hızlı olur
+
+### 2.3 Tauri'yi Kontrol Et# Sonraki çalıştırmalar çok hızlı olur
+
 ```
 
-**Beklenen Çıktı:**
-```
+```bash
+
+# Tauri CLI kurulu mu?**Beklenen Çıktı:**
+
+pnpm tauri --version```
+
    Compiling cepwallet v0.1.0
-    Finished dev [unoptimized + debuginfo] target(s) in 45.2s
-  
+
+# Tauri sistem gereksinimlerini kontrol et    Finished dev [unoptimized + debuginfo] target(s) in 45.2s
+
+pnpm tauri info  
+
   VITE v4.5.0  ready in 1234 ms
-  
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: use --host to expose
-  
-  Tauri app started on http://localhost:1430
-```
 
-### 3.2 Trezor'u Bağla ve Test Et
+# Çıktı şöyle olmalı:  
 
-1. **Trezor cihazını USB'ye tak**
+# [✓] Environment  ➜  Local:   http://localhost:5173/
+
+#   - OS: macOS / Windows / Linux  ➜  Network: use --host to expose
+
+#   - Rust: 1.70+  
+
+#   - Node: 18+  Tauri app started on http://localhost:1430
+
+#   - pnpm: 8+```
+
+# [✓] Packages
+
+#   - tauri: 2.x### 3.2 Trezor'u Bağla ve Test Et
+
+#   - tauri-cli: 2.x
+
+```1. **Trezor cihazını USB'ye tak**
+
 2. **Trezor Suite'i kapat** (eğer açıksa)
-3. **CepWallet'te "Connect Device" butonuna tıkla**
+
+---3. **CepWallet'te "Connect Device" butonuna tıkla**
+
 4. **PIN gir** (Trezor ekranında)
-5. **Başarılı!** Device bilgileri görünmeli
 
-### 3.3 Production Build (Dağıtım)
+## 🎯 Adım 3: Uygulamayı Çalıştır5. **Başarılı!** Device bilgileri görünmeli
 
-```bash
-# Tüm platformlar için build
-pnpm tauri build
 
-# Sadece current platform
-pnpm tauri build --target current
 
-# Çıktılar:
-# macOS:   src-tauri/target/release/bundle/macos/CepWallet.app
+### 3.1 Development Modu (TEK KOMUT!)### 3.3 Production Build (Dağıtım)
+
+
+
+```bash```bash
+
+# Root klasörden çalıştır# Tüm platformlar için build
+
+pnpm tauri devpnpm tauri build
+
+
+
+# Bu komut:# Sadece current platform
+
+# 1. Rust backend'i derler (src-tauri/)pnpm tauri build --target current
+
+# 2. React frontend'i başlatır (Vite dev server - src/)
+
+# 3. Tauri window açar# Çıktılar:
+
+# 4. Hot reload aktif (hem Rust hem React)# macOS:   src-tauri/target/release/bundle/macos/CepWallet.app
+
 #          src-tauri/target/release/bundle/dmg/CepWallet_0.1.0_x64.dmg
-# Windows: src-tauri/target/release/bundle/msi/CepWallet_0.1.0_x64.msi
-# Linux:   src-tauri/target/release/bundle/appimage/CepWallet_0.1.0_amd64.AppImage
-```
+
+# İlk çalıştırmada biraz uzun sürebilir (Rust compile - 2-5 dakika)# Windows: src-tauri/target/release/bundle/msi/CepWallet_0.1.0_x64.msi
+
+# Sonraki çalıştırmalar çok hızlı olur (~10 saniye)# Linux:   src-tauri/target/release/bundle/appimage/CepWallet_0.1.0_amd64.AppImage
+
+``````
+
   - 'packages/*'
-  - 'bridge'
-EOF
 
-# 2. Root package.json'u oluştur/doğrula
-# (ayrı bir bölüm olacak - PROJECT_STRUCTURE.md'ye bak)
+**Beklenen Çıktı:**  - 'bridge'
 
-# 3. Tüm bağımlılıkları yükle
-pnpm install
+```EOF
 
-# Yüklemeyi doğrula
-ls -la node_modules/.pnpm  # pnpm cache görünmelidir
-```
+   Compiling cepwallet v0.1.0
 
-### 2.3 Workspace Klasörlerini Oluştur
+    Finished dev [unoptimized + debuginfo] target(s) in 45.2s# 2. Root package.json'u oluştur/doğrula
 
-```bash
+  # (ayrı bir bölüm olacak - PROJECT_STRUCTURE.md'ye bak)
+
+  VITE v5.4.2  ready in 1234 ms
+
+  # 3. Tüm bağımlılıkları yükle
+
+  ➜  Local:   http://localhost:5173/pnpm install
+
+  ➜  Network: use --host to expose
+
+  # Yüklemeyi doğrula
+
+  Tauri app startedls -la node_modules/.pnpm  # pnpm cache görünmelidir
+
+``````
+
+
+
+Uygulama otomatik olarak açılacak!### 2.3 Workspace Klasörlerini Oluştur
+
+
+
+### 3.2 Hot Reload Test```bash
+
 # packages/ klasörleri için alt dizinler
-mkdir -p packages/shared/src/{types,utils,crypto,kohaku,rpc,bridge}
-mkdir -p packages/shared/__tests__
-mkdir -p packages/shared/dist
 
-mkdir -p packages/desktop/src/{main,preload,renderer,utils}
-mkdir -p packages/desktop/public
+**Frontend değişikliklerini test et:**mkdir -p packages/shared/src/{types,utils,crypto,kohaku,rpc,bridge}
+
+```bashmkdir -p packages/shared/__tests__
+
+# src/App.tsx'i aç ve bir değişiklik yapmkdir -p packages/shared/dist
+
+# Kaydet
+
+# Tauri penceresi otomatik yenilenecek (instant!)mkdir -p packages/desktop/src/{main,preload,renderer,utils}
+
+```mkdir -p packages/desktop/public
+
 mkdir -p packages/desktop/build
 
-mkdir -p bridge/src
-mkdir -p bridge/proto
-mkdir -p bridge/tests
-```
+**Backend değişikliklerini test et:**
 
----
+```bashmkdir -p bridge/src
 
-## 🔌 Adım 3: Trezor Kurulumu
+# src-tauri/src/commands.rs'i aç ve bir değişiklik yapmkdir -p bridge/proto
 
-### 3.1 Trezor Bridge Yükle
+# Kaydetmkdir -p bridge/tests
 
-**macOS:**
+# Rust yeniden compile olur (5-10 saniye)```
+
+# Tauri penceresi otomatik yeniden başlar
+
+```---
+
+
+
+### 3.3 Tauri DevTools## 🔌 Adım 3: Trezor Kurulumu
+
+
+
+Tauri penceresi açıkken:### 3.1 Trezor Bridge Yükle
+
+- **macOS:** `Cmd + Option + I`
+
+- **Windows/Linux:** `Ctrl + Shift + I`**macOS:**
+
 ```bash
-brew install trezor-bridge
+
+Browser DevTools açılır. React component'leri, console.log, network requests görebilirsiniz.brew install trezor-bridge
+
 # Başlat: launchctl start io.trezor.bridge
-```
 
-**Linux (Debian/Ubuntu):**
+---```
+
+
+
+## 🔌 Adım 4: Trezor Kurulumu (Opsiyonel)**Linux (Debian/Ubuntu):**
+
 ```bash
-wget https://data.trezor.io/bridge/2.0.33/trezor-bridge_2.0.33_amd64.deb
+
+### 4.1 Trezor Bridge Yüklewget https://data.trezor.io/bridge/2.0.33/trezor-bridge_2.0.33_amd64.deb
+
 sudo dpkg -i trezor-bridge_2.0.33_amd64.deb
-```
 
-**Windows:**
-- https://data.trezor.io/bridge/2.0.33/trezor-bridge-2.0.33-win32-install.exe adresinden indir
-- Exe'yi çalıştır ve yüklemeyi tamamla
-
-### 3.2 Trezor Cihazını Hazırla
+**macOS:**```
 
 ```bash
-# Trezor'u USB'ye bağla
+
+brew install trezor-bridge**Windows:**
+
+# Başlat: launchctl start io.trezor.bridge- https://data.trezor.io/bridge/2.0.33/trezor-bridge-2.0.33-win32-install.exe adresinden indir
+
+```- Exe'yi çalıştır ve yüklemeyi tamamla
+
+
+
+**Linux (Debian/Ubuntu):**### 3.2 Trezor Cihazını Hazırla
+
+```bash
+
+wget https://data.trezor.io/bridge/2.0.33/trezor-bridge_2.0.33_amd64.deb```bash
+
+sudo dpkg -i trezor-bridge_2.0.33_amd64.deb# Trezor'u USB'ye bağla
+
+```
 
 # Web arayüzüne git: https://suite.trezor.io
-# VEYA CLI ile:
 
-npm install -g @trezor/trezor-suite
+**Windows:**# VEYA CLI ile:
 
-# Adımlar:
+- https://data.trezor.io/bridge/2.0.33/trezor-bridge-2.0.33-win32-install.exe
+
+- Exe'yi çalıştır ve yüklemeyi tamamlanpm install -g @trezor/trezor-suite
+
+
+
+### 4.2 Trezor'u Bağla ve Test Et# Adımlar:
+
 # 1. "Get Started" / "Başla"'yı tıkla
-# 2. Firmware'i güncelle (varsa)
-# 3. "Yeni cüzdan oluştur" veya "Geri yükle" seçeneğini seç
-# 4. Ekranda gösterilen 24 kelimelik recovery phrase'i YÖNETİYLE YERLERE YAZ
-# 5. PIN ayarla (geliştirme için: 1234)
-# 6. Setup tamamlandı!
+
+1. **Trezor cihazını USB'ye tak**# 2. Firmware'i güncelle (varsa)
+
+2. **Trezor Suite'i kapat** (eğer açıksa - aynı anda sadece bir uygulama kullanabilir)# 3. "Yeni cüzdan oluştur" veya "Geri yükle" seçeneğini seç
+
+3. **CepWallet'i aç:** `pnpm tauri dev`# 4. Ekranda gösterilen 24 kelimelik recovery phrase'i YÖNETİYLE YERLERE YAZ
+
+4. **"Connect Device" butonuna tıkla**# 5. PIN ayarla (geliştirme için: 1234)
+
+5. **PIN gir** (Trezor ekranında)# 6. Setup tamamlandı!
+
+6. **Başarılı!** Device bilgileri görünmeli
 
 # Kontrol et (CLI):
-npm install -g @trezor/connect-web
+
+---npm install -g @trezor/connect-web
+
 # Trezor bağlı mı kontrol et
-```
 
-### 3.3 Test Et
+## 🏗️ Adım 5: Production Build```
 
-```bash
-# Browser'da test et
-# https://trezor.io/learn/a/where-to-find-my-xpub-address
+
+
+### 5.1 Build Yap### 3.3 Test Et
+
+
+
+```bash```bash
+
+# Tüm platformlar için build# Browser'da test et
+
+pnpm tauri build# https://trezor.io/learn/a/where-to-find-my-xpub-address
+
 # Trezor'u bağlı tutup testa tıkla
-# Cihazda onay verdiğinde başarılı oldu
+
+# Sadece current platform# Cihazda onay verdiğinde başarılı oldu
+
+pnpm tauri build --target current
 
 # Adres öğren (ilk hesap)
-# Bu adresi not et (sonra test işlemleri için kullanacağız)
+
+# İlk build uzun sürebilir (5-10 dakika)# Bu adresi not et (sonra test işlemleri için kullanacağız)
+
+# Rust tüm bağımlılıkları release mode'da compile eder```
+
 ```
 
 ---
+
+### 5.2 Çıktılar
 
 ## 📦 Adım 4: Workspace Paketlerini Kur
 
-### 4.1 Root Package.json Oluştur
+**macOS:**
 
-Dosya: `package.json` (root)
+```### 4.1 Root Package.json Oluştur
+
+src-tauri/target/release/bundle/macos/CepWallet.app
+
+src-tauri/target/release/bundle/dmg/cepwallet_0.1.0_x64.dmgDosya: `package.json` (root)
+
+```
 
 ```json
-{
-  "name": "cepwallet",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
+
+**Windows:**{
+
+```  "name": "cepwallet",
+
+src-tauri/target/release/bundle/msi/CepWallet_0.1.0_x64.msi  "version": "0.1.0",
+
+src-tauri/target/release/cepwallet.exe  "private": true,
+
+```  "type": "module",
+
   "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
-  },
-  "scripts": {
-    "install:all": "pnpm install",
+
+**Linux:**    "node": ">=18.0.0",
+
+```    "pnpm": ">=8.0.0"
+
+src-tauri/target/release/bundle/appimage/cep-wallet_0.1.0_amd64.AppImage  },
+
+src-tauri/target/release/bundle/deb/cep-wallet_0.1.0_amd64.deb  "scripts": {
+
+```    "install:all": "pnpm install",
+
     "build": "pnpm -r build",
-    "build:shared": "pnpm -F @cepwallet/shared build",
+
+### 5.3 Build'i Test Et    "build:shared": "pnpm -F @cepwallet/shared build",
+
     "build:desktop": "pnpm -F @cepwallet/desktop build",
-    "dev": "concurrently \"pnpm dev:desktop\" \"pnpm dev:bridge\"",
-    "dev:desktop": "pnpm -F @cepwallet/desktop dev",
-    "dev:bridge": "pnpm -F bridge dev",
+
+```bash    "dev": "concurrently \"pnpm dev:desktop\" \"pnpm dev:bridge\"",
+
+# macOS    "dev:desktop": "pnpm -F @cepwallet/desktop dev",
+
+open src-tauri/target/release/bundle/macos/CepWallet.app    "dev:bridge": "pnpm -F bridge dev",
+
     "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
-    "clean": "pnpm -r clean"
+
+# Linux    "lint": "pnpm -r lint",
+
+./src-tauri/target/release/bundle/appimage/cep-wallet_0.1.0_amd64.AppImage    "clean": "pnpm -r clean"
+
   },
-  "devDependencies": {
-    "concurrently": "^8.2.0",
-    "typescript": "^5.3.0",
+
+# Windows  "devDependencies": {
+
+.\src-tauri\target\release\cepwallet.exe    "concurrently": "^8.2.0",
+
+```    "typescript": "^5.3.0",
+
     "eslint": "^8.54.0",
-    "prettier": "^3.1.0"
+
+---    "prettier": "^3.1.0"
+
   }
-}
+
+## 🧪 Adım 6: Wallet Operasyonlarını Test Et}
+
 ```
+
+### 6.1 Temel UI Test
 
 ### 4.2 @cepwallet/shared Setup
 
-```bash
-cd packages/shared
+Uygulama açıkken:
 
-# package.json oluştur
-pnpm init
+- [ ] `WalletConnect` component'i görünüyor```bash
 
-# Güncelle:
+- [ ] `TransactionList` component'i görünüyorcd packages/shared
+
+- [ ] `TrezorConnect` component'i görünüyor (hardware tab)
+
+- [ ] UI responsive (pencere yeniden boyutlandır)# package.json oluştur
+
+- [ ] Hot reload çalışıyor (bir dosyayı değiştir)pnpm init
+
+
+
+### 6.2 Tauri IPC Test# Güncelle:
+
 cat > package.json << 'EOF'
-{
-  "name": "@cepwallet/shared",
-  "version": "0.1.0",
-  "type": "module",
+
+DevTools Console'da:{
+
+```javascript  "name": "@cepwallet/shared",
+
+// Tauri command test  "version": "0.1.0",
+
+const { invoke } = window.__TAURI__.core;  "type": "module",
+
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
+
+// Ping command (basit test)  "types": "./dist/index.d.ts",
+
+await invoke('greet', { name: 'CepWallet' });  "scripts": {
+
+// Çıktı: "Hello, CepWallet!"    "build": "tsc",
+
     "dev": "tsc --watch",
-    "test": "jest",
-    "lint": "eslint src",
-    "clean": "rm -rf dist"
-  },
-  "dependencies": {
-    "ethers": "^6.10.0"
-  },
+
+// Wallet oluştur (gerçek kriptografi)    "test": "jest",
+
+const wallet = await invoke('create_wallet', {     "lint": "eslint src",
+
+  password: 'test123456'     "clean": "rm -rf dist"
+
+});  },
+
+console.log(wallet);  "dependencies": {
+
+// Çıktı: { address: "0x...", mnemonic: "word1 word2 ...", ... }    "ethers": "^6.10.0"
+
+```  },
+
   "devDependencies": {
-    "typescript": "^5.3.0",
+
+### 6.3 Trezor Operasyonları Test    "typescript": "^5.3.0",
+
     "jest": "^29.7.0",
-    "@types/jest": "^29.5.0"
-  }
-}
-EOF
+
+```javascript    "@types/jest": "^29.5.0"
+
+// Trezor cihazını bağla  }
+
+const device = await invoke('connect_trezor');}
+
+console.log(device);EOF
+
+// Çıktı: { model: "Trezor One", features: {...}, ... }
 
 # Bağımlılıkları yükle (root'tan)
-cd ../..
-pnpm install
-```
 
-### 4.3 @cepwallet/desktop Setup
+// Ethereum adresi alcd ../..
+
+const address = await invoke('get_ethereum_address', {pnpm install
+
+  path: "m/44'/60'/0'/0/0"```
+
+});
+
+console.log(address);### 4.3 @cepwallet/desktop Setup
+
+// Çıktı: "0x..."
 
 ```bash
-cd packages/desktop
 
-# package.json oluştur
-pnpm init
+// Transaction imzalacd packages/desktop
 
-# Güncelle (aşağıya bakıncıya kadar şimdilik basic version):
-pnpm add electron react react-dom ethers
-pnpm add -D @types/react @types/node typescript webpack webpack-cli webpack-dev-server
+const signature = await invoke('sign_transaction', {
+
+  to: "0x...",# package.json oluştur
+
+  value: "1000000000000000000", // 1 ETH in weipnpm init
+
+  nonce: 0,
+
+  gasLimit: "21000",# Güncelle (aşağıya bakıncıya kadar şimdilik basic version):
+
+  gasPrice: "20000000000"pnpm add electron react react-dom ethers
+
+});pnpm add -D @types/react @types/node typescript webpack webpack-cli webpack-dev-server
+
+console.log(signature);```
+
 ```
 
 ### 4.4 Bridge (Rust) Setup
 
-```bash
-cd bridge
-
-# Cargo.toml oluştur
-cargo init --name cepwallet-bridge
-
-# Bağımlılıkları ekle
-cargo add tokio --features full
-cargo add tokio-tungstenite
-cargo add serde serde_json
-```
-
 ---
 
-## 🚀 Adım 5: İlk Çalıştırma
-
-### 5.1 Shared Package'i Build Et
-
 ```bash
-pnpm build:shared
 
-# Doğrula
-ls packages/shared/dist/  # index.js ve index.d.ts görmelidir
+## 📁 Proje Yapısı (Özet)cd bridge
+
+
+
+```# Cargo.toml oluştur
+
+cepwallet/cargo init --name cepwallet-bridge
+
+├── src/                     # React Frontend
+
+│   ├── App.tsx             # Ana component# Bağımlılıkları ekle
+
+│   ├── main.tsx            # Entry pointcargo add tokio --features full
+
+│   ├── components/         # UI componentscargo add tokio-tungstenite
+
+│   │   ├── Wallet/cargo add serde serde_json
+
+│   │   └── Hardware/```
+
+│   ├── hooks/              # React hooks
+
+│   ├── store/              # State management---
+
+│   └── styles/             # CSS
+
+│## 🚀 Adım 5: İlk Çalıştırma
+
+├── src-tauri/              # Rust Backend
+
+│   ├── src/### 5.1 Shared Package'i Build Et
+
+│   │   ├── main.rs         # Tauri entry point
+
+│   │   ├── commands.rs     # Tauri commands (IPC)```bash
+
+│   │   ├── crypto/         # Kriptografipnpm build:shared
+
+│   │   │   └── wallet.rs   # Wallet logic
+
+│   │   └── hardware/       # Trezor# Doğrula
+
+│   │       └── trezor.rs   # Trezor integrationls packages/shared/dist/  # index.js ve index.d.ts görmelidir
+
+│   ├── Cargo.toml          # Rust dependencies```
+
+│   └── tauri.conf.json     # Tauri config
+
+│### 5.2 Bridge'i Başlat (Terminal 1)
+
+├── docs/                   # Dokümantasyon
+
+│   ├── GETTING_STARTED.md  # Bu dosya```bash
+
+│   ├── PROJECT_STRUCTURE.mdcd bridge
+
+│   └── ARCHITECTURE.mdcargo run
+
+│
+
+├── package.json            # Frontend dependencies# Output şöyle olmalı:
+
+├── vite.config.ts          # Vite config# Compiling cepwallet-bridge v0.1.0
+
+└── tsconfig.json           # TypeScript config# Finished...
+
+```# Listening on ws://localhost:8000
+
 ```
 
-### 5.2 Bridge'i Başlat (Terminal 1)
-
-```bash
-cd bridge
-cargo run
-
-# Output şöyle olmalı:
-# Compiling cepwallet-bridge v0.1.0
-# Finished...
-# Listening on ws://localhost:8000
-```
+Detaylı yapı için: [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)
 
 ### 5.3 Desktop App'ı Başlat (Terminal 2)
 
+---
+
 ```bash
-cd packages/desktop
+
+## 🛠️ Geliştirme Komutlarıcd packages/desktop
+
 pnpm dev
 
-# Webpack dev server başlatmalı
-# http://localhost:3000 açılmalı
+### Frontend (React + TypeScript)
 
-# Yeni bir terminal açıp (Terminal 3):
+# Webpack dev server başlatmalı
+
+```bash# http://localhost:3000 açılmalı
+
+# Vite dev server (standalone - Tauri olmadan)
+
+pnpm dev# Yeni bir terminal açıp (Terminal 3):
+
 cd packages/desktop
-pnpm electron
+
+# TypeScript type checkpnpm electron
+
+pnpm type-check
 
 # Electron penceresi açılmalı
-```
+
+# Linting```
+
+pnpm lint
 
 ### 5.4 Trezor'u Bağla
 
-```bash
-# Trezor'u USB'ye bağla
-# Desktop app'ında "Connect Device" butonuna tıkla
-# Trezor cihazında onay ver
-# Hesaplar görüntülenmeli
-```
+# Build (sadece frontend)
 
----
+pnpm build```bash
+
+```# Trezor'u USB'ye bağla
+
+# Desktop app'ında "Connect Device" butonuna tıkla
+
+### Backend (Rust + Tauri)# Trezor cihazında onay ver
+
+# Hesaplar görüntülenmeli
+
+```bash```
+
+# Rust format
+
+cd src-tauri---
+
+cargo fmt
 
 ## 🧪 Adım 6: İlk Test İşlemi
 
-### 6.1 Test Ağında (Ethereum Sepolia)
+# Rust lint
 
-```bash
-# Sepolia test ETH elde et
+cargo clippy### 6.1 Test Ağında (Ethereum Sepolia)
+
+
+
+# Rust test```bash
+
+cargo test# Sepolia test ETH elde et
+
 # https://sepoliafaucet.com adresine git
-# Trezor'dan aldığın adresi gir
-# Birkaç dakika bekle (ETH gelmeli)
 
-# İşlem gönder
-# 1. "Send" butonuna tıkla
-# 2. Test ETH miktarını gir
-# 3. Alıcı adresi: 0x742d35Cc6634C0532925a3b844Bc0e8a5f4Ec3c6
+# Rust build (release)# Trezor'dan aldığın adresi gir
+
+cargo build --release# Birkaç dakika bekle (ETH gelmeli)
+
+
+
+# Tauri command ekle# İşlem gönder
+
+# src-tauri/src/commands.rs'e ekle# 1. "Send" butonuna tıkla
+
+# src-tauri/src/main.rs'de register et# 2. Test ETH miktarını gir
+
+```# 3. Alıcı adresi: 0x742d35Cc6634C0532925a3b844Bc0e8a5f4Ec3c6
+
 # 4. İşlemi gönder
-# 5. Trezor'da onay ver
+
+### Tauri# 5. Trezor'da onay ver
+
 # 6. Block Explorer'da işlem sorgula:
-#    https://sepolia.etherscan.io/tx/[TX_HASH]
-```
+
+```bash#    https://sepolia.etherscan.io/tx/[TX_HASH]
+
+# Development```
+
+pnpm tauri dev
 
 ### 6.2 Kohaku Shield İşlemi (Faz 2'de)
 
-```bash
+# Production build
+
+pnpm tauri build```bash
+
 # Faz 1'de bu kullanılamaz
-# Faz 2'de adım adım rehber eklenecek
-# Şimdilik normal ETH transferi test et
+
+# Sistem bilgileri# Faz 2'de adım adım rehber eklenecek
+
+pnpm tauri info# Şimdilik normal ETH transferi test et
+
 ```
 
----
+# İkon güncelle
 
-## 🐛 Troubleshooting
+pnpm tauri icon path/to/icon.png---
 
-### Problem: "pnpm: command not found"
 
-```bash
+
+# Config doğrula## 🐛 Troubleshooting
+
+pnpm tauri info --config
+
+```### Problem: "pnpm: command not found"
+
+
+
+---```bash
+
 # Çözüm: Global kurulumu kontrol et
-npm install -g pnpm
 
-# VEYA npm kullanıcı cache'ini temizle
+## 🐛 Sorun Gidermenpm install -g pnpm
+
+
+
+### Problem: `pnpm tauri dev` çalışmıyor# VEYA npm kullanıcı cache'ini temizle
+
 npm cache clean --force
-npm install -g pnpm@latest
+
+**Çözüm 1:** Tauri CLI kurulu mu?npm install -g pnpm@latest
+
+```bash```
+
+pnpm list @tauri-apps/cli
+
+# Yoksa: pnpm install### Problem: "Trezor bağlantı bulunamadı"
+
 ```
 
-### Problem: "Trezor bağlantı bulunamadı"
-
 ```bash
-# 1. Bridge servisi çalışıyor mu?
-ps aux | grep trezor-bridge
 
-# 2. macOS'te başlat:
-launchctl start io.trezor.bridge
+**Çözüm 2:** Rust güncel mi?# 1. Bridge servisi çalışıyor mu?
 
-# 3. Linux'te başlat:
-sudo systemctl start trezor-bridge
+```bashps aux | grep trezor-bridge
 
-# 4. Trezor'u USB'den çıkart ve yeniden tak
+rustup update
+
+rustc --version  # 1.70+ olmalı# 2. macOS'te başlat:
+
+```launchctl start io.trezor.bridge
+
+
+
+**Çözüm 3:** Sistem bağımlılıkları kurulu mu?# 3. Linux'te başlat:
+
+```bashsudo systemctl start trezor-bridge
+
+pnpm tauri info
+
+# Eksik paketleri kur (platform'a göre)# 4. Trezor'u USB'den çıkart ve yeniden tak
+
+``````
+
+
+
+### Problem: Rust compile hatası### Problem: Webpack "entry point not found"
+
+
+
+**Çözüm 1:** Cargo.lock'u temizle```bash
+
+```bash# Çözüm: TypeScript dosyalarını oluştur
+
+cd src-tauritouch packages/desktop/src/index.tsx
+
+rm -rf target/touch packages/desktop/src/App.tsx
+
+cargo cleantouch packages/desktop/src/main/index.ts
+
+cd ..```
+
+pnpm tauri dev
+
+```### Problem: "Cannot find module '@cepwallet/shared'"
+
+
+
+**Çözüm 2:** Bağımlılıkları güncelle```bash
+
+```bash# Çözüm 1: Workspace linkage'ini kontrol et
+
+cd src-tauripnpm install
+
+cargo update
+
+cd ..# Çözüm 2: pnpm-workspace.yaml'ı doğrula
+
+pnpm tauri devcat pnpm-workspace.yaml
+
 ```
-
-### Problem: Webpack "entry point not found"
-
-```bash
-# Çözüm: TypeScript dosyalarını oluştur
-touch packages/desktop/src/index.tsx
-touch packages/desktop/src/App.tsx
-touch packages/desktop/src/main/index.ts
-```
-
-### Problem: "Cannot find module '@cepwallet/shared'"
-
-```bash
-# Çözüm 1: Workspace linkage'ini kontrol et
-pnpm install
-
-# Çözüm 2: pnpm-workspace.yaml'ı doğrula
-cat pnpm-workspace.yaml
 
 # Çözüm 3: node_modules yeniden kur
-pnpm clean
+
+### Problem: Trezor bağlanamıyorpnpm clean
+
 pnpm install
-```
 
-### Problem: Bridge Rust compile error
+**Çözüm 1:** Trezor Suite kapalı mı?```
 
-```bash
-# Çözüm: Rust toolchain güncellemesi
-rustup update
-rustup update nightly
+- Trezor Suite'i tamamen kapat
+
+- CepWallet'i yeniden başlat### Problem: Bridge Rust compile error
+
+
+
+**Çözüm 2:** Trezor Bridge çalışıyor mu?```bash
+
+```bash# Çözüm: Rust toolchain güncellemesi
+
+# macOSrustup update
+
+launchctl list | grep trezorrustup update nightly
+
+# Yoksa: launchctl start io.trezor.bridge
 
 # Cargo cache temizle
-cargo clean
-cargo build
+
+# Linuxcargo clean
+
+systemctl status trezord.servicecargo build
+
+# Yoksa: sudo systemctl start trezord```
+
 ```
 
 ---
 
-## ✅ Başarı Kontrolü
+**Çözüm 3:** USB bağlantısı
 
-Aşağıdaki tüm adımları tamamladıysan, hazırsın! ✅
+- Trezor'u çıkar ve tekrar tak## ✅ Başarı Kontrolü
 
-- [ ] pnpm kuruldu (`pnpm --version`)
+- Farklı bir USB port dene
+
+- USB hub kullanıyorsan, direkt PC'ye bağlaAşağıdaki tüm adımları tamamladıysan, hazırsın! ✅
+
+
+
+### Problem: Hot reload çalışmıyor- [ ] pnpm kuruldu (`pnpm --version`)
+
 - [ ] Node.js 18+ kuruldu (`node --version`)
-- [ ] Rust kuruldu (`rustc --version`)
-- [ ] Repository clone edildi
-- [ ] `pnpm install` başarılı oldu
-- [ ] Trezor Bridge çalışıyor
-- [ ] Trezor cihazı bağlı ve hazır
-- [ ] Bridge WebSocket sunucusu çalışıyor (`cargo run`)
-- [ ] Desktop app başlıyor (`pnpm dev:desktop`)
-- [ ] Electron penceresi açılıyor
+
+**Çözüm:**- [ ] Rust kuruldu (`rustc --version`)
+
+```bash- [ ] Repository clone edildi
+
+# Dev server'ı durdur (Ctrl+C)- [ ] `pnpm install` başarılı oldu
+
+# Node modules'ü temizle- [ ] Trezor Bridge çalışıyor
+
+rm -rf node_modules/ pnpm-lock.yaml- [ ] Trezor cihazı bağlı ve hazır
+
+pnpm install- [ ] Bridge WebSocket sunucusu çalışıyor (`cargo run`)
+
+pnpm tauri dev- [ ] Desktop app başlıyor (`pnpm dev:desktop`)
+
+```- [ ] Electron penceresi açılıyor
+
 - [ ] Trezor'a bağlanabiliyor
-- [ ] İlk işlem gönderilebildi
 
----
+---- [ ] İlk işlem gönderilebildi
 
-## 📚 Sonraki Adımlar
 
-### Hemen Sonra
-1. **ARCHITECTURE.md** oku - Sistem mimarisi
-2. **TREZOR_KOHAKU_INTEGRATION.md** oku - Entegrasyon detayları
+
+## 📚 İleri Okuma---
+
+
+
+- **Proje Yapısı:** [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) - Detaylı proje yapısı## 📚 Sonraki Adımlar
+
+- **Mimari:** [ARCHITECTURE.md](./ARCHITECTURE.md) - Sistem mimarisi
+
+- **Tauri Dökümanları:** [tauri.app/v2](https://v2.tauri.app) - Resmi Tauri 2.x docs### Hemen Sonra
+
+- **Trezor Entegrasyonu:** [docs/trezor/README.md](./trezor/README.md) - Trezor kullanımı1. **ARCHITECTURE.md** oku - Sistem mimarisi
+
+- **Kohaku SDK:** [docs/kohaku/README.md](./kohaku/README.md) - DeFi operasyonları2. **TREZOR_KOHAKU_INTEGRATION.md** oku - Entegrasyon detayları
+
 3. **packages/shared** TypeScript types'ı yazmeye başla
 
-### Faz 1 (Geliştiriciler)
-1. Wallet Dashboard UI bileşenleri oluştur
-2. Bridge WebSocket client'ı tamamla
-3. Trezor Connect entegrasyonunu genişlet
-4. Unit tests yaz (Jest)
-
-### Faz 2 (Privacy)
-1. Kohaku entegrasyonunu ekle
-2. RAILGUN Shield işlemini uygula
-3. Privacy Pool desteğini ekle
-4. Humanizer başlat
-
 ---
+
+### Faz 1 (Geliştiriciler)
+
+## ✅ Checklist: İlk Setup Tamamlandı mı?1. Wallet Dashboard UI bileşenleri oluştur
+
+2. Bridge WebSocket client'ı tamamla
+
+- [ ] Node.js 18+ kurulu3. Trezor Connect entegrasyonunu genişlet
+
+- [ ] pnpm 8+ kurulu4. Unit tests yaz (Jest)
+
+- [ ] Rust 1.70+ kurulu
+
+- [ ] Repository clone edildi### Faz 2 (Privacy)
+
+- [ ] `pnpm install` başarıyla tamamlandı1. Kohaku entegrasyonunu ekle
+
+- [ ] `pnpm tauri dev` çalışıyor2. RAILGUN Shield işlemini uygula
+
+- [ ] Tauri penceresi açılıyor3. Privacy Pool desteğini ekle
+
+- [ ] UI component'leri görünüyor4. Humanizer başlat
+
+- [ ] DevTools açılabiliyor
+
+- [ ] Hot reload çalışıyor (bir dosyayı değiştirip test et)---
+
+- [ ] (Opsiyonel) Trezor bağlanabiliyor
 
 ## 📖 İlgili Belgeler
 
+Hepsi tamamsa, **hazırsın!** 🎉
+
 | Belge | Açıklama |
-|-------|----------|
+
+---|-------|----------|
+
 | [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | Proje dosya organizasyonu |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Teknik sistem mimarisi |
+
+## 🚀 Bir Sonraki Adımlar| [ARCHITECTURE.md](ARCHITECTURE.md) | Teknik sistem mimarisi |
+
 | [TREZOR_KOHAKU_INTEGRATION.md](TREZOR_KOHAKU_INTEGRATION.md) | Entegrasyon detayları |
-| [SETUP_CI_CD.md](SETUP_CI_CD.md) | CI/CD pipeline kurulumu |
-| [HARDWARE.md](HARDWARE.md) | Trezor hardware rehberi |
-| [PRIVACY_FEATURES.md](PRIVACY_FEATURES.md) | Kohaku privacy özellikleri |
 
-Sorularınız mı var? [CONTRIBUTING.md](../CONTRIBUTING.md) dosyasına bakın veya issue açın! 🎉
+1. **UI Geliştir:** `src/components/` altında yeni component'ler ekle| [SETUP_CI_CD.md](SETUP_CI_CD.md) | CI/CD pipeline kurulumu |
 
-````
+2. **Tauri Commands Ekle:** `src-tauri/src/commands.rs`'e yeni backend fonksiyonları ekle| [HARDWARE.md](HARDWARE.md) | Trezor hardware rehberi |
+
+3. **Wallet Oluştur:** Temel wallet operasyonlarını test et| [PRIVACY_FEATURES.md](PRIVACY_FEATURES.md) | Kohaku privacy özellikleri |
+
+4. **Trezor Test:** Hardware wallet entegrasyonunu dene
+
+5. **DeFi:** Kohaku SDK ile DeFi protokollerini entegre etSorularınız mı var? [CONTRIBUTING.md](../CONTRIBUTING.md) dosyasına bakın veya issue açın! 🎉
+
+
+
+**Daha fazla detay için:** [ROADMAP.md](./ROADMAP.md)````
+
     app.quit();
-  }
+
+---  }
+
 });
 
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
+**Son Güncelleme:** 17 Ekim 2025  
+
+**Güncelleyen:** Tauri 2.x Migrasyon  app.on('activate', () => {
+
+**Sorular?** GitHub Issues: https://github.com/zinderud/cepwallet/issues  if (BrowserWindow.getAllWindows().length === 0) {
+
     createWindow();
   }
 });

@@ -1,0 +1,21 @@
+{
+  "name": "cepwallet-proof-generator",
+  "version": "0.1.0",
+  "description": "ZK-SNARK proof generator for CepWallet using RAILGUN SDK",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@railgun-community/wallet": "^10.5.1",
+    "@railgun-community/engine": "^9.4.0",
+    "@railgun-community/shared-models": "^8.0.0",
+    "leveldown": "^6.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "CepWallet Contributors",
+  "license": "GPL-3.0"
+}

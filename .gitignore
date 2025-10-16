@@ -10,6 +10,7 @@
 /node_modules
 npm-debug.log
 yarn-error.log
+pnpm-debug.log
 
 # IDEs and editors
 .idea/
@@ -40,3 +41,154 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# ========================================
+# TAURI 2.x SPECIFIC
+# ========================================
+
+# Tauri build artifacts
+src-tauri/target/
+src-tauri/WixTools/
+
+# Tauri bundle outputs
+src-tauri/bundle/
+
+# ========================================
+# RUST SPECIFIC
+# ========================================
+
+# Rust compilation artifacts
+**/target/
+**/*.rs.bk
+**/*.pdb
+
+# Cargo lock for libraries (keep for binaries)
+# Cargo.lock
+
+# ========================================
+# PRIVACY & SECURITY
+# ========================================
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.envrc
+
+# Private keys and secrets
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+**/secrets/
+**/private/
+
+# Wallet data (DO NOT COMMIT!)
+**/wallet_data/
+**/keystore/
+**/.wallets/
+**/*_mnemonic.txt
+**/*_seed.txt
+
+# RAILGUN privacy data
+**/railgun_data/
+**/merkle_cache/
+**/nullifier_cache/
+
+# ========================================
+# BLOCKCHAIN & WEB3
+# ========================================
+
+# Hardhat / Foundry (if added later)
+cache/
+artifacts/
+node_modules/
+
+# Ganache
+ganache_data/
+
+# ========================================
+# TESTING & DEBUG
+# ========================================
+
+# Test outputs
+/test-results/
+/playwright-report/
+/coverage/
+
+# Debug logs
+*.log
+logs/
+**/*.log
+
+# ========================================
+# MACOS SPECIFIC
+# ========================================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# ========================================
+# LINUX SPECIFIC
+# ========================================
+
+*~
+
+# temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# ========================================
+# WINDOWS SPECIFIC
+# ========================================
+
+# Windows thumbnail cache files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Dump file
+*.stackdump
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk

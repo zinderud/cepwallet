@@ -30,6 +30,21 @@ pub enum CepWalletError {
     
     #[error("Encoding error: {0}")]
     EncodingError(String),
+
+    #[error("Not initialized: {0}")]
+    NotInitialized(String),
+
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
+    #[error("Privacy error: {0}")]
+    PrivacyError(String),
+
+    #[error("ZK proof error: {0}")]
+    ZKProofError(String),
+
+    #[error("Pool error: {0}")]
+    PoolError(String),
 }
 
 pub type Result<T> = std::result::Result<T, CepWalletError>;
@@ -50,5 +65,12 @@ impl From<String> for CepWalletError {
 impl From<CepWalletError> for String {
     fn from(err: CepWalletError) -> Self {
         err.to_string()
+    }
+}
+
+// Convert from anyhow::Error for FFI operations
+impl From<anyhow::Error> for CepWalletError {
+    fn from(err: anyhow::Error) -> Self {
+        CepWalletError::PrivacyError(err.to_string())
     }
 }

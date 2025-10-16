@@ -1,10 +1,12 @@
 use crate::hardware::{DeviceInfo, TrezorManager};
+use crate::privacy::{PrivacyManager, PrivacyLevel, ShieldedTransaction, PrivacyPoolOperation};
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 use tauri::State;
 
 pub struct AppState {
     pub trezor: Mutex<Option<TrezorManager>>,
+    pub privacy: Mutex<Option<PrivacyManager>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -150,6 +152,12 @@ pub async fn sign_message(
         .map_err(|e| e.to_string())
 }
 
+/// Simple greet command for testing Tauri IPC
+#[tauri::command]
+pub fn greet(name: String) -> String {
+    format!("Hello, {}! Welcome to CepWallet.", name)
+}
+
 /// Sign EIP-712 typed data
 #[tauri::command]
 pub async fn sign_typed_data(
@@ -166,4 +174,227 @@ pub async fn sign_typed_data(
         .sign_typed_data(&path, data)
         .await
         .map_err(|e| e.to_string())
+}
+
+// ============================================================================
+// PRIVACY COMMANDS (Kohaku Integration)
+// ============================================================================
+
+/// Initialize privacy features (RAILGUN + Privacy Pools)
+#[tauri::command]
+pub async fn initialize_privacy(state: State<'_, AppState>) -> Result<(), String> {
+    let mut privacy = state.privacy.lock().await;
+    
+    if privacy.is_some() {
+        return Ok(()); // Already initialized
+    }
+
+    let mut manager = PrivacyManager::new().map_err(|e| e.to_string())?;
+    manager.initialize().await.map_err(|e| e.to_string())?;
+
+    *privacy = Some(manager);
+    
+    println!("✅ Privacy features initialized (RAILGUN + Privacy Pools)");
+    Ok(())
+}
+
+/// Check if privacy features are ready
+#[tauri::command]
+pub async fn is_privacy_ready(state: State<'_, AppState>) -> Result<bool, String> {
+    let privacy = state.privacy.lock().await;
+    
+    match privacy.as_ref() {
+        Some(manager) => Ok(manager.is_ready()),
+        None => Ok(false),
+    }
+}
+
+/// Shield ETH/tokens (Public → Private via RAILGUN)
+#[tauri::command]
+pub async fn shield_transaction(
+    state: State<'_, AppState>,
+    token: String,
+    amount: String,
+) -> Result<ShieldedTransaction, String> {
+    let privacy = state.privacy.lock().await;
+    let manager = privacy
+        .as_ref()
+        .ok_or("Privacy features not initialized".to_string())?;
+
+    manager
+        .railgun()
+        .shield(&token, &amount)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Unshield ETH/tokens (Private → Public via RAILGUN)
+#[tauri::command]
+pub async fn unshield_transaction(
+    state: State<'_, AppState>,
+    token: String,
+    amount: String,
+    recipient: String,
+) -> Result<ShieldedTransaction, String> {
+    let privacy = state.privacy.lock().await;
+    let manager = privacy
+        .as_ref()
+        .ok_or("Privacy features not initialized".to_string())?;
+
+    manager
+        .railgun()
+        .unshield(&recipient, &token, &amount)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Private transfer (Private → Private via RAILGUN)
+#[tauri::command]
+pub async fn private_transfer(
+    state: State<'_, AppState>,
+    recipient: String,
+    token: String,
+    amount: String,
+) -> Result<ShieldedTransaction, String> {
+    let privacy = state.privacy.lock().await;
+    let manager = privacy
+        .as_ref()
+        .ok_or("Privacy features not initialized".to_string())?;
+
+    manager
+        .railgun()
+        .shielded_transfer(&recipient, &token, &amount)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Get shielded balance
+#[tauri::command]
+pub async fn get_shielded_balance(
+    state: State<'_, AppState>,
+    token: String,
+) -> Result<String, String> {
+    let privacy = state.privacy.lock().await;
+    let manager = privacy
+        .as_ref()
+        .ok_or("Privacy features not initialized".to_string())?;
+
+    manager
+        .railgun()
+        .get_shielded_balance(&token)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Join a privacy pool
+#[tauri::command]
+pub async fn join_privacy_pool(
+    state: State<'_, AppState>,
+    pool_id: String,
+    token: String,
+    deposit_amount: String,
+) -> Result<PrivacyPoolOperation, String> {
+    let privacy = state.privacy.lock().await;
+    let manager = privacy
+        .as_ref()
+        .ok_or("Privacy features not initialized".to_string())?;
+
+    // Note: This returns immutable reference, but join_pool needs mutable
+    // In production, we'd use RefCell or redesign the API
+    // For now, this is a placeholder showing the interface
+    
+    Err("Pool operations require mutable access - to be implemented".to_string())
+}
+
+/// Exit from a privacy pool
+#[tauri::command]
+pub async fn exit_privacy_pool(
+    state: State<'_, AppState>,
+    pool_id: String,
+    withdraw_address: String,
+) -> Result<PrivacyPoolOperation, String> {
+    let privacy = state.privacy.lock().await;
+    let _manager = privacy
+        .as_ref()
+        .ok_or("Privacy features not initialized".to_string())?;
+
+    Err("Pool operations require mutable access - to be implemented".to_string())
+}
+
+/// Swap within privacy pool
+#[tauri::command]
+pub async fn privacy_pool_swap(
+    state: State<'_, AppState>,
+    pool_id: String,
+    from_token: String,
+    to_token: String,
+    amount: String,
+) -> Result<PrivacyPoolOperation, String> {
+    let privacy = state.privacy.lock().await;
+    let manager = privacy
+        .as_ref()
+        .ok_or("Privacy features not initialized".to_string())?;
+
+    manager
+        .privacy_pools()
+        .swap_in_pool(&pool_id, &from_token, &to_token, &amount)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Generate ZK proof
+#[tauri::command]
+pub async fn generate_zk_proof(
+    state: State<'_, AppState>,
+    proof_type: String,
+    public_inputs: Vec<String>,
+    private_inputs: Vec<String>,
+) -> Result<Vec<u8>, String> {
+    let privacy = state.privacy.lock().await;
+    let manager = privacy
+        .as_ref()
+        .ok_or("Privacy features not initialized".to_string())?;
+
+    // Parse proof type
+    use crate::privacy::ProofType;
+    let ptype = match proof_type.as_str() {
+        "shield" => ProofType::Shield,
+        "transfer" => ProofType::Transfer,
+        "unshield" => ProofType::Unshield,
+        "pool_membership" => ProofType::PoolMembership,
+        "compliance" => ProofType::Compliance,
+        _ => return Err(format!("Invalid proof type: {}", proof_type)),
+    };
+
+    manager
+        .zk_generator()
+        .generate_proof(ptype, public_inputs, private_inputs)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Get proof generation time estimate
+#[tauri::command]
+pub fn estimate_proof_time(proof_type: String) -> Result<u64, String> {
+    use crate::privacy::ProofType;
+    
+    let ptype = match proof_type.as_str() {
+        "shield" => ProofType::Shield,
+        "transfer" => ProofType::Transfer,
+        "unshield" => ProofType::Unshield,
+        "pool_membership" => ProofType::PoolMembership,
+        "compliance" => ProofType::Compliance,
+        _ => return Err(format!("Invalid proof type: {}", proof_type)),
+    };
+
+    // This would come from ZKProofGenerator, but we'll hardcode for now
+    let time = match ptype {
+        ProofType::Shield => 8,
+        ProofType::Transfer => 20,
+        ProofType::Unshield => 10,
+        ProofType::PoolMembership => 15,
+        ProofType::Compliance => 25,
+    };
+
+    Ok(time)
 }

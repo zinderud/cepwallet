@@ -1,53 +1,100 @@
-# Kohaku + Trezor Entegrasyon Rehberi
+# Kohaku + Trezor Entegrasyon Rehberi (Tauri 2.x)
+
+**Son Güncelleme:** 17 Ekim 2025  
+**Tauri Sürümü:** 2.8.5  
+**Mimari:** Rust Backend + React Frontend
 
 ## 🎯 Genel Bakış
 
-Bu rehber, **Kohaku** gizlilik protokollerini (RAILGUN ve Privacy Pools) **Trezor** hardware wallet ile entegre ederek privacy-first bir wallet uygulaması geliştirme sürecini detaylandırır.
+Bu rehber, **Kohaku** gizlilik protokollerini (RAILGUN ve Privacy Pools) **Trezor** hardware wallet ile **Tauri 2.x** mimarisinde entegre ederek privacy-first bir wallet uygulaması geliştirme sürecini detaylandırır.
+
+> **Not:** Bu implementasyon Tauri 2.x kullanır. Electron'dan farklı olarak:
+> - Privacy logic **Rust backend**'de çalışır (daha güvenli, daha hızlı)
+> - Zero-knowledge proof generation **native Rust** kütüphaneleri kullanır
+> - Trezor communication **Tauri IPC** üzerinden yapılır
 
 ---
 
 ## 📋 Ön Gereksinimler
 
 ### Hardware
-- Trezor One veya Trezor Model T
-- USB kablo
+- ✅ Trezor One veya Trezor Model T
+- ✅ USB kablo
 
 ### Software
-- Node.js 18+
-- pnpm (Kohaku için)
-- Trezor Bridge
+- ✅ **Rust** 1.70+ (ZK proof libraries için)
+- ✅ **Node.js** 18+ (React frontend)
+- ✅ **pnpm** 8+ (package manager)
+- ✅ **Tauri** 2.8+ (desktop framework)
+- ✅ **Trezor Bridge** (USB communication)
 
 ### Bilgi Gereksinimleri
-- TypeScript
-- Ethereum / Web3
-- Zero-knowledge proofs (temel)
-- React (UI için)
+- ✅ **Rust** (privacy logic backend)
+- ✅ **TypeScript** (React frontend)
+- ✅ **Ethereum / Web3** (blockchain)
+- ✅ **Zero-knowledge proofs** (temel - Rust zkSNARK libraries)
+- ✅ **Tauri IPC** (frontend-backend communication)
 
 ---
 
-## 🏗️ Mimari Tasarım
+## 🏗️ Mimari Tasarım (Tauri 2.x)
 
 ### Katmanlı Yapı
 
 ```
-┌────────────────────────────────────────────┐
-│           UI Layer (React)                  │
-│  • Wallet Dashboard                         │
-│  • Privacy Controls                         │
-│  • DApp Browser                             │
-└────────────────────────────────────────────┘
-                    ↓
-┌────────────────────────────────────────────┐
-│       Privacy Layer (Kohaku)                │
-│  ┌──────────────┬──────────────────────┐   │
-│  │   RAILGUN    │   Privacy Pools      │   │
-│  │  • Shield    │  • Join Pool         │   │
-│  │  • Transfer  │  • Swap in Pool      │   │
-│  │  • Unshield  │  • Compliance Proof  │   │
-│  └──────────────┴──────────────────────┘   │
-└────────────────────────────────────────────┘
-                    ↓
-┌────────────────────────────────────────────┐
+┌────────────────────────────────────────────────────────┐
+│              React Frontend (TypeScript)                │
+│  • Privacy Control UI                                   │
+│  • Shielded Balance Display                             │
+│  • Transaction Builder with Privacy Levels              │
+│  • Privacy Pool Dashboard                               │
+└─────────────────────────┬──────────────────────────────┘
+                          │ Tauri IPC
+                          ↓
+┌────────────────────────────────────────────────────────┐
+│              Tauri Commands (Rust)                      │
+│  • shield_transaction(amount, token)                    │
+│  • unshield_transaction(amount, to)                     │
+│  • private_transfer(to, amount, proof)                  │
+│  • join_privacy_pool(pool_id, deposit)                  │
+│  • generate_zk_proof(transaction)                       │
+└─────────────────────────┬──────────────────────────────┘
+                          │
+                          ↓
+┌────────────────────────────────────────────────────────┐
+│           Privacy Module (Rust src-tauri/)              │
+│  ┌───────────────────┬──────────────────────────────┐  │
+│  │   RAILGUN (Rust)  │   Privacy Pools (Rust FFI)   │  │
+│  │  • Shield         │  • Pool Join/Exit            │  │
+│  │  • Shielded TX    │  • Private Swaps             │  │
+│  │  • Unshield       │  • Compliance Proofs         │  │
+│  │  • ZK Proofs      │  • Pool Membership           │  │
+│  └───────────────────┴──────────────────────────────┘  │
+└─────────────────────────┬──────────────────────────────┘
+                          │
+                          ↓
+┌────────────────────────────────────────────────────────┐
+│         Trezor Hardware Integration (Rust)              │
+│  • TrezorManager (existing)                             │
+│  • Sign shielded transactions                           │
+│  • Sign privacy pool operations                         │
+│  • Secure key management                                │
+└─────────────────────────┬──────────────────────────────┘
+                          │ USB/HID
+                          ↓
+┌────────────────────────────────────────────────────────┐
+│              Trezor Hardware Device                     │
+│  • Private key storage (never leaves device)            │
+│  • Transaction signing with user confirmation           │
+│  • PIN/Passphrase protection                            │
+└────────────────────────────────────────────────────────┘
+```
+
+### **Tauri-Specific Avantajlar:**
+- ✅ **Rust Backend:** ZK proof generation C++ libraries ile native entegrasyon
+- ✅ **Security:** Private keys Trezor'da, sensitive data Rust memory management
+- ✅ **Performance:** Native code, multi-threading, async runtime
+- ✅ **Cross-platform:** macOS, Windows, Linux tek codebase
 │      Signing Layer (Trezor)                 │
 │  • Trezor Connect API                       │
 │  • Transaction signing                      │

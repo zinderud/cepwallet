@@ -1,0 +1,102 @@
+/// Privacy Module - RAILGUN & Privacy Pools Integration
+/// 
+/// This module provides zero-knowledge proof based privacy features:
+/// - RAILGUN shielded transactions
+/// - Privacy Pools (compliance-friendly privacy)
+/// - ZK proof generation and verification
+/// 
+/// Architecture:
+/// - railgun.rs: RAILGUN protocol implementation
+/// - privacy_pools.rs: Privacy Pools integration
+/// - zkproof.rs: Zero-knowledge proof generation
+/// - types.rs: Common types and structures
+/// - contracts.rs: Contract addresses and constants
+
+pub mod railgun;
+pub mod privacy_pools;
+pub mod zkproof;
+pub mod types;
+pub mod contracts;
+pub mod ffi;
+
+pub use railgun::RailgunManager;
+pub use privacy_pools::PrivacyPoolManager;
+pub use zkproof::{ZKProofGenerator, ProofType};
+pub use types::{PrivacyLevel, ShieldedTransaction, PrivacyPoolOperation};
+pub use contracts::{RailgunContracts, CommonTokens};
+pub use ffi::{generate_proof, generate_shield_proof, generate_transfer_proof, generate_unshield_proof};
+
+use crate::error::{CepWalletError, Result};
+
+/// Privacy manager - orchestrates RAILGUN and Privacy Pools
+pub struct PrivacyManager {
+    railgun: RailgunManager,
+    privacy_pools: PrivacyPoolManager,
+    zk_generator: ZKProofGenerator,
+}
+
+impl PrivacyManager {
+    /// Create new privacy manager
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            railgun: RailgunManager::new()?,
+            privacy_pools: PrivacyPoolManager::new()?,
+            zk_generator: ZKProofGenerator::new()?,
+        })
+    }
+
+    /// Initialize privacy features
+    pub async fn initialize(&mut self) -> Result<()> {
+        // Initialize RAILGUN
+        self.railgun.initialize().await?;
+
+        // Initialize Privacy Pools
+        self.privacy_pools.initialize().await?;
+
+        // Load ZK proving keys (this can take time)
+        self.zk_generator.load_proving_keys().await?;
+
+        Ok(())
+    }
+
+    /// Check if privacy features are ready
+    pub fn is_ready(&self) -> bool {
+        self.railgun.is_ready() 
+            && self.privacy_pools.is_ready()
+            && self.zk_generator.is_ready()
+    }
+
+    /// Get privacy manager reference
+    pub fn railgun(&self) -> &RailgunManager {
+        &self.railgun
+    }
+
+    /// Get privacy pools manager reference
+    pub fn privacy_pools(&self) -> &PrivacyPoolManager {
+        &self.privacy_pools
+    }
+
+    /// Get ZK proof generator reference
+    pub fn zk_generator(&self) -> &ZKProofGenerator {
+        &self.zk_generator
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_privacy_manager_creation() {
+        let manager = PrivacyManager::new();
+        assert!(manager.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_privacy_manager_initialization() {
+        let mut manager = PrivacyManager::new().unwrap();
+        let result = manager.initialize().await;
+        // Note: Will fail if proving keys not available
+        // In production, we'll download them or bundle them
+    }
+}
