@@ -53,8 +53,8 @@ pub struct ShieldedTransaction {
     pub amount: String,
     /// Recipient (for transfers and unshield)
     pub recipient: Option<String>,
-    /// ZK proof data
-    pub proof: Option<Vec<u8>>,
+    /// ZK proof data (hex string or proof identifier)
+    pub proof: Option<String>,
     /// Merkle tree root
     pub merkle_root: Option<String>,
     /// Nullifier (to prevent double-spending)

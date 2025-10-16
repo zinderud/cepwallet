@@ -67,7 +67,7 @@ async function initRailgun(chainId = 1) {
     
     // Start RAILGUN engine
     await startRailgunEngine(
-      'CepWallet', // wallet source identifier
+      'CepWallet', // wallet source identifier (no special characters)
       db,
       true, // shouldDebug
       artifactStore,

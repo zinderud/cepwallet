@@ -22,6 +22,8 @@ pub struct ProofRequest {
     pub amount: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub commitment: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shield_private_key: Option<String>,
     
     // Transfer-specific
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -31,7 +33,13 @@ pub struct ProofRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub output_commitment: Option<String>,
     
-    // Unshield-specific
+    // Transfer/Unshield-specific  
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub railgun_wallet_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub encryption_key: Option<String>,
+    
+    // Common fields
     #[serde(skip_serializing_if = "Option::is_none")]
     pub recipient: Option<String>,
 }
@@ -143,19 +151,23 @@ pub async fn generate_proof(request: ProofRequest) -> Result<ProofResponse> {
 pub async fn generate_shield_proof(
     token: &str,
     amount: &str,
-    commitment: &str,
-    chain_id: u64,
+    railgun_address: &str,
+    shield_private_key: &str,
+    chain_id: Option<u64>,
 ) -> Result<ProofResponse> {
     let request = ProofRequest {
         proof_type: "shield".to_string(),
-        chain_id: Some(chain_id),
+        chain_id,
         token: Some(token.to_string()),
         amount: Some(amount.to_string()),
-        commitment: Some(commitment.to_string()),
+        commitment: None, // Not used in new API
         merkle_root: None,
         nullifier: None,
         output_commitment: None,
-        recipient: None,
+        recipient: Some(railgun_address.to_string()),
+        railgun_wallet_id: None,
+        encryption_key: None,
+        shield_private_key: Some(shield_private_key.to_string()),
     };
     
     generate_proof(request).await
@@ -163,21 +175,26 @@ pub async fn generate_shield_proof(
 
 /// Generate a private transfer proof (private → private)
 pub async fn generate_transfer_proof(
-    merkle_root: &str,
-    nullifier: &str,
-    output_commitment: &str,
-    chain_id: u64,
+    railgun_wallet_id: &str,
+    encryption_key: &str,
+    to_railgun_address: &str,
+    token: &str,
+    amount: &str,
+    chain_id: Option<u64>,
 ) -> Result<ProofResponse> {
     let request = ProofRequest {
         proof_type: "transfer".to_string(),
-        chain_id: Some(chain_id),
-        merkle_root: Some(merkle_root.to_string()),
-        nullifier: Some(nullifier.to_string()),
-        output_commitment: Some(output_commitment.to_string()),
-        token: None,
-        amount: None,
+        chain_id,
+        railgun_wallet_id: Some(railgun_wallet_id.to_string()),
+        encryption_key: Some(encryption_key.to_string()),
+        recipient: Some(to_railgun_address.to_string()),
+        token: Some(token.to_string()),
+        amount: Some(amount.to_string()),
+        merkle_root: None,
+        nullifier: None,
+        output_commitment: None,
         commitment: None,
-        recipient: None,
+        shield_private_key: None,
     };
     
     generate_proof(request).await
@@ -185,21 +202,26 @@ pub async fn generate_transfer_proof(
 
 /// Generate an unshield proof (private → public)
 pub async fn generate_unshield_proof(
-    nullifier: &str,
+    railgun_wallet_id: &str,
+    encryption_key: &str,
     recipient: &str,
+    token: &str,
     amount: &str,
-    chain_id: u64,
+    chain_id: Option<u64>,
 ) -> Result<ProofResponse> {
     let request = ProofRequest {
         proof_type: "unshield".to_string(),
-        chain_id: Some(chain_id),
-        nullifier: Some(nullifier.to_string()),
+        chain_id,
+        railgun_wallet_id: Some(railgun_wallet_id.to_string()),
+        encryption_key: Some(encryption_key.to_string()),
         recipient: Some(recipient.to_string()),
+        token: Some(token.to_string()),
         amount: Some(amount.to_string()),
-        token: None,
-        commitment: None,
+        nullifier: None,
         merkle_root: None,
         output_commitment: None,
+        commitment: None,
+        shield_private_key: None,
     };
     
     generate_proof(request).await
@@ -213,15 +235,16 @@ mod tests {
     #[ignore] // Only run if Node.js and proof-generator are set up
     async fn test_shield_proof_generation() {
         let result = generate_shield_proof(
-            "0x0000000000000000000000000000000000000000",
-            "1000000000000000000",
-            "0xabcd1234",
-            1,
+            "0x0000000000000000000000000000000000000000", // token
+            "1000000000000000000", // amount
+            "0zk1234...railgun_address...", // railgun_address
+            "0x" + &"0".repeat(64), // shield_private_key (32 bytes hex)
+            Some(11155111), // chain_id (Sepolia)
         ).await;
         
         assert!(result.is_ok());
         let proof = result.unwrap();
+        assert!(proof.success);
         assert!(!proof.proof.is_empty());
-        assert!(!proof.public_inputs.is_empty());
     }
 }

@@ -37,9 +37,9 @@ pub struct PrivacyManager {
 
 impl PrivacyManager {
     /// Create new privacy manager
-    pub fn new() -> Result<Self> {
+    pub fn new(chain_id: u64) -> Result<Self> {
         Ok(Self {
-            railgun: RailgunManager::new()?,
+            railgun: RailgunManager::new(chain_id)?,
             privacy_pools: PrivacyPoolManager::new()?,
             zk_generator: ZKProofGenerator::new()?,
         })
@@ -88,13 +88,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_privacy_manager_creation() {
-        let manager = PrivacyManager::new();
+        let manager = PrivacyManager::new(11155111); // Sepolia testnet
         assert!(manager.is_ok());
     }
 
     #[tokio::test]
     async fn test_privacy_manager_initialization() {
-        let mut manager = PrivacyManager::new().unwrap();
+        let mut manager = PrivacyManager::new(11155111).unwrap(); // Sepolia testnet
         let result = manager.initialize().await;
         // Note: Will fail if proving keys not available
         // In production, we'll download them or bundle them

@@ -182,19 +182,22 @@ pub async fn sign_typed_data(
 
 /// Initialize privacy features (RAILGUN + Privacy Pools)
 #[tauri::command]
-pub async fn initialize_privacy(state: State<'_, AppState>) -> Result<(), String> {
+pub async fn initialize_privacy(
+    state: State<'_, AppState>,
+    chain_id: u64,
+) -> Result<(), String> {
     let mut privacy = state.privacy.lock().await;
     
     if privacy.is_some() {
         return Ok(()); // Already initialized
     }
 
-    let mut manager = PrivacyManager::new().map_err(|e| e.to_string())?;
+    let mut manager = PrivacyManager::new(chain_id).map_err(|e| e.to_string())?;
     manager.initialize().await.map_err(|e| e.to_string())?;
 
     *privacy = Some(manager);
     
-    println!("✅ Privacy features initialized (RAILGUN + Privacy Pools)");
+    println!("✅ Privacy features initialized for chain {} (RAILGUN + Privacy Pools)", chain_id);
     Ok(())
 }
 
@@ -215,6 +218,8 @@ pub async fn shield_transaction(
     state: State<'_, AppState>,
     token: String,
     amount: String,
+    railgun_address: String,
+    shield_private_key: String,
 ) -> Result<ShieldedTransaction, String> {
     let privacy = state.privacy.lock().await;
     let manager = privacy
@@ -223,7 +228,7 @@ pub async fn shield_transaction(
 
     manager
         .railgun()
-        .shield(&token, &amount)
+        .shield(&token, &amount, &railgun_address, &shield_private_key)
         .await
         .map_err(|e| e.to_string())
 }
@@ -235,6 +240,8 @@ pub async fn unshield_transaction(
     token: String,
     amount: String,
     recipient: String,
+    railgun_wallet_id: String,
+    encryption_key: String,
 ) -> Result<ShieldedTransaction, String> {
     let privacy = state.privacy.lock().await;
     let manager = privacy
@@ -243,7 +250,7 @@ pub async fn unshield_transaction(
 
     manager
         .railgun()
-        .unshield(&recipient, &token, &amount)
+        .unshield(&railgun_wallet_id, &encryption_key, &recipient, &token, &amount)
         .await
         .map_err(|e| e.to_string())
 }
@@ -255,6 +262,8 @@ pub async fn private_transfer(
     recipient: String,
     token: String,
     amount: String,
+    railgun_wallet_id: String,
+    encryption_key: String,
 ) -> Result<ShieldedTransaction, String> {
     let privacy = state.privacy.lock().await;
     let manager = privacy
@@ -263,7 +272,7 @@ pub async fn private_transfer(
 
     manager
         .railgun()
-        .shielded_transfer(&recipient, &token, &amount)
+        .shielded_transfer(&railgun_wallet_id, &encryption_key, &recipient, &token, &amount)
         .await
         .map_err(|e| e.to_string())
 }
