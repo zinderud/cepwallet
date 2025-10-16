@@ -1,8 +1,0 @@
-/Users/muratonurkaradeniz/workspace/sade/code/cepwallet/cepwallet/src-tauri/target/debug/deps/scale_info_derive-12cb59bcf6172dfa.d: /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/lib.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/attr.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/trait_bounds.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/utils.rs
-
-/Users/muratonurkaradeniz/workspace/sade/code/cepwallet/cepwallet/src-tauri/target/debug/deps/libscale_info_derive-12cb59bcf6172dfa.dylib: /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/lib.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/attr.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/trait_bounds.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/utils.rs
-
-/Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/lib.rs:
-/Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/attr.rs:
-/Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/trait_bounds.rs:
-/Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/scale-info-derive-2.11.6/src/utils.rs:

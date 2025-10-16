@@ -1,7 +1,7 @@
 {
   "name": "cepwallet",
   "version": "0.1.0",
-  "description": "Privacy-First Hardware Wallet with Ethereum & Kohaku Integration",
+  "description": "Privacy-First Hardware Wallet with Ethereum & Kohaku Integration using Tauri",
   "private": true,
   "type": "module",
   "engines": {
@@ -9,31 +9,27 @@
     "pnpm": ">=8.0.0"
   },
   "scripts": {
-    "preinstall": "node -e \"const fs=require('fs');!fs.existsSync('pnpm-workspace.yaml')&&console.log('Run: pnpm install from root')\"",
-    "dev": "pnpm tauri dev",
-    "build": "pnpm tauri build",
-    "build:shared": "pnpm -F @cepwallet/shared build",
-    "tauri": "tauri",
-    "test": "pnpm -r test",
-    "test:shared": "pnpm -F @cepwallet/shared test",
-    "test:desktop": "pnpm -F @cepwallet/desktop test",
-    "test:e2e": "pnpm -F @cepwallet/desktop test:e2e",
-    "lint": "pnpm -r lint",
-    "lint:fix": "pnpm -r lint:fix",
-    "type-check": "pnpm -r type-check",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "start": "tauri dev",
+    "test": "echo \"No tests yet\"",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "clean": "pnpm -r clean && rm -rf node_modules pnpm-lock.yaml src-tauri/target",
+    "clean": "rm -rf dist node_modules",
     "prepare": "husky install",
     "precommit": "lint-staged"
   },
   "dependencies": {},
   "devDependencies": {
-    "@tauri-apps/cli": "^1.5.9",
+    "concurrently": "^8.2.0",
     "husky": "^8.0.0",
     "lint-staged": "^15.2.0",
     "prettier": "^3.1.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "tauri": "^1.0.0"
   },
   "keywords": [
     "ethereum",

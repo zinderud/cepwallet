@@ -1,8 +1,0 @@
-/Users/muratonurkaradeniz/workspace/sade/code/cepwallet/cepwallet/src-tauri/target/debug/deps/impl_trait_for_tuples-6c07c923cd0ce441.d: /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/lib.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/full_automatic.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/semi_automatic.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/utils.rs
-
-/Users/muratonurkaradeniz/workspace/sade/code/cepwallet/cepwallet/src-tauri/target/debug/deps/libimpl_trait_for_tuples-6c07c923cd0ce441.dylib: /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/lib.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/full_automatic.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/semi_automatic.rs /Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/utils.rs
-
-/Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/lib.rs:
-/Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/full_automatic.rs:
-/Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/semi_automatic.rs:
-/Users/muratonurkaradeniz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/utils.rs:
