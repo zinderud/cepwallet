@@ -1,28 +1,37 @@
 {
-  "package": {
-    "productName": "CepWallet",
-    "version": "0.1.0",
-    "description": "Privacy-First Hardware Wallet with Ethereum & Kohaku Integration",
-    "author": "CepWallet Contributors",
-    "license": "GPL-3.0",
-    "tauri": {
-      "bundle": {
-        "identifier": "com.zinderud.cepwallet",
-        "icon": [
-          "icons/icon.png"
-        ],
-        "resources": [],
-        "category": "Utility"
-      },
-      "updater": {
-        "active": true
-      },
-      "systemTray": {
-        "icon": "icons/icon.png"
-      },
-      "allowlist": {
-        "all": true
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "CepWallet",
+  "version": "0.1.0",
+  "identifier": "com.zinderud.cepwallet",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../dist"
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/icon.png"
+    ],
+    "resources": [],
+    "category": "Utility",
+    "shortDescription": "Privacy-First Hardware Wallet",
+    "longDescription": "Privacy-First Hardware Wallet with Ethereum & Kohaku Integration"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "CepWallet",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
       }
+    ],
+    "security": {
+      "csp": null
     }
   }
 }
