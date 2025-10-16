@@ -1,28 +1,27 @@
-import { writable } from 'svelte/store';
+import { invoke } from '@tauri-apps/api/core';
 
-export const walletStore = writable({
-  address: '',
-  balance: 0,
-  transactions: [],
-});
+interface WalletData {
+  address: string;
+  balance: number;
+  transactions: any[];
+}
 
-export const setWalletAddress = (address) => {
-  walletStore.update((state) => ({
-    ...state,
-    address,
-  }));
+export const getWalletData = async (): Promise<WalletData> => {
+  try {
+    const data = await invoke<WalletData>('get_wallet_data');
+    return data;
+  } catch (error) {
+    console.error('Failed to get wallet data:', error);
+    throw error;
+  }
 };
 
-export const setWalletBalance = (balance) => {
-  walletStore.update((state) => ({
-    ...state,
-    balance,
-  }));
-};
-
-export const addTransaction = (transaction) => {
-  walletStore.update((state) => ({
-    ...state,
-    transactions: [...state.transactions, transaction],
-  }));
+export const connectWallet = async (): Promise<WalletData> => {
+  try {
+    const data = await invoke<WalletData>('connect_wallet');
+    return data;
+  } catch (error) {
+    console.error('Failed to connect wallet:', error);
+    throw error;
+  }
 };

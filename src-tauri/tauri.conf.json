@@ -1,5 +1,4 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
   "productName": "CepWallet",
   "version": "0.1.0",
   "identifier": "com.zinderud.cepwallet",
@@ -15,19 +14,15 @@
     "icon": [
       "icons/icon.png"
     ],
-    "resources": [],
     "category": "Utility",
-    "shortDescription": "Privacy-First Hardware Wallet",
-    "longDescription": "Privacy-First Hardware Wallet with Ethereum & Kohaku Integration"
+    "shortDescription": "Privacy-First Hardware Wallet"
   },
   "app": {
     "windows": [
       {
         "title": "CepWallet",
         "width": 1200,
-        "height": 800,
-        "resizable": true,
-        "fullscreen": false
+        "height": 800
       }
     ],
     "security": {

@@ -1,6 +1,6 @@
 use crate::hardware::{DeviceInfo, TrezorManager};
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 use tauri::State;
 
 pub struct AppState {
@@ -25,7 +25,7 @@ pub async fn connect_device(state: State<'_, AppState>) -> Result<DeviceInfo, St
 
     let device_info = manager.connect().await.map_err(|e| e.to_string())?;
 
-    let mut trezor = state.trezor.lock().unwrap();
+    let mut trezor = state.trezor.lock().await;
     *trezor = Some(manager);
 
     Ok(device_info)
@@ -34,7 +34,7 @@ pub async fn connect_device(state: State<'_, AppState>) -> Result<DeviceInfo, St
 /// Disconnect from Trezor device
 #[tauri::command]
 pub async fn disconnect_device(state: State<'_, AppState>) -> Result<(), String> {
-    let mut trezor = state.trezor.lock().unwrap();
+    let mut trezor = state.trezor.lock().await;
 
     if let Some(manager) = trezor.as_ref() {
         manager.disconnect().await.map_err(|e| e.to_string())?;
@@ -47,7 +47,7 @@ pub async fn disconnect_device(state: State<'_, AppState>) -> Result<(), String>
 /// Get device information
 #[tauri::command]
 pub async fn get_device_info(state: State<'_, AppState>) -> Result<DeviceInfo, String> {
-    let trezor = state.trezor.lock().unwrap();
+    let trezor = state.trezor.lock().await;
     let manager = trezor
         .as_ref()
         .ok_or("Device not connected".to_string())?;
@@ -64,7 +64,7 @@ pub async fn get_public_key(
     state: State<'_, AppState>,
     path: String,
 ) -> Result<String, String> {
-    let trezor = state.trezor.lock().unwrap();
+    let trezor = state.trezor.lock().await;
     let manager = trezor
         .as_ref()
         .ok_or("Device not connected".to_string())?;
@@ -83,7 +83,7 @@ pub async fn get_address(
     state: State<'_, AppState>,
     path: String,
 ) -> Result<String, String> {
-    let trezor = state.trezor.lock().unwrap();
+    let trezor = state.trezor.lock().await;
     let manager = trezor
         .as_ref()
         .ok_or("Device not connected".to_string())?;
@@ -98,7 +98,7 @@ pub async fn get_addresses(
     start_index: u32,
     count: u32,
 ) -> Result<Vec<String>, String> {
-    let trezor = state.trezor.lock().unwrap();
+    let trezor = state.trezor.lock().await;
     let manager = trezor
         .as_ref()
         .ok_or("Device not connected".to_string())?;
@@ -116,7 +116,7 @@ pub async fn sign_transaction(
     path: String,
     tx: TransactionRequest,
 ) -> Result<String, String> {
-    let trezor = state.trezor.lock().unwrap();
+    let trezor = state.trezor.lock().await;
     let manager = trezor
         .as_ref()
         .ok_or("Device not connected".to_string())?;
@@ -139,7 +139,7 @@ pub async fn sign_message(
     path: String,
     message: String,
 ) -> Result<String, String> {
-    let trezor = state.trezor.lock().unwrap();
+    let trezor = state.trezor.lock().await;
     let manager = trezor
         .as_ref()
         .ok_or("Device not connected".to_string())?;
@@ -157,7 +157,7 @@ pub async fn sign_typed_data(
     path: String,
     data: serde_json::Value,
 ) -> Result<String, String> {
-    let trezor = state.trezor.lock().unwrap();
+    let trezor = state.trezor.lock().await;
     let manager = trezor
         .as_ref()
         .ok_or("Device not connected".to_string())?;

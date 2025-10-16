@@ -1,6 +1,6 @@
 import React from 'react';
 
-const TransactionList = () => {
+export const TransactionList = () => {
   const transactions = []; // Replace with actual transaction data
 
   return (
@@ -22,5 +22,3 @@ const TransactionList = () => {
     </div>
   );
 };
-
-export default TransactionList;

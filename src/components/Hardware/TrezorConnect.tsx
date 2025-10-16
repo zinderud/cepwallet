@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 
-const TrezorConnect = () => {
+export const TrezorConnect = () => {
   const [connected, setConnected] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const connectToTrezor = async () => {
     try {
-      const response = await invoke('connect_trezor');
+      const response = await invoke<boolean>('connect_trezor');
       setConnected(response);
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     }
   };
 
@@ -30,5 +30,3 @@ const TrezorConnect = () => {
     </div>
   );
 };
-
-export default TrezorConnect;

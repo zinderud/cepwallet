@@ -13,7 +13,7 @@ use commands::{
     connect_device, disconnect_device, get_address, get_addresses, get_device_info,
     get_public_key, sign_message, sign_transaction, sign_typed_data, AppState,
 };
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 
 fn main() {
     tauri::Builder::default()

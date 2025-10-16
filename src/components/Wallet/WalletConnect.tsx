@@ -1,7 +1,7 @@
 import React from 'react';
 import { useWallet } from '../../hooks/useWallet';
 
-const WalletConnect: React.FC = () => {
+export const WalletConnect: React.FC = () => {
   const { connectWallet, walletAddress } = useWallet();
 
   return (
@@ -15,5 +15,3 @@ const WalletConnect: React.FC = () => {
     </div>
   );
 };
-
-export default WalletConnect;
