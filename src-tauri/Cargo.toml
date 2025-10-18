@@ -7,6 +7,7 @@ license = "GPL-3.0"
 repository = "https://github.com/zinderud/cepwallet"
 edition = "2021"
 rust-version = "1.70"
+default-run = "cepwallet"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

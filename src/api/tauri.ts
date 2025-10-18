@@ -4,7 +4,7 @@
  * Type-safe wrapper for Tauri invoke commands
  */
 
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import type {
   DeviceInfo,
   TransactionRequest,
@@ -120,21 +120,21 @@ export const privacyApi = {
    * Shield tokens (Public → Private)
    */
   shield: async (params: ShieldTransactionParams): Promise<ShieldedTransaction> => {
-    return invoke<ShieldedTransaction>('shield_transaction', params);
+    return invoke<ShieldedTransaction>('shield_transaction', { ...params });
   },
 
   /**
    * Unshield tokens (Private → Public)
    */
   unshield: async (params: UnshieldTransactionParams): Promise<ShieldedTransaction> => {
-    return invoke<ShieldedTransaction>('unshield_transaction', params);
+    return invoke<ShieldedTransaction>('unshield_transaction', { ...params });
   },
 
   /**
    * Private transfer (Private → Private)
    */
   transfer: async (params: PrivateTransferParams): Promise<ShieldedTransaction> => {
-    return invoke<ShieldedTransaction>('private_transfer', params);
+    return invoke<ShieldedTransaction>('private_transfer', { ...params });
   },
 
   /**
@@ -148,28 +148,28 @@ export const privacyApi = {
    * Join a privacy pool
    */
   joinPool: async (params: JoinPrivacyPoolParams): Promise<PrivacyPoolOperation> => {
-    return invoke<PrivacyPoolOperation>('join_privacy_pool', params);
+    return invoke<PrivacyPoolOperation>('join_privacy_pool', { ...params });
   },
 
   /**
    * Exit a privacy pool
    */
   exitPool: async (params: ExitPrivacyPoolParams): Promise<PrivacyPoolOperation> => {
-    return invoke<PrivacyPoolOperation>('exit_privacy_pool', params);
+    return invoke<PrivacyPoolOperation>('exit_privacy_pool', { ...params });
   },
 
   /**
    * Perform privacy pool swap
    */
   poolSwap: async (params: PrivacyPoolSwapParams): Promise<PrivacyPoolOperation> => {
-    return invoke<PrivacyPoolOperation>('privacy_pool_swap', params);
+    return invoke<PrivacyPoolOperation>('privacy_pool_swap', { ...params });
   },
 
   /**
    * Generate ZK proof
    */
   generateProof: async (params: GenerateZKProofParams): Promise<string> => {
-    return invoke<string>('generate_zk_proof', params);
+    return invoke<string>('generate_zk_proof', { ...params });
   },
 
   /**
@@ -193,7 +193,7 @@ export const railgunWalletApi = {
    * @returns Wallet information including ID, address, and mnemonic
    */
   createWallet: async (params: CreateRailgunWalletParams): Promise<WalletCreateResponse> => {
-    return invoke<WalletCreateResponse>('create_railgun_wallet', params);
+    return invoke<WalletCreateResponse>('create_railgun_wallet', { ...params });
   },
 
   /**
@@ -203,7 +203,7 @@ export const railgunWalletApi = {
    * @returns Shield private key (used for shield operations)
    */
   getShieldKey: async (params: GetShieldKeyParams): Promise<ShieldPrivateKeyResponse> => {
-    return invoke<ShieldPrivateKeyResponse>('get_shield_key', params);
+    return invoke<ShieldPrivateKeyResponse>('get_shield_key', { ...params });
   },
 };
 
