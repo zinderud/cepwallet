@@ -5,7 +5,13 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "test": "node test.js"
+    "test": "node test.js",
+    "test:wallet": "node test-wallet.js",
+    "test:shield": "node test-shield-simple.js",
+    "test:transfer": "node test-transfer.js",
+    "test:unshield": "node test-unshield.js",
+    "test:ffi": "node test-ffi-integration.js",
+    "test:all": "npm run test:wallet && npm run test:ffi"
   },
   "dependencies": {
     "@railgun-community/engine": "^9.4.0",

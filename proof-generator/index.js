@@ -326,19 +326,35 @@ async function main() {
     const args = process.argv.slice(2);
     
     if (args.length === 0) {
-      console.error('Usage: node index.js <json_params>');
+      console.error('Usage: node index.js <operation> <json_params>');
+      console.error('   or: node index.js <json_with_operation>');
       process.exit(1);
     }
     
-    const params = JSON.parse(args[0]);
-    const { operation, ...operationParams } = params;
+    // Support both formats:
+    // 1. Two args: operation and params separately
+    // 2. One arg: JSON with operation field
+    let operation, operationParams;
+    
+    if (args.length === 1) {
+      const params = JSON.parse(args[0]);
+      operation = params.operation;
+      const { operation: _, ...rest } = params;
+      operationParams = rest;
+    } else {
+      operation = args[0];
+      operationParams = JSON.parse(args[1]);
+    }
     
     console.log(`[ProofGen] Operation: ${operation}`);
     
     // Handle different operations
     let result;
     
-    if (operation === 'createWallet') {
+    if (operation === 'initRailgun') {
+      await initRailgun(operationParams.chainId || 11155111);
+      result = { success: true };
+    } else if (operation === 'createWallet') {
       result = await createWallet(operationParams);
     } else if (operation === 'getShieldPrivateKey') {
       result = await getShieldPrivateKey(operationParams);
@@ -404,18 +420,30 @@ async function createWallet(params) {
   console.log('[WalletMgmt] Creating RAILGUN wallet...');
   
   try {
+    // Initialize RAILGUN if not already initialized
+    if (!railgunInitialized) {
+      console.log('[WalletMgmt] Auto-initializing RAILGUN...');
+      await initRailgun(params.chainId || 11155111);
+    }
+    
     const { createRailgunWallet } = require('@railgun-community/wallet');
     
+    // Remove 0x prefix if present
+    let encryptionKey = params.encryptionKey;
+    if (encryptionKey.startsWith('0x')) {
+      encryptionKey = encryptionKey.substring(2);
+    }
+    
     // Validate encryption key (must be 32 bytes / 64 hex chars)
-    if (!params.encryptionKey || params.encryptionKey.length !== 66) { // 0x + 64 chars
-      throw new Error('Encryption key must be 32 bytes (66 hex chars with 0x prefix)');
+    if (!encryptionKey || encryptionKey.length !== 64) {
+      throw new Error('Encryption key must be 32 bytes (64 hex chars)');
     }
     
     const mnemonic = params.mnemonic || generateMnemonic();
     
     // Create wallet
     const walletInfo = await createRailgunWallet(
-      params.encryptionKey,
+      encryptionKey, // Without 0x prefix
       mnemonic,
       undefined // creationBlockNumbers (optional)
     );
@@ -456,10 +484,10 @@ async function getShieldPrivateKey(params) {
   console.log('[WalletMgmt] Getting shield private key...');
   
   try {
-    const { getShieldPrivateKeySignature } = require('@railgun-community/wallet');
+    const { getShieldPrivateKeySignatureMessage } = require('@railgun-community/wallet');
     
-    // Get shield private key for this wallet
-    const shieldPrivateKey = await getShieldPrivateKeySignature(
+    // Get shield private key signature message for this wallet
+    const shieldPrivateKey = await getShieldPrivateKeySignatureMessage(
       params.railgunWalletId
     );
     
