@@ -1,535 +1,1067 @@
-# Trezor Entegrasyonu Dokümantasyonu
+# Trezor Hardware Wallet Integration 🔐# Trezor Entegrasyonu Dokümantasyonu
 
-## İçindekiler
 
-1. [Proje Genel Bakış](#proje-genel-bakış)
+
+CepWallet, Trezor hardware wallet'ları maksimum güvenlik için entegre eder. **Private key'ler ASLA cihazdan çıkmaz.**## İçindekiler
+
+
+
+## 📚 Doküman İndeksi1. [Proje Genel Bakış](#proje-genel-bakış)
+
 2. [Trezor Suite Mimarisi](#trezor-suite-mimarisi)
-3. [Trezor Firmware Mimarisi](#trezor-firmware-mimarisi)
-4. [Kurulum ve Bağımlılıklar](#kurulum-ve-bağımlılıklar)
+
+### 🔐 [TREZOR_SECRET_WALLET_INTEGRATION.md](./TREZOR_SECRET_WALLET_INTEGRATION.md)3. [Trezor Firmware Mimarisi](#trezor-firmware-mimarisi)
+
+**Trezor Secret Wallet entegrasyonu için kapsamlı implementasyon rehberi.**4. [Kurulum ve Bağımlılıklar](#kurulum-ve-bağımlılıklar)
+
 5. [Dokümantasyon Yapısı](#dokümantasyon-yapısı)
 
-## Proje Genel Bakış
+**İçerik:**
 
-Trezor ekosistemi, donanım cüzdan cihazları için gelişmiş bir altyapı sunar. İki ana bileşenden oluşur:
+- Kullanıcı akışı (6 adım)## Proje Genel Bakış
 
-### 1. Trezor Suite
-**Repository**: `trezor/trezor-suite`
+- Secret Wallet (passphrase) aktivasyonu
 
-Trezor Suite, Trezor donanım cüzdanları için resmi masaüstü ve web uygulamasıdır.
+- RAILGUN key derivation (deterministik)Trezor ekosistemi, donanım cüzdan cihazları için gelişmiş bir altyapı sunar. İki ana bileşenden oluşur:
 
-**Ana Özellikler:**
-- 🔐 Multi-coin desteği (Bitcoin, Ethereum, Cardano, Solana, vb.)
-- 🌐 Web ve masaüstü uygulaması
+- UI/UX mockup'ları
+
+- Kod örnekleri (TypeScript)### 1. Trezor Suite
+
+- İmplementasyon planı (8-13 gün)**Repository**: `trezor/trezor-suite`
+
+
+
+**Kritik Güvenlik Prensibi:**Trezor Suite, Trezor donanım cüzdanları için resmi masaüstü ve web uygulamasıdır.
+
+- ✅ Trezor'dan deterministik key derivation
+
+- ✅ cipherKeyValue API ile SLIP-0011 standardı**Ana Özellikler:**
+
+- ✅ Private key ASLA cihazdan çıkmaz- 🔐 Multi-coin desteği (Bitcoin, Ethereum, Cardano, Solana, vb.)
+
+- ❌ ~~Private key export~~ (GÜVENLİK AÇIĞI)- 🌐 Web ve masaüstü uygulaması
+
 - 📱 React Native ile mobil uygulama
-- 🔗 WalletConnect entegrasyonu
+
+---- 🔗 WalletConnect entegrasyonu
+
 - 🏦 DeFi ve staking desteği
-- 🔄 Blockchain link yönetimi
+
+### 🛡️ [SECURITY_ANALYSIS.md](./SECURITY_ANALYSIS.md)- 🔄 Blockchain link yönetimi
+
+**Trezor + RAILGUN güvenlik mimarisi detaylı analizi.**
 
 ### 2. Trezor Firmware
-**Repository**: `trezor/trezor-firmware`
 
-Trezor cihazlarının firmware'i ve low-level kriptografik işlemleri.
+**İçerik:****Repository**: `trezor/trezor-firmware`
 
-**Ana Özellikler:**
-- 🔒 Güvenli imza işlemleri
-- 🔑 HD wallet key türetme
-- 💾 Firmware güncelleme sistemi
+- Neden private key export edilmemeli
+
+- Doğru vs Yanlış yaklaşımlar (kod örnekleriyle)Trezor cihazlarının firmware'i ve low-level kriptografik işlemleri.
+
+- SLIP-0011 standardı açıklaması
+
+- RAILGUN dual-key system (Spending + Viewing)**Ana Özellikler:**
+
+- BIP-32/BIP-39 entegrasyonu- 🔒 Güvenli imza işlemleri
+
+- Common pitfalls & solutions- 🔑 HD wallet key türetme
+
+- Security checklist- 💾 Firmware güncelleme sistemi
+
 - 🛡️ Bootloader güvenliği
-- ⚡ Hardware güvenlik modülü
 
-## Trezor Suite Mimarisi
+**Key Takeaways:**- ⚡ Hardware güvenlik modülü
 
-### Monorepo Yapısı
+- cipherKeyValue() deterministik key derivation
 
-```
+- RAILGUN: Spending + Viewing keys## Trezor Suite Mimarisi
+
+- 5 katmanlı güvenlik mimarisi
+
+- Physical approval her işlem için### Monorepo Yapısı
+
+
+
+---```
+
 trezor-suite/
-├── packages/
-│   ├── connect/              # @trezor/connect - API library
+
+### 📡 [TREZOR_CONNECT.md](./TREZOR_CONNECT.md)├── packages/
+
+**Trezor Connect API kullanım kılavuzu.**│   ├── connect/              # @trezor/connect - API library
+
 │   ├── connect-webextension/ # Browser extension proxy
-│   ├── blockchain-link/      # Blockchain backends
-│   └── suite/                # Main Suite app
-├── suite-native/             # React Native mobile app
-├── suite-common/             # Shared utilities
-│   ├── wallet-core/          # Core wallet logic
-│   ├── wallet-types/         # TypeScript types
+
+**İçerik:**│   ├── blockchain-link/      # Blockchain backends
+
+- TrezorConnect başlatma│   └── suite/                # Main Suite app
+
+- Cihaz bağlantısı├── suite-native/             # React Native mobile app
+
+- PIN entry flow├── suite-common/             # Shared utilities
+
+- Transaction signing│   ├── wallet-core/          # Core wallet logic
+
+- Message signing│   ├── wallet-types/         # TypeScript types
+
 │   ├── walletconnect/        # WalletConnect integration
-│   └── token-definitions/    # Token metadata
+
+---│   └── token-definitions/    # Token metadata
+
 └── docs/                     # Documentation
-```
+
+### ✍️ [SIGNING.md](./SIGNING.md)```
+
+**Transaction ve message signing detayları.**
 
 ### Temel Paketler
 
-#### @trezor/connect
-Trezor cihazlarıyla iletişim kurmak için JavaScript/TypeScript API.
+**İçerik:**
 
-**Yetenekler:**
+- Ethereum transaction signing#### @trezor/connect
+
+- EIP-712 typed data signingTrezor cihazlarıyla iletişim kurmak için JavaScript/TypeScript API.
+
+- Message signing (authentication)
+
+- Signature verification**Yetenekler:**
+
 - Cihaz bağlantı yönetimi
-- Transaction imzalama
+
+---- Transaction imzalama
+
 - Mesaj imzalama/doğrulama
-- Public key alma
+
+## 🎯 Quick Start Guide- Public key alma
+
 - Address türetme
 
+### 1. Trezor Bağlantısı
+
 #### @trezor/blockchain-link
-Blockchain backend'leriyle iletişim.
+
+```typescriptBlockchain backend'leriyle iletişim.
+
+import TrezorConnect from '@trezor/connect-web';
 
 **Desteklenen Backend'ler:**
-- Blockbook (Bitcoin, Ethereum)
-- Electrum (Bitcoin)
-- Ripple
-- Blockfrost (Cardano)
-- Solana RPC
-- Stellar Horizon
+
+// Initialize Trezor Connect- Blockbook (Bitcoin, Ethereum)
+
+await TrezorConnect.init({- Electrum (Bitcoin)
+
+  manifest: {- Ripple
+
+    email: 'support@cepwallet.com',- Blockfrost (Cardano)
+
+    appUrl: 'https://cepwallet.com',- Solana RPC
+
+  },- Stellar Horizon
+
+});
 
 ## Trezor Firmware Mimarisi
 
-### Firmware Yapısı
+// Connect to device (Secret Wallet mode)
+
+const device = await TrezorConnect.getDeviceState({### Firmware Yapısı
+
+  useEmptyPassphrase: false, // Secret Wallet için
+
+});```
+
+trezor-firmware/
+
+console.log('Device connected:', device.success);├── core/                      # Trezor T firmware (Python)
+
+```│   ├── src/
+
+│   │   ├── apps/              # Application modules
+
+### 2. Secret Wallet Aktivasyonu│   │   │   ├── bitcoin/       # Bitcoin signing
+
+│   │   │   ├── ethereum/      # Ethereum signing
+
+```typescript│   │   │   ├── cardano/       # Cardano support
+
+// Passphrase Trezor cihazda girilir│   │   │   └── misc/          # Misc operations
+
+const secretWallet = await TrezorConnect.ethereumGetAddress({│   │   └── trezor/            # Core libraries
+
+  path: "m/44'/60'/0'/0/0",│   └── embed/                 # Embedded C code
+
+  showOnTrezor: true, // Cihazda göster ve onayla├── legacy/                    # Trezor One firmware (C)
+
+});│   ├── firmware/              # Main firmware
+
+│   ├── bootloader/            # Bootloader
+
+if (secretWallet.success) {│   └── signing/               # Transaction signing
+
+  console.log('Secret Wallet Address:', secretWallet.payload.address);├── python/                    # Python tools
+
+}│   └── src/trezorlib/         # Python client library
+
+```└── tests/                     # Device tests
 
 ```
-trezor-firmware/
-├── core/                      # Trezor T firmware (Python)
-│   ├── src/
-│   │   ├── apps/              # Application modules
-│   │   │   ├── bitcoin/       # Bitcoin signing
-│   │   │   ├── ethereum/      # Ethereum signing
-│   │   │   ├── cardano/       # Cardano support
-│   │   │   └── misc/          # Misc operations
-│   │   └── trezor/            # Core libraries
-│   └── embed/                 # Embedded C code
-├── legacy/                    # Trezor One firmware (C)
-│   ├── firmware/              # Main firmware
-│   ├── bootloader/            # Bootloader
-│   └── signing/               # Transaction signing
-├── python/                    # Python tools
-│   └── src/trezorlib/         # Python client library
-└── tests/                     # Device tests
-```
+
+### 3. RAILGUN Key Derivation (Güvenli Yöntem)
 
 ### İmzalama Akışı
 
-#### Bitcoin İmzalama
-```
-1. SignTx mesajı → Cihaz
-2. Kullanıcı onayı
-3. Input/Output doğrulama
-4. Private key ile imzalama
-5. İmza döndürme
+```typescript
+
+// ✅ DOĞRU: Deterministik key derivation#### Bitcoin İmzalama
+
+async function deriveRailgunKeys(walletId: string) {```
+
+  // Helper: 16-byte padding (PKCS7)1. SignTx mesajı → Cihaz
+
+  const padTo16Bytes = (str: string) => {2. Kullanıcı onayı
+
+    const bytes = Buffer.from(str, 'utf8');3. Input/Output doğrulama
+
+    const blockSize = 16;4. Private key ile imzalama
+
+    const paddingLength = blockSize - (bytes.length % blockSize);5. İmza döndürme
+
+    const padding = Buffer.alloc(paddingLength, paddingLength);```
+
+    return Buffer.concat([bytes, padding]).toString('hex');
+
+  };#### Ethereum İmzalama
+
 ```
 
-#### Ethereum İmzalama
-```
-1. EthereumSignTx mesajı
-2. Transaction parametreleri doğrulama
-3. Chain ID kontrolü
-4. Kullanıcı onayı
-5. ECDSA imzalama (v, r, s)
-6. EIP-155/EIP-1559 desteği
-```
+  // Spending Key derivation1. EthereumSignTx mesajı
+
+  const spendingKey = await TrezorConnect.cipherKeyValue({2. Transaction parametreleri doğrulama
+
+    path: "m/44'/60'/0'/0/0",3. Chain ID kontrolü
+
+    key: `RAILGUN_SPENDING_KEY_${walletId}`,4. Kullanıcı onayı
+
+    value: padTo16Bytes(walletId),5. ECDSA imzalama (v, r, s)
+
+    encrypt: true,6. EIP-155/EIP-1559 desteği
+
+    askOnEncrypt: true, // Trezor'da onay iste```
+
+  });
 
 ## Kurulum ve Bağımlılıklar
 
-### Trezor Suite Kurulumu
+  // Viewing Key derivation
 
-```bash
-# Repository klonlama
-git clone https://github.com/trezor/trezor-suite.git
-cd trezor-suite
+  const viewingKey = await TrezorConnect.cipherKeyValue({### Trezor Suite Kurulumu
+
+    path: "m/44'/60'/0'/0/0",
+
+    key: `RAILGUN_VIEWING_KEY_${walletId}`,```bash
+
+    value: padTo16Bytes(walletId),# Repository klonlama
+
+    encrypt: true,git clone https://github.com/trezor/trezor-suite.git
+
+    askOnEncrypt: true,cd trezor-suite
+
+  });
 
 # Bağımlılıkları yükleme
-yarn install
 
-# Development build
-yarn build:libs
-yarn workspace @trezor/suite-desktop dev
-```
+  if (spendingKey.success && viewingKey.success) {yarn install
 
-### Trezor Connect Kullanımı
+    return {
+
+      spendingKey: spendingKey.payload.value, // 32-byte hex# Development build
+
+      viewingKey: viewingKey.payload.value,   // 32-byte hexyarn build:libs
+
+    };yarn workspace @trezor/suite-desktop dev
+
+  }```
+
+
+
+  throw new Error('Key derivation failed');### Trezor Connect Kullanımı
+
+}
 
 ```bash
-# NPM ile kurulum
-npm install @trezor/connect
+
+// ❌ YANLIŞ: Private key export etmeyin!# NPM ile kurulum
+
+// const privateKey = await trezor.getPrivateKey(); // ⚠️ Bu API yok!npm install @trezor/connect
+
+```
 
 # veya Yarn
-yarn add @trezor/connect
+
+### 4. Transaction Signingyarn add @trezor/connect
+
 ```
 
-#### TypeScript Örneği
-
 ```typescript
-import TrezorConnect from '@trezor/connect';
 
-// Initialization
-TrezorConnect.init({
-  manifest: {
-    appUrl: 'https://your-app.com',
-    email: 'developer@your-app.com',
+// Transaction oluştur#### TypeScript Örneği
+
+const tx = {
+
+  to: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',```typescript
+
+  value: '0x0', // 0 ETH (contract interaction)import TrezorConnect from '@trezor/connect';
+
+  gasPrice: '0x3B9ACA00', // 1 Gwei
+
+  gasLimit: '0x5208', // 21000// Initialization
+
+  nonce: '0x0',TrezorConnect.init({
+
+  chainId: 1, // Ethereum Mainnet  manifest: {
+
+  data: '0x...', // Contract call data    appUrl: 'https://your-app.com',
+
+};    email: 'developer@your-app.com',
+
   },
-});
 
-// Get Ethereum address
-const result = await TrezorConnect.ethereumGetAddress({
-  path: "m/44'/60'/0'/0/0",
+// Trezor'da imzala (cihazda onay gerekli)});
+
+const result = await TrezorConnect.ethereumSignTransaction({
+
+  path: "m/44'/60'/0'/0/0",// Get Ethereum address
+
+  transaction: tx,const result = await TrezorConnect.ethereumGetAddress({
+
+});  path: "m/44'/60'/0'/0/0",
+
   showOnTrezor: true,
-});
 
-if (result.success) {
-  console.log('Address:', result.payload.address);
-}
+if (result.success) {});
 
-// Sign Ethereum transaction
-const signResult = await TrezorConnect.ethereumSignTransaction({
-  path: "m/44'/60'/0'/0/0",
-  transaction: {
+  const signature = {
+
+    r: result.payload.r,if (result.success) {
+
+    s: result.payload.s,  console.log('Address:', result.payload.address);
+
+    v: result.payload.v,}
+
+  };
+
+  // Sign Ethereum transaction
+
+  console.log('Transaction signed:', signature);const signResult = await TrezorConnect.ethereumSignTransaction({
+
+}  path: "m/44'/60'/0'/0/0",
+
+```  transaction: {
+
     to: '0x...',
-    value: '0x0',
+
+---    value: '0x0',
+
     gasLimit: '0x5208',
-    gasPrice: '0x3b9aca00',
+
+## 🔒 Güvenlik Prensipleri    gasPrice: '0x3b9aca00',
+
     nonce: '0x0',
-    chainId: 1,
+
+### ✅ YAPILMASI GEREKENLER    chainId: 1,
+
   },
-});
-```
 
-## Dokümantasyon Yapısı
+#### 1. Deterministik Key Derivation});
 
-Bu klasördeki diğer dosyalar:
+```typescript```
 
-- **[TREZOR_CONNECT.md](./TREZOR_CONNECT.md)** - TrezorConnect API detayları
-- **[SIGNING.md](./SIGNING.md)** - Transaction ve mesaj imzalama
-- **[FIRMWARE.md](./FIRMWARE.md)** - Firmware yapısı ve güvenlik
-- **[BLOCKCHAIN_LINK.md](./BLOCKCHAIN_LINK.md)** - Blockchain backend entegrasyonu
+// ✅ cipherKeyValue kullan
+
+await TrezorConnect.cipherKeyValue({## Dokümantasyon Yapısı
+
+  path: "m/44'/60'/0'/0/0",
+
+  key: "RAILGUN_KEY",Bu klasördeki diğer dosyalar:
+
+  value: padTo16Bytes(data),
+
+  encrypt: true,- **[TREZOR_CONNECT.md](./TREZOR_CONNECT.md)** - TrezorConnect API detayları
+
+  askOnEncrypt: true,- **[SIGNING.md](./SIGNING.md)** - Transaction ve mesaj imzalama
+
+});- **[FIRMWARE.md](./FIRMWARE.md)** - Firmware yapısı ve güvenlik
+
+```- **[BLOCKCHAIN_LINK.md](./BLOCKCHAIN_LINK.md)** - Blockchain backend entegrasyonu
+
 - **[WALLETCONNECT.md](./WALLETCONNECT.md)** - WalletConnect desteği
-- **[MOBILE.md](./MOBILE.md)** - React Native mobil uygulama
-- **[SECURITY.md](./SECURITY.md)** - Güvenlik best practices
 
-## Hızlı Başlangıç
+#### 2. Physical Approval- **[MOBILE.md](./MOBILE.md)** - React Native mobil uygulama
 
-### 1. Temel Cüzdan İşlemleri
+```typescript- **[SECURITY.md](./SECURITY.md)** - Güvenlik best practices
 
-```typescript
-import TrezorConnect from '@trezor/connect';
+// ✅ Her kritik işlem için onay iste
 
-// BIP-32 path'ten address alma
-async function getAddress(path: string) {
-  const result = await TrezorConnect.getAddress({
-    path,
+{## Hızlı Başlangıç
+
+  askOnEncrypt: true,  // Encryption için onay
+
+  askOnDecrypt: true,  // Decryption için onay### 1. Temel Cüzdan İşlemleri
+
+  showOnTrezor: true,  // Cihazda göster
+
+}```typescript
+
+```import TrezorConnect from '@trezor/connect';
+
+
+
+#### 3. Proper Error Handling// BIP-32 path'ten address alma
+
+```typescriptasync function getAddress(path: string) {
+
+// ✅ User rejection handle et  const result = await TrezorConnect.getAddress({
+
+const result = await TrezorConnect.signTransaction(...);    path,
+
     coin: 'btc',
-  });
-  
-  return result.success ? result.payload.address : null;
-}
 
-// Public key alma
-async function getPublicKey(path: string) {
-  const result = await TrezorConnect.getPublicKey({
-    path,
-  });
-  
-  return result.success ? result.payload : null;
-}
-```
+if (!result.success) {  });
 
-### 2. Transaction İmzalama
+  if (result.payload.error === 'Action cancelled by user') {  
+
+    // Kullanıcı red etti  return result.success ? result.payload.address : null;
+
+    showNotification('Transaction cancelled by user');}
+
+  } else {
+
+    // Başka bir hata// Public key alma
+
+    showError(result.payload.error);async function getPublicKey(path: string) {
+
+  }  const result = await TrezorConnect.getPublicKey({
+
+  return;    path,
+
+}  });
+
+  
+
+// Success case  return result.success ? result.payload : null;
+
+processSignature(result.payload);}
+
+``````
+
+
+
+#### 4. Session Management### 2. Transaction İmzalama
 
 ```typescript
-// Bitcoin transaction
-async function signBitcoinTx(inputs, outputs) {
+
+// ✅ Timeout ve auto-lock```typescript
+
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 dakika// Bitcoin transaction
+
+const WARNING_BEFORE = 5 * 60 * 1000;   // 5 dakika önce uyarasync function signBitcoinTx(inputs, outputs) {
+
   const result = await TrezorConnect.signTransaction({
-    inputs,
+
+let lastActivity = Date.now();    inputs,
+
     outputs,
-    coin: 'btc',
-  });
-  
-  return result.payload;
-}
 
-// Ethereum transaction (EIP-1559)
-async function signEthereumTx(tx) {
-  const result = await TrezorConnect.ethereumSignTransaction({
-    path: "m/44'/60'/0'/0/0",
-    transaction: {
+setInterval(() => {    coin: 'btc',
+
+  const idle = Date.now() - lastActivity;  });
+
+    
+
+  if (idle > SESSION_TIMEOUT) {  return result.payload;
+
+    disconnectTrezor();}
+
+    showNotification('Session expired. Please reconnect.');
+
+  } else if (idle > (SESSION_TIMEOUT - WARNING_BEFORE)) {// Ethereum transaction (EIP-1559)
+
+    showWarning('Session will expire in 5 minutes');async function signEthereumTx(tx) {
+
+  }  const result = await TrezorConnect.ethereumSignTransaction({
+
+}, 60000); // Her dakika kontrol    path: "m/44'/60'/0'/0/0",
+
+```    transaction: {
+
       to: tx.to,
-      value: tx.value,
-      maxFeePerGas: tx.maxFeePerGas,
-      maxPriorityFeePerGas: tx.maxPriorityFeePerGas,
-      gasLimit: tx.gasLimit,
-      nonce: tx.nonce,
-      chainId: tx.chainId,
-      data: tx.data,
-    },
-  });
-  
-  return result.payload;
-}
-```
 
-### 3. Mesaj İmzalama
+---      value: tx.value,
+
+      maxFeePerGas: tx.maxFeePerGas,
+
+### ❌ YAPILMAMASI GEREKENLER      maxPriorityFeePerGas: tx.maxPriorityFeePerGas,
+
+      gasLimit: tx.gasLimit,
+
+#### 1. Private Key Export      nonce: tx.nonce,
+
+```typescript      chainId: tx.chainId,
+
+// ❌ ASLA BÖYLE YAPMAYIN!      data: tx.data,
+
+const privateKey = await trezor.getPrivateKey(); // Bu API yok    },
+
+const wallet = new ethers.Wallet(privateKey);    // Güvenlik açığı  });
+
+wallet.signTransaction(tx);                      // Hardware wallet'ın amacını bozar  
+
+```  return result.payload;
+
+}
+
+#### 2. Confirmation Bypass```
 
 ```typescript
-// Bitcoin mesaj imzalama
-async function signMessage(message: string, path: string) {
-  const result = await TrezorConnect.signMessage({
-    path,
-    message,
-    coin: 'btc',
-  });
-  
-  return result.payload.signature;
-}
 
-// Ethereum mesaj imzalama
-async function signEthMessage(message: string, path: string) {
-  const result = await TrezorConnect.ethereumSignMessage({
-    path,
-    message,
-  });
-  
-  return result.payload.signature;
-}
+// ❌ Silent signing yapma### 3. Mesaj İmzalama
 
-// Mesaj doğrulama
-async function verifyMessage(address: string, message: string, signature: string) {
+{
+
+  askOnEncrypt: false,  // ❌ Onay istemeden yapma```typescript
+
+  askOnDecrypt: false,  // ❌ Kullanıcı bilmeden işlem yapma// Bitcoin mesaj imzalama
+
+}async function signMessage(message: string, path: string) {
+
+```  const result = await TrezorConnect.signMessage({
+
+    path,
+
+#### 3. Improper Padding    message,
+
+```typescript    coin: 'btc',
+
+// ❌ 16-byte alignment olmadan  });
+
+await TrezorConnect.cipherKeyValue({  
+
+  value: "some-random-string", // ❌ Padding yok  return result.payload.signature;
+
+});}
+
+
+
+// ✅ DOĞRU: PKCS7 padding// Ethereum mesaj imzalama
+
+await TrezorConnect.cipherKeyValue({async function signEthMessage(message: string, path: string) {
+
+  value: padTo16Bytes("some-random-string"), // ✅  const result = await TrezorConnect.ethereumSignMessage({
+
+});    path,
+
+```    message,
+
+  });
+
+#### 4. Memory Leakage  
+
+```typescript  return result.payload.signature;
+
+// ❌ Sensitive data temizlenmeden}
+
+let derivedKey = await deriveKey();
+
+// ... işlemler ...// Mesaj doğrulama
+
+// derivedKey hala memory'de!async function verifyMessage(address: string, message: string, signature: string) {
+
   const result = await TrezorConnect.verifyMessage({
-    address,
-    message,
-    signature,
-    coin: 'btc',
-  });
-  
-  return result.payload.success;
-}
+
+// ✅ DOĞRU: Temizle    address,
+
+let derivedKey = await deriveKey();    message,
+
+try {    signature,
+
+  // İşlemleri yap    coin: 'btc',
+
+  await useKey(derivedKey);  });
+
+} finally {  
+
+  // Memory'den temizle  return result.payload.success;
+
+  derivedKey = null;}
+
+}```
+
 ```
 
 ## Desteklenen Coin'ler
 
+---
+
 ### Bitcoin ve Türevleri
-- Bitcoin (BTC)
+
+## 📊 Güvenlik Katmanları- Bitcoin (BTC)
+
 - Bitcoin Cash (BCH)
-- Bitcoin Gold (BTG)
+
+CepWallet'ın 5 katmanlı güvenlik mimarisi:- Bitcoin Gold (BTG)
+
 - Litecoin (LTC)
-- Dash (DASH)
-- Zcash (ZEC)
-- Dogecoin (DOGE)
 
-### Ethereum ve EVM Zincirleri
-- Ethereum (ETH)
-- Ethereum Classic (ETC)
-- Polygon (MATIC)
-- Binance Smart Chain (BNB)
-- Avalanche (AVAX)
-- Fantom (FTM)
-- Optimism (OP)
-- Arbitrum (ARB)
+```- Dash (DASH)
 
-### Diğer Blockchain'ler
-- Cardano (ADA)
-- Solana (SOL)
-- Ripple (XRP)
-- Stellar (XLM)
-- Tezos (XTZ)
-- EOS (EOS)
-- NEM (XEM)
+┌─────────────────────────────────────────────────┐- Zcash (ZEC)
 
-## Event Handling
+│  Layer 1: Hardware Isolation (Trezor)          │- Dogecoin (DOGE)
 
-```typescript
-// Device event'lerini dinleme
-TrezorConnect.on('DEVICE_EVENT', (event) => {
-  if (event.type === 'device-connect') {
-    console.log('Trezor connected:', event.payload);
-  }
-  
-  if (event.type === 'device-disconnect') {
-    console.log('Trezor disconnected:', event.payload);
-  }
-});
+│  • Private keys in Secure Element              │
 
-// Button request handling
-TrezorConnect.on('UI_EVENT', (event) => {
-  if (event.type === 'ui-button') {
+│  • Physical button approval                     │### Ethereum ve EVM Zincirleri
+
+│  • PIN protection                               │- Ethereum (ETH)
+
+└─────────────────────────────────────────────────┘- Ethereum Classic (ETC)
+
+                    │- Polygon (MATIC)
+
+                    ▼- Binance Smart Chain (BNB)
+
+┌─────────────────────────────────────────────────┐- Avalanche (AVAX)
+
+│  Layer 2: Secret Wallet (Passphrase)           │- Fantom (FTM)
+
+│  • BIP-39 passphrase standard                   │- Optimism (OP)
+
+│  • Hidden wallet derivation                     │- Arbitrum (ARB)
+
+│  • Plausible deniability                        │
+
+└─────────────────────────────────────────────────┘### Diğer Blockchain'ler
+
+                    │- Cardano (ADA)
+
+                    ▼- Solana (SOL)
+
+┌─────────────────────────────────────────────────┐- Ripple (XRP)
+
+│  Layer 3: Deterministic Derivation (SLIP-0011) │- Stellar (XLM)
+
+│  • cipherKeyValue API                           │- Tezos (XTZ)
+
+│  • No private key export                        │- EOS (EOS)
+
+│  • User confirmation required                   │- NEM (XEM)
+
+└─────────────────────────────────────────────────┘
+
+                    │## Event Handling
+
+                    ▼
+
+┌─────────────────────────────────────────────────┐```typescript
+
+│  Layer 4: RAILGUN Privacy (Zero-Knowledge)     │// Device event'lerini dinleme
+
+│  • Shielded transactions                        │TrezorConnect.on('DEVICE_EVENT', (event) => {
+
+│  • On-chain privacy                             │  if (event.type === 'device-connect') {
+
+│  • Dual-key system (Spending + Viewing)         │    console.log('Trezor connected:', event.payload);
+
+└─────────────────────────────────────────────────┘  }
+
+                    │  
+
+                    ▼  if (event.type === 'device-disconnect') {
+
+┌─────────────────────────────────────────────────┐    console.log('Trezor disconnected:', event.payload);
+
+│  Layer 5: Encrypted Storage (LevelDOWN)       │  }
+
+│  • Local database encryption                    │});
+
+│  • Trezor-derived encryption keys               │
+
+│  • AES-256 encryption                           │// Button request handling
+
+└─────────────────────────────────────────────────┘TrezorConnect.on('UI_EVENT', (event) => {
+
+```  if (event.type === 'ui-button') {
+
     console.log('Confirm on device');
-  }
+
+---  }
+
   
-  if (event.type === 'ui-request_pin') {
+
+## 🧪 Test Scenarios  if (event.type === 'ui-request_pin') {
+
     // PIN girişi gerekli
-  }
+
+### Scenario 1: İlk Kurulum & Wallet Oluşturma  }
+
   
-  if (event.type === 'ui-request_passphrase') {
-    // Passphrase girişi gerekli
-  }
-});
-```
 
-## Güvenlik Özellikleri
+```bash  if (event.type === 'ui-request_passphrase') {
 
-### 1. Firmware İmzalama
+# Adımlar    // Passphrase girişi gerekli
+
+1. Trezor cihazı USB ile bağla  }
+
+2. PIN kodunu Trezor ekranında gir});
+
+3. Secret Wallet özelliğini aktive et```
+
+4. Passphrase'i Trezor cihazda gir (2 kez doğrulama)
+
+5. RAILGUN key'lerini türet (3 key: spending, viewing, nullifying)## Güvenlik Özellikleri
+
+6. RAILGUN wallet oluştur
+
+7. Test işlemi yap ve Trezor'da onayla### 1. Firmware İmzalama
+
 - Çoklu imza gerektiren firmware güncellemeleri
-- Bootloader güvenliği
-- Secure boot chain
 
-### 2. PIN Koruma
-- Brute-force koruması
+# Beklenen Sonuç- Bootloader güvenliği
+
+✅ Wallet oluşturuldu- Secure boot chain
+
+✅ Private key asla çıkmadı
+
+✅ Her adımda fiziksel onay verildi### 2. PIN Koruma
+
+```- Brute-force koruması
+
 - Rastgele numara girişi
-- Cihazda PIN doğrulama
 
-### 3. Passphrase Desteği
-- Ek güvenlik katmanı
-- Hidden wallet oluşturma
-- BIP-39 passphrase standardı
+### Scenario 2: Tekrar Bağlanma (Aynı Secret Wallet)- Cihazda PIN doğrulama
 
-### 4. Recovery Seed
-- BIP-39 mnemonic
+
+
+```bash### 3. Passphrase Desteği
+
+# Adımlar- Ek güvenlik katmanı
+
+1. Trezor bağla- Hidden wallet oluşturma
+
+2. PIN gir- BIP-39 passphrase standardı
+
+3. Aynı passphrase'i gir
+
+4. Wallet verilerini yükle### 4. Recovery Seed
+
+5. Balance'ları kontrol et- BIP-39 mnemonic
+
 - Shamir Backup (SLIP-39)
-- Seed'in cihazda kalması
 
-## CepWallet Entegrasyon Önerileri
+# Beklenen Sonuç- Seed'in cihazda kalması
 
-### 1. TrezorConnect Entegrasyonu
+✅ Aynı wallet'a bağlanıldı
+
+✅ Balance'lar doğru## CepWallet Entegrasyon Önerileri
+
+✅ Aynı 0zk address
+
+```### 1. TrezorConnect Entegrasyonu
+
 ```typescript
-// CepWallet için Trezor provider
+
+### Scenario 3: Farklı Secret Wallets (Plausible Deniability)// CepWallet için Trezor provider
+
 class TrezorWalletProvider {
-  async connect() {
-    await TrezorConnect.init({
-      manifest: {
-        appUrl: 'https://cepwallet.app',
-        email: 'support@cepwallet.app',
-      },
-    });
+
+```bash  async connect() {
+
+# Adımlar    await TrezorConnect.init({
+
+1. Passphrase "Alice" ile Wallet A oluştur      manifest: {
+
+2. Address ve balance kaydet        appUrl: 'https://cepwallet.app',
+
+3. Trezor'dan çık        email: 'support@cepwallet.app',
+
+4. Passphrase "Bob" ile Wallet B oluştur      },
+
+5. Address'leri karşılaştır    });
+
   }
-  
-  async getAccounts(coinType: string, count: number = 1) {
-    const accounts = [];
-    
-    for (let i = 0; i < count; i++) {
+
+# Beklenen Sonuç  
+
+✅ Tamamen farklı adresler  async getAccounts(coinType: string, count: number = 1) {
+
+✅ Farklı balance'lar    const accounts = [];
+
+✅ Her wallet bağımsız    
+
+```    for (let i = 0; i < count; i++) {
+
       const path = `m/44'/${this.getCoinIndex(coinType)}'/${i}'/0/0`;
-      const result = await TrezorConnect.getAddress({
+
+---      const result = await TrezorConnect.getAddress({
+
         path,
-        coin: coinType,
+
+## 📦 Dependencies        coin: coinType,
+
       });
-      
-      if (result.success) {
-        accounts.push({
-          path,
-          address: result.payload.address,
-          publicKey: result.payload.publicKey,
-        });
-      }
-    }
+
+```json      
+
+{      if (result.success) {
+
+  "dependencies": {        accounts.push({
+
+    "@trezor/connect-web": "^9.1.0",          path,
+
+    "@trezor/connect": "^9.1.0",          address: result.payload.address,
+
+    "ethers": "^6.9.0"          publicKey: result.payload.publicKey,
+
+  }        });
+
+}      }
+
+```    }
+
     
-    return accounts;
-  }
-  
-  async signTransaction(tx: Transaction) {
+
+**Kurulum:**    return accounts;
+
+```bash  }
+
+pnpm add @trezor/connect-web @trezor/connect ethers  
+
+```  async signTransaction(tx: Transaction) {
+
     // Chain'e göre uygun signing metodu
-    if (tx.chain === 'ethereum') {
+
+---    if (tx.chain === 'ethereum') {
+
       return this.signEthereumTransaction(tx);
-    } else if (tx.chain === 'bitcoin') {
+
+## 🚀 Implementation Roadmap    } else if (tx.chain === 'bitcoin') {
+
       return this.signBitcoinTransaction(tx);
-    }
-  }
-}
-```
 
-### 2. Multi-Signature Wallet Desteği
-```typescript
-// Multisig wallet oluşturma
-async function createMultisigWallet(publicKeys: string[], m: number) {
-  const result = await TrezorConnect.getAddress({
-    path: "m/48'/0'/0'/2'/0/0",
-    coin: 'btc',
-    multisig: {
-      pubkeys: publicKeys.map(pk => ({
-        node: pk,
-        address_n: [0, 0],
-      })),
-      m,
-      signatures: ['', '', ''],
-    },
-  });
-  
-  return result.payload.address;
-}
-```
+| Faz | Görev | Süre | Status |    }
 
-### 3. Account Discovery
+|-----|-------|------|--------|  }
+
+| **1** | Temel Trezor Bağlantısı | 1-2 gün | 📋 Planned |}
+
+| | • TrezorConnect entegrasyonu | | |```
+
+| | • Cihaz bağlantı testi | | |
+
+| | • PIN entry flow | | |### 2. Multi-Signature Wallet Desteği
+
+| | • Basic UI components | | |```typescript
+
+| **2** | Secret Wallet | 2-3 gün | 📋 Planned |// Multisig wallet oluşturma
+
+| | • Passphrase flow | | |async function createMultisigWallet(publicKeys: string[], m: number) {
+
+| | • Device state management | | |  const result = await TrezorConnect.getAddress({
+
+| | • Wallet derivation | | |    path: "m/48'/0'/0'/2'/0/0",
+
+| | • UI/UX polish | | |    coin: 'btc',
+
+| **3** | RAILGUN Entegrasyonu | 2-3 gün | 📋 Planned |    multisig: {
+
+| | • Encryption key derivation | | |      pubkeys: publicKeys.map(pk => ({
+
+| | • Wallet creation flow | | |        node: pk,
+
+| | • Storage encryption | | |        address_n: [0, 0],
+
+| | • Session management | | |      })),
+
+| **4** | Transaction Signing | 2-3 gün | 📋 Planned |      m,
+
+| | • Transaction builder | | |      signatures: ['', '', ''],
+
+| | • Trezor approval flow | | |    },
+
+| | • Error handling | | |  });
+
+| | • User feedback | | |  
+
+| **5** | Test & Polish | 1-2 gün | 📋 Planned |  return result.payload.address;
+
+| | • End-to-end testing | | |}
+
+| | • Error scenarios | | |```
+
+| | • UI/UX refinement | | |
+
+| | • Documentation | | |### 3. Account Discovery
+
 ```typescript
-// Hesap keşfi (BIP-44)
+
+**Toplam Tahmini Süre:** 8-13 gün// Hesap keşfi (BIP-44)
+
 async function discoverAccounts(coinType: string) {
-  const accounts = [];
+
+---  const accounts = [];
+
   let index = 0;
-  let emptyAccounts = 0;
+
+## 🔍 Code Structure  let emptyAccounts = 0;
+
   
-  while (emptyAccounts < 20) {
-    const path = `m/44'/${coinType}'/${index}'/0/0`;
-    const result = await TrezorConnect.getAccountInfo({
-      path,
-      coin: coinType,
-    });
-    
-    if (result.success) {
-      if (result.payload.empty) {
-        emptyAccounts++;
-      } else {
-        accounts.push({
-          index,
-          path,
-          balance: result.payload.balance,
+
+```  while (emptyAccounts < 20) {
+
+src/    const path = `m/44'/${coinType}'/${index}'/0/0`;
+
+├── services/    const result = await TrezorConnect.getAccountInfo({
+
+│   └── TrezorSecretWallet.ts      # Trezor servis katmanı      path,
+
+├── hooks/      coin: coinType,
+
+│   └── useTrezorSecretWallet.ts   # React hook    });
+
+├── components/    
+
+│   └── Wallet/    if (result.success) {
+
+│       ├── TrezorConnectCard.tsx  # Bağlantı UI      if (result.payload.empty) {
+
+│       ├── SecretWalletCard.tsx   # Secret wallet UI        emptyAccounts++;
+
+│       └── RailgunWalletCard.tsx  # RAILGUN UI      } else {
+
+├── pages/        accounts.push({
+
+│   └── WalletPage.tsx             # Ana wallet page          index,
+
+└── types/          path,
+
+    └── trezor.ts                  # TypeScript definitions          balance: result.payload.balance,
+
           transactions: result.payload.history.total,
-        });
-        emptyAccounts = 0;
-      }
-    }
-    
-    index++;
-  }
-  
+
+docs/        });
+
+└── trezor/        emptyAccounts = 0;
+
+    ├── README.md                          # Bu dosya      }
+
+    ├── TREZOR_SECRET_WALLET_INTEGRATION.md    }
+
+    ├── SECURITY_ANALYSIS.md    
+
+    ├── TREZOR_CONNECT.md    index++;
+
+    └── SIGNING.md  }
+
+```  
+
   return accounts;
-}
+
+---}
+
 ```
+
+## 📞 Support & Resources
 
 ## Performans ve Optimizasyon
 
-### 1. Connection Pool
-```typescript
-// Tek bir TrezorConnect instance kullanma
+### Documentation
+
+- 📁 `/docs/trezor/` - Tüm Trezor dokümanları### 1. Connection Pool
+
+- 🔐 `SECURITY_ANALYSIS.md` - Güvenlik analizi```typescript
+
+- 🛠️ `TREZOR_SECRET_WALLET_INTEGRATION.md` - Implementasyon rehberi// Tek bir TrezorConnect instance kullanma
+
 const trezorInstance = TrezorConnect;
 
-// İşlemler arası bağlantıyı koruma
-async function performMultipleOperations() {
-  await trezorInstance.init(config);
-  
-  const address1 = await trezorInstance.getAddress({...});
+### External Resources
+
+- 🌐 [Trezor Suite GitHub](https://github.com/trezor/trezor-suite)// İşlemler arası bağlantıyı koruma
+
+- 📚 [Trezor Connect Docs](https://github.com/trezor/connect)async function performMultipleOperations() {
+
+- 📖 [SLIP-0011 Standard](https://github.com/satoshilabs/slips/blob/master/slip-0011.md)  await trezorInstance.init(config);
+
+- 🔗 [BIP-32 Spec](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)  
+
+- 🔗 [BIP-39 Spec](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)  const address1 = await trezorInstance.getAddress({...});
+
   const address2 = await trezorInstance.getAddress({...});
-  
-  // Dispose sadece uygulama kapatılırken
-  // await trezorInstance.dispose();
-}
+
+### Contact  
+
+- **Issues:** GitHub Issues  // Dispose sadece uygulama kapatılırken
+
+- **Security:** security@cepwallet.com  // await trezorInstance.dispose();
+
+- **General:** support@cepwallet.com}
+
 ```
+
+---
 
 ### 2. Batch Operations
-```typescript
+
+## ⚠️ CRITICAL SECURITY WARNING```typescript
+
 // Bundle edilen adres alımı
-async function getMultipleAddresses(paths: string[]) {
+
+### Private Key Protectionasync function getMultipleAddresses(paths: string[]) {
+
   const result = await TrezorConnect.getAddress({
-    bundle: paths.map(path => ({ path, coin: 'btc' })),
-  });
-  
-  return result.success ? result.payload : [];
-}
+
+**ASLA YAPILMAYACAKLAR:**    bundle: paths.map(path => ({ path, coin: 'btc' })),
+
+- ❌ Trezor'dan private key export etmek  });
+
+- ❌ Private key'i memory'de tutmak  
+
+- ❌ Private key'i log'lamak  return result.success ? result.payload : [];
+
+- ❌ Software wallet gibi kullanmak}
+
 ```
 
-## Hata Yönetimi
+**MUTLAKA YAPILACAKLAR:**
 
-```typescript
-async function handleTrezorOperation<T>(
+- ✅ Deterministik key derivation (cipherKeyValue)## Hata Yönetimi
+
+- ✅ Her işlem için fiziksel onay
+
+- ✅ SLIP-0011 standardına uyum```typescript
+
+- ✅ Proper error handlingasync function handleTrezorOperation<T>(
+
   operation: () => Promise<TrezorConnect.Response<T>>
-): Promise<T | null> {
+
+> **Private keys are NEVER exported from Trezor device.** All cryptographic operations happen inside the Secure Element. Any code attempting to extract private keys is a **CRITICAL SECURITY VULNERABILITY** and must be rejected immediately.): Promise<T | null> {
+
   try {
-    const result = await operation();
+
+---    const result = await operation();
+
     
-    if (result.success) {
-      return result.payload;
-    }
-    
+
+**Version:** 2.0 (Security Revision)      if (result.success) {
+
+**Last Updated:** 18 Ekim 2025        return result.payload;
+
+**Team:** CepWallet Security & Development Team      }
+
+**Critical Update:** Private key export replaced with deterministic key derivation    
+
     // Hata tipleri
     switch (result.payload.error) {
       case 'Transport_Missing':

@@ -1,13 +1,23 @@
 /**
  * Wallet Management Page
  * 
- * RAILGUN wallet creation and management
+ * RAILGUN wallet creation and management with Trezor hardware wallet support
  */
 
 import React, { useState } from 'react';
 import { useRailgunWallet } from '../hooks/useRailgunWallet';
+import { useTrezorSecretWallet } from '../hooks/useTrezorSecretWallet';
+import {
+  TrezorConnectCard,
+  TrezorPinCard,
+  SecretWalletChoiceCard,
+  PassphraseConfirmCard,
+  RailgunWalletCard,
+  TrezorSuccessCard,
+} from '../components/Trezor';
 
 export const WalletPage: React.FC = () => {
+  // RAILGUN wallet hook
   const {
     wallet,
     shieldPrivateKey,
@@ -19,11 +29,93 @@ export const WalletPage: React.FC = () => {
     clearWallet,
   } = useRailgunWallet(11155111); // Sepolia
 
+  // Trezor hook
+  const trezor = useTrezorSecretWallet();
+
+  // UI state
+  const [walletType, setWalletType] = useState<'trezor' | 'manual' | null>(null);
   const [encryptionKey, setEncryptionKey] = useState('');
   const [mnemonic, setMnemonic] = useState('');
   const [showMnemonic, setShowMnemonic] = useState(false);
   const [showEncryptionKey, setShowEncryptionKey] = useState(false);
 
+  // Trezor flow steps
+  type TrezorStep = 
+    | 'connect' 
+    | 'pin' 
+    | 'secret-wallet-choice' 
+    | 'passphrase' 
+    | 'railgun' 
+    | 'complete';
+  
+  const [trezorStep, setTrezorStep] = useState<TrezorStep>('connect');
+
+  // Trezor handlers
+  const handleTrezorConnect = async () => {
+    try {
+      await trezor.connect();
+      setTrezorStep('pin');
+      
+      // Wait for device unlock, then move to secret wallet choice
+      setTimeout(() => {
+        if (trezor.isConnected) {
+          setTrezorStep('secret-wallet-choice');
+        }
+      }, 2000);
+    } catch (err) {
+      console.error('Trezor connection failed:', err);
+    }
+  };
+
+  const handleEnableSecretWallet = async () => {
+    try {
+      setTrezorStep('passphrase');
+      await trezor.enableSecretWallet();
+      
+      // Wait for passphrase confirmation
+      setTimeout(() => {
+        if (trezor.isSecretWallet) {
+          setTrezorStep('railgun');
+        }
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to enable Secret Wallet:', err);
+      setTrezorStep('secret-wallet-choice');
+    }
+  };
+
+  const handleSkipSecretWallet = () => {
+    // Skip to RAILGUN with standard wallet
+    setTrezorStep('railgun');
+  };
+
+  const handleInitializeRailgun = async () => {
+    try {
+      // First initialize privacy if needed
+      if (!isInitialized) {
+        await initializePrivacy(11155111);
+      }
+
+      // Derive RAILGUN keys from Trezor (use default wallet ID)
+      const walletId = trezor.address || 'default-wallet';
+      const railgunKeys = await trezor.deriveRailgunKeys(walletId);
+      console.log('RAILGUN keys derived:', railgunKeys);
+
+      // TODO: Create RAILGUN wallet with Trezor-derived keys
+      // This would require updating the useRailgunWallet hook to accept external keys
+
+      setTrezorStep('complete');
+    } catch (err) {
+      console.error('Failed to initialize RAILGUN:', err);
+    }
+  };
+
+  const handleTrezorComplete = () => {
+    // Navigate to dashboard or wallet view
+    console.log('Trezor setup complete');
+  };
+
+  // Manual wallet handlers
   const handleInitialize = async () => {
     try {
       await initializePrivacy(11155111);
@@ -39,10 +131,23 @@ export const WalletPage: React.FC = () => {
     }
 
     try {
+      console.log('Creating wallet with encryption key:', encryptionKey);
+      console.log('Mnemonic:', mnemonic || 'Will generate new');
+      
       await createWallet(encryptionKey, mnemonic || undefined);
       setShowMnemonic(true);
-    } catch (err) {
+      
+      console.log('Wallet created successfully!');
+    } catch (err: any) {
       console.error('Failed to create wallet:', err);
+      console.error('Error details:', {
+        message: err?.message,
+        stack: err?.stack,
+        cause: err?.cause,
+      });
+      
+      // Show detailed error to user
+      alert(`Failed to create wallet: ${err?.message || 'Unknown error'}\n\nCheck console for details.`);
     }
   };
 
@@ -56,14 +161,20 @@ export const WalletPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '30px', maxWidth: '900px', margin: '0 auto' }}>
+    <div style={{ 
+      padding: '30px', 
+      maxWidth: '900px', 
+      margin: '0 auto',
+      minHeight: '100vh',
+      background: '#0f1419',
+    }}>
       {/* Header */}
       <div style={{ marginBottom: '30px' }}>
         <h1 style={{
           margin: '0 0 10px',
           fontSize: '32px',
           fontWeight: '700',
-          color: '#1e293b',
+          color: '#fff',
           display: 'flex',
           alignItems: 'center',
           gap: '12px'
@@ -73,38 +184,199 @@ export const WalletPage: React.FC = () => {
         <p style={{
           margin: 0,
           fontSize: '16px',
-          color: '#64748b'
+          color: '#999'
         }}>
           Create and manage your private RAILGUN wallet
         </p>
       </div>
 
       {/* Error Display */}
-      {error && (
+      {(error || trezor.error) && (
         <div style={{
           padding: '16px',
-          background: '#fef2f2',
-          border: '2px solid #fecaca',
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '2px solid #ef4444',
           borderRadius: '12px',
           marginBottom: '20px'
         }}>
           <div style={{
             fontSize: '14px',
             fontWeight: '600',
-            color: '#991b1b',
+            color: '#fca5a5',
             marginBottom: '4px'
           }}>
             ❌ Error
           </div>
           <div style={{
             fontSize: '14px',
-            color: '#dc2626'
+            color: '#ef4444'
           }}>
-            {error}
+            {error || trezor.error}
           </div>
         </div>
       )}
 
+      {/* Wallet Type Selection (if not selected yet) */}
+      {!walletType && !wallet && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '20px',
+          marginBottom: '30px',
+        }}>
+          {/* Trezor Hardware Wallet Option */}
+          <div
+            onClick={() => setWalletType('trezor')}
+            style={{
+              background: 'linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 100%)',
+              borderRadius: '16px',
+              padding: '40px 30px',
+              border: '2px solid #667eea',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textAlign: 'center',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 12px 40px rgba(102, 126, 234, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div style={{ fontSize: '64px', marginBottom: '20px' }}>💳</div>
+            <h3 style={{ margin: '0 0 10px', color: '#fff', fontSize: '20px' }}>
+              Trezor Hardware Wallet
+            </h3>
+            <p style={{ margin: '0 0 20px', color: '#bbb', fontSize: '14px', lineHeight: '1.6' }}>
+              Maximum security with Trezor device + Secret Wallet passphrase protection
+            </p>
+            <div style={{
+              background: 'rgba(16, 185, 129, 0.2)',
+              border: '1px solid #10b981',
+              borderRadius: '8px',
+              padding: '10px',
+              fontSize: '13px',
+              color: '#6ee7b7',
+            }}>
+              ✅ Recommended for best security
+            </div>
+          </div>
+
+          {/* Manual Wallet Option */}
+          <div
+            onClick={() => setWalletType('manual')}
+            style={{
+              background: '#1a1a2e',
+              borderRadius: '16px',
+              padding: '40px 30px',
+              border: '2px solid #2d2d44',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textAlign: 'center',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 12px 40px rgba(102, 126, 234, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div style={{ fontSize: '64px', marginBottom: '20px' }}>⌨️</div>
+            <h3 style={{ margin: '0 0 10px', color: '#fff', fontSize: '20px' }}>
+              Manual Wallet
+            </h3>
+            <p style={{ margin: '0 0 20px', color: '#999', fontSize: '14px', lineHeight: '1.6' }}>
+              Create wallet with custom encryption key and optional mnemonic phrase
+            </p>
+            <div style={{
+              background: 'rgba(255, 165, 0, 0.1)',
+              border: '1px solid #ffa500',
+              borderRadius: '8px',
+              padding: '10px',
+              fontSize: '13px',
+              color: '#ffcc80',
+            }}>
+              ⚠️ Less secure than hardware wallet
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trezor Flow */}
+      {walletType === 'trezor' && (
+        <>
+          {trezorStep === 'connect' && (
+            <TrezorConnectCard
+              onConnect={handleTrezorConnect}
+              isLoading={trezor.isLoading}
+              error={trezor.error}
+            />
+          )}
+
+          {trezorStep === 'pin' && (
+            <TrezorPinCard deviceLabel={trezor.device || undefined} />
+          )}
+
+          {trezorStep === 'secret-wallet-choice' && (
+            <SecretWalletChoiceCard
+              standardAddress={trezor.address || undefined}
+              onEnable={handleEnableSecretWallet}
+              onSkip={handleSkipSecretWallet}
+              isLoading={trezor.isLoading}
+            />
+          )}
+
+          {trezorStep === 'passphrase' && (
+            <PassphraseConfirmCard deviceLabel={trezor.device || undefined} />
+          )}
+
+          {trezorStep === 'railgun' && (
+            <RailgunWalletCard
+              secretWalletAddress={trezor.address || ''}
+              deviceLabel={trezor.device || undefined}
+              onInitializeRailgun={handleInitializeRailgun}
+              onBack={() => setTrezorStep('secret-wallet-choice')}
+            />
+          )}
+
+          {trezorStep === 'complete' && (
+            <TrezorSuccessCard
+              secretWalletAddress={trezor.address || ''}
+              deviceLabel={trezor.device || undefined}
+              onContinue={handleTrezorComplete}
+            />
+          )}
+
+          {/* Back to Selection Button */}
+          {trezorStep === 'connect' && (
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <button
+                onClick={() => setWalletType(null)}
+                style={{
+                  padding: '12px 24px',
+                  background: 'transparent',
+                  color: '#999',
+                  border: '2px solid #444',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                ← Back to Selection
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Manual Wallet Flow */}
+      {walletType === 'manual' && (
+        <>
       {/* Status Cards */}
       <div style={{
         display: 'grid',
@@ -513,6 +785,30 @@ export const WalletPage: React.FC = () => {
           </div>
         </div>
       )}
+
+          {/* Back to Selection Button */}
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <button
+              onClick={() => {
+                setWalletType(null);
+                clearWallet();
+              }}
+              style={{
+                padding: '12px 24px',
+                background: 'transparent',
+                color: '#999',
+                border: '2px solid #444',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+              }}
+            >
+              ← Back to Selection
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -529,8 +825,8 @@ interface StatusCardProps {
 const StatusCard: React.FC<StatusCardProps> = ({ icon, label, status, isActive }) => (
   <div style={{
     padding: '16px',
-    background: isActive ? '#f0fdf4' : '#f8fafc',
-    border: `2px solid ${isActive ? '#86efac' : '#e2e8f0'}`,
+    background: isActive ? 'rgba(16, 185, 129, 0.1)' : '#1a1a2e',
+    border: `2px solid ${isActive ? '#10b981' : '#2d2d44'}`,
     borderRadius: '12px',
     textAlign: 'center'
   }}>
@@ -540,7 +836,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ icon, label, status, isActive }
     <div style={{
       fontSize: '12px',
       fontWeight: '600',
-      color: '#64748b',
+      color: '#999',
       marginBottom: '4px',
       textTransform: 'uppercase',
       letterSpacing: '0.5px'
@@ -550,7 +846,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ icon, label, status, isActive }
     <div style={{
       fontSize: '14px',
       fontWeight: '700',
-      color: isActive ? '#059669' : '#94a3b8'
+      color: isActive ? '#10b981' : '#666'
     }}>
       {status}
     </div>

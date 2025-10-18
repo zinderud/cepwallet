@@ -84,19 +84,29 @@ pub async fn create_railgun_wallet(
     let output = Command::new("node")
         .arg(&script_path)
         .arg(&request_json)
+        .current_dir(&proof_generator_dir)
         .output()
         .map_err(|e| anyhow::anyhow!("Failed to execute Node.js: {}", e))?;
     
+    // Log both stdout and stderr for debugging
+    let stdout_str = String::from_utf8_lossy(&output.stdout);
+    let stderr_str = String::from_utf8_lossy(&output.stderr);
+    
+    tracing::debug!("Node.js stdout: {}", stdout_str);
+    if !stderr_str.is_empty() {
+        tracing::warn!("Node.js stderr: {}", stderr_str);
+    }
+    
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(anyhow::anyhow!("Wallet creation failed: {}", stderr).into());
+        return Err(anyhow::anyhow!(
+            "Wallet creation failed:\nSTDOUT: {}\nSTDERR: {}", 
+            stdout_str, 
+            stderr_str
+        ).into());
     }
     
     // Parse response
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    tracing::debug!("Node.js output: {}", stdout);
-    
-    let json_line = stdout
+    let json_line = stdout_str
         .lines()
         .rev()
         .find(|line| line.trim().starts_with('{'))
