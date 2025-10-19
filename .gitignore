@@ -93,6 +93,8 @@ src-tauri/bundle/
 
 # RAILGUN privacy data
 **/railgun_data/
+**/railgun_db/
+**/test_railgun_db/
 **/merkle_cache/
 **/nullifier_cache/
 

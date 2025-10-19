@@ -39,6 +39,13 @@ export const WalletPage: React.FC = () => {
   const [showMnemonic, setShowMnemonic] = useState(false);
   const [showEncryptionKey, setShowEncryptionKey] = useState(false);
 
+  // If wallet is restored from localStorage, set walletType to 'manual'
+  React.useEffect(() => {
+    if (wallet && !walletType) {
+      setWalletType('manual');
+    }
+  }, [wallet, walletType]);
+
   // Trezor flow steps
   type TrezorStep = 
     | 'connect' 

@@ -5,6 +5,12 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
+// Local type for wallet creation parameters
+interface WalletCreateParams {
+  encryptionKey: string;
+  mnemonic?: string;
+}
+
 import type {
   DeviceInfo,
   TransactionRequest,
@@ -192,8 +198,19 @@ export const railgunWalletApi = {
    * @param mnemonic - Optional mnemonic phrase (generates new if not provided)
    * @returns Wallet information including ID, address, and mnemonic
    */
-  createWallet: async (params: CreateRailgunWalletParams): Promise<WalletCreateResponse> => {
-    return invoke<WalletCreateResponse>('create_railgun_wallet', { ...params });
+  createWallet: async (params: WalletCreateParams): Promise<WalletCreateResponse> => {
+    console.log('📡 Tauri API: create_railgun_wallet');
+    console.log('  Input params:', params);
+    
+    // Tauri automatically converts camelCase → snake_case
+    // So we send camelCase from TypeScript!
+    const args = {
+      encryptionKey: params.encryptionKey,
+      mnemonic: params.mnemonic
+    };
+    console.log('  Sending (camelCase - Tauri will convert):', args);
+    
+    return invoke<WalletCreateResponse>('create_railgun_wallet', args);
   },
 
   /**
@@ -203,7 +220,9 @@ export const railgunWalletApi = {
    * @returns Shield private key (used for shield operations)
    */
   getShieldKey: async (params: GetShieldKeyParams): Promise<ShieldPrivateKeyResponse> => {
-    return invoke<ShieldPrivateKeyResponse>('get_shield_key', { ...params });
+    return invoke<ShieldPrivateKeyResponse>('get_shield_key', {
+      railgunWalletId: params.railgunWalletId,
+    });
   },
 };
 

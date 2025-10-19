@@ -48,6 +48,31 @@ export function useRailgunWallet(
   const [error, setError] = useState<string | null>(null);
 
   /**
+   * Restore wallet from localStorage on mount
+   */
+  useEffect(() => {
+    const storedWallet = localStorage.getItem('railgun_wallet');
+    const storedShieldKey = localStorage.getItem('railgun_shield_key');
+    
+    if (storedWallet) {
+      try {
+        const parsedWallet = JSON.parse(storedWallet);
+        setWallet(parsedWallet);
+        console.log('✅ Wallet restored from localStorage:', parsedWallet.railgunAddress);
+        
+        if (storedShieldKey) {
+          setShieldPrivateKey(storedShieldKey);
+          console.log('✅ Shield key restored from localStorage');
+        }
+      } catch (err) {
+        console.error('❌ Failed to restore wallet from localStorage:', err);
+        localStorage.removeItem('railgun_wallet');
+        localStorage.removeItem('railgun_shield_key');
+      }
+    }
+  }, []); // Run only on mount
+
+  /**
    * Initialize privacy features
    */
   const initializePrivacy = useCallback(async (chainId: number) => {
@@ -76,15 +101,23 @@ export function useRailgunWallet(
     setError(null);
     
     try {
+      console.log('🔄 Creating RAILGUN wallet...');
+      console.log('  Encryption key:', encryptionKey.substring(0, 10) + '...');
+      console.log('  Mnemonic:', mnemonic ? 'provided' : 'will generate');
+      
       // Ensure privacy is initialized first
       if (!isInitialized) {
+        console.log('🔄 Privacy not initialized, initializing now...');
         await initializePrivacy(chainId);
       }
 
+      console.log('🔄 Calling Tauri API...');
       const response = await tauriApi.railgunWallet.createWallet({
         encryptionKey,
         mnemonic,
       });
+
+      console.log('✅ Tauri API response:', response);
 
       const newWallet: RailgunWallet = {
         railgunWalletId: response.railgunWalletId,
@@ -95,16 +128,19 @@ export function useRailgunWallet(
       setWallet(newWallet);
       
       // Auto-load shield key
+      console.log('🔄 Loading shield key...');
       await loadShieldKey(newWallet.railgunWalletId);
       
       console.log('✅ RAILGUN wallet created:', newWallet.railgunAddress);
       
       // Store wallet info in localStorage (encrypted in production!)
       localStorage.setItem('railgun_wallet', JSON.stringify(newWallet));
-    } catch (err) {
+    } catch (err: any) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to create wallet';
       setError(errorMsg);
       console.error('❌ Wallet creation failed:', errorMsg);
+      console.error('❌ Full error:', err);
+      console.error('❌ Error stack:', err?.stack);
       throw err;
     } finally {
       setIsLoading(false);
@@ -121,7 +157,11 @@ export function useRailgunWallet(
       });
       
       setShieldPrivateKey(response.shieldPrivateKey);
-      console.log('✅ Shield key loaded');
+      
+      // Store shield key in localStorage (encrypted in production!)
+      localStorage.setItem('railgun_shield_key', response.shieldPrivateKey);
+      
+      console.log('✅ Shield key loaded and stored');
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to load shield key';
       setError(errorMsg);
@@ -247,7 +287,8 @@ export function useRailgunWallet(
     setWallet(null);
     setShieldPrivateKey(null);
     localStorage.removeItem('railgun_wallet');
-    console.log('🗑️ Wallet cleared');
+    localStorage.removeItem('railgun_shield_key');
+    console.log('🗑️ Wallet cleared from state and localStorage');
   }, []);
 
   /**

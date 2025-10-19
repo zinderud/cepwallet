@@ -67,15 +67,29 @@ pub async fn create_railgun_wallet(
     let request_json = serde_json::to_string(&request)
         .map_err(|e| anyhow::anyhow!("Failed to serialize wallet request: {}", e))?;
     
-    // Get proof-generator directory
-    let proof_generator_dir = std::env::current_dir()
-        .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?
-        .join("proof-generator");
+    // Get proof-generator directory (workspace root / proof-generator)
+    let current_dir = std::env::current_dir()
+        .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?;
     
+    tracing::debug!("Current directory: {}", current_dir.display());
+    
+    // Try workspace root first (if current_dir is src-tauri, go up one level)
+    let workspace_root = if current_dir.ends_with("src-tauri") {
+        current_dir.parent().unwrap_or(&current_dir)
+    } else {
+        &current_dir
+    };
+    
+    let proof_generator_dir = workspace_root.join("proof-generator");
     let script_path = proof_generator_dir.join("index.js");
     
+    tracing::debug!("Looking for script at: {}", script_path.display());
+    
     if !script_path.exists() {
-        return Err(anyhow::anyhow!("proof-generator/index.js not found").into());
+        return Err(anyhow::anyhow!(
+            "proof-generator/index.js not found at {}", 
+            script_path.display()
+        ).into());
     }
     
     tracing::debug!("Running: node {} '{}'", script_path.display(), request_json);
@@ -149,17 +163,34 @@ pub async fn get_shield_private_key(
     let request_json = serde_json::to_string(&request)
         .map_err(|e| anyhow::anyhow!("Failed to serialize request: {}", e))?;
     
-    // Get proof-generator directory
-    let proof_generator_dir = std::env::current_dir()
-        .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?
-        .join("proof-generator");
+    // Get proof-generator directory (workspace root / proof-generator)
+    let current_dir = std::env::current_dir()
+        .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?;
     
+    // Try workspace root first (if current_dir is src-tauri, go up one level)
+    let workspace_root = if current_dir.ends_with("src-tauri") {
+        current_dir.parent().unwrap_or(&current_dir)
+    } else {
+        &current_dir
+    };
+    
+    let proof_generator_dir = workspace_root.join("proof-generator");
     let script_path = proof_generator_dir.join("index.js");
+    
+    tracing::debug!("Shield key - Looking for script at: {}", script_path.display());
+    
+    if !script_path.exists() {
+        return Err(anyhow::anyhow!(
+            "proof-generator/index.js not found at {}", 
+            script_path.display()
+        ).into());
+    }
     
     // Execute Node.js script
     let output = Command::new("node")
         .arg(&script_path)
         .arg(&request_json)
+        .current_dir(&proof_generator_dir)
         .output()
         .map_err(|e| anyhow::anyhow!("Failed to execute Node.js: {}", e))?;
     

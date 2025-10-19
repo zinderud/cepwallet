@@ -420,12 +420,18 @@ pub async fn create_railgun_wallet(
 ) -> Result<serde_json::Value, String> {
     use crate::privacy::wallet;
     
+    tracing::info!("Creating RAILGUN wallet");
+    tracing::debug!("Encryption key: {}...", &encryption_key[..10.min(encryption_key.len())]);
+    
     let response = wallet::create_railgun_wallet(
         &encryption_key,
         mnemonic.as_deref(),
     )
     .await
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| {
+        tracing::error!("Wallet creation failed: {}", e);
+        e.to_string()
+    })?;
     
     Ok(serde_json::json!({
         "success": true,
