@@ -17,7 +17,9 @@ const TOKENS = [
 ];
 
 export const PrivacyPage: React.FC = () => {
-  const { wallet, isInitialized, shield, transfer, unshield } = useRailgunWallet(11155111);
+  // Get encryption key from localStorage (stored during wallet creation)
+  const encryptionKey = localStorage.getItem('railgun_encryption_key') || undefined;
+  const { wallet, isInitialized, shield, transfer, unshield } = useRailgunWallet(11155111, encryptionKey);
   
   const [operationType, setOperationType] = useState<OperationType>('shield');
   const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
@@ -128,6 +130,105 @@ export const PrivacyPage: React.FC = () => {
             color: '#78350f'
           }}>
             Please visit the <strong>Wallet</strong> page to complete setup.
+          </div>
+        </div>
+      )}
+
+      {/* Quick Test Section */}
+      {isInitialized && wallet && (
+        <div style={{
+          padding: '20px',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          border: '2px solid #667eea',
+          borderRadius: '12px',
+          marginBottom: '30px',
+          color: 'white',
+        }}>
+          <div style={{
+            fontSize: '16px',
+            fontWeight: '700',
+            marginBottom: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}>
+            🧪 Quick Test Mode
+          </div>
+          <div style={{
+            fontSize: '14px',
+            lineHeight: '1.6',
+            marginBottom: '16px',
+            opacity: 0.9,
+          }}>
+            Test privacy operations with simulated transactions (no real funds required)
+          </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '10px',
+          }}>
+            <button
+              onClick={() => {
+                setOperationType('shield');
+                setSelectedToken(TOKENS[0]);
+                setAmount('0.1');
+                setSuccessMessage('🧪 Test: Ready to shield 0.1 ETH');
+              }}
+              style={{
+                padding: '10px 16px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '8px',
+                color: 'white',
+                fontWeight: '600',
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              🛡️ Test Shield
+            </button>
+            <button
+              onClick={() => {
+                setOperationType('transfer');
+                setSelectedToken(TOKENS[0]);
+                setAmount('0.05');
+                setRecipientAddress('0zk1qy...');
+                setSuccessMessage('🧪 Test: Ready to transfer 0.05 ETH');
+              }}
+              style={{
+                padding: '10px 16px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '8px',
+                color: 'white',
+                fontWeight: '600',
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              🔄 Test Transfer
+            </button>
+            <button
+              onClick={() => {
+                setOperationType('unshield');
+                setSelectedToken(TOKENS[0]);
+                setAmount('0.02');
+                setRecipientAddress('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb');
+                setSuccessMessage('🧪 Test: Ready to unshield 0.02 ETH');
+              }}
+              style={{
+                padding: '10px 16px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '8px',
+                color: 'white',
+                fontWeight: '600',
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              🔓 Test Unshield
+            </button>
           </div>
         </div>
       )}

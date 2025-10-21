@@ -53,6 +53,7 @@ export function useRailgunWallet(
   useEffect(() => {
     const storedWallet = localStorage.getItem('railgun_wallet');
     const storedShieldKey = localStorage.getItem('railgun_shield_key');
+    const storedInitialized = localStorage.getItem('railgun_initialized');
     
     if (storedWallet) {
       try {
@@ -64,10 +65,16 @@ export function useRailgunWallet(
           setShieldPrivateKey(storedShieldKey);
           console.log('✅ Shield key restored from localStorage');
         }
+        
+        if (storedInitialized === 'true') {
+          setIsInitialized(true);
+          console.log('✅ Privacy initialization state restored');
+        }
       } catch (err) {
         console.error('❌ Failed to restore wallet from localStorage:', err);
         localStorage.removeItem('railgun_wallet');
         localStorage.removeItem('railgun_shield_key');
+        localStorage.removeItem('railgun_initialized');
       }
     }
   }, []); // Run only on mount
@@ -82,6 +89,7 @@ export function useRailgunWallet(
     try {
       await tauriApi.privacy.initialize(chainId);
       setIsInitialized(true);
+      localStorage.setItem('railgun_initialized', 'true');
       console.log(`✅ Privacy initialized for chain ${chainId}`);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to initialize privacy';
@@ -135,6 +143,7 @@ export function useRailgunWallet(
       
       // Store wallet info in localStorage (encrypted in production!)
       localStorage.setItem('railgun_wallet', JSON.stringify(newWallet));
+      localStorage.setItem('railgun_encryption_key', encryptionKey);
     } catch (err: any) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to create wallet';
       setError(errorMsg);
@@ -206,7 +215,7 @@ export function useRailgunWallet(
    * Unshield tokens (Private → Public)
    */
   const unshield = useCallback(async (
-    params: Omit<UnshieldTransactionParams, 'railgunWalletId' | 'encryptionKey'>
+    params: Omit<UnshieldTransactionParams, 'railgunWalletId' | 'encryptionKey' | 'mnemonic'>
   ): Promise<ShieldedTransaction> => {
     if (!wallet || !encryptionKey) {
       throw new Error('Wallet not initialized or encryption key missing');
@@ -220,6 +229,7 @@ export function useRailgunWallet(
         ...params,
         railgunWalletId: wallet.railgunWalletId,
         encryptionKey,
+        mnemonic: wallet.mnemonic,
       });
 
       console.log('✅ Tokens unshielded successfully');
@@ -238,7 +248,7 @@ export function useRailgunWallet(
    * Private transfer (Private → Private)
    */
   const transfer = useCallback(async (
-    params: Omit<PrivateTransferParams, 'railgunWalletId' | 'encryptionKey'>
+    params: Omit<PrivateTransferParams, 'railgunWalletId' | 'encryptionKey' | 'mnemonic'>
   ): Promise<ShieldedTransaction> => {
     if (!wallet || !encryptionKey) {
       throw new Error('Wallet not initialized or encryption key missing');
@@ -252,6 +262,7 @@ export function useRailgunWallet(
         ...params,
         railgunWalletId: wallet.railgunWalletId,
         encryptionKey,
+        mnemonic: wallet.mnemonic,
       });
 
       console.log('✅ Private transfer completed');
@@ -286,8 +297,12 @@ export function useRailgunWallet(
   const clearWallet = useCallback(() => {
     setWallet(null);
     setShieldPrivateKey(null);
+    setIsInitialized(false);
     localStorage.removeItem('railgun_wallet');
     localStorage.removeItem('railgun_shield_key');
+    localStorage.removeItem('railgun_initialized');
+    localStorage.removeItem('railgun_encryption_key');
+    localStorage.removeItem('railgun_eth_address');
     console.log('🗑️ Wallet cleared from state and localStorage');
   }, []);
 

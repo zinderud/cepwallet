@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { useRailgunWallet } from '../hooks/useRailgunWallet';
 import { useTrezorSecretWallet } from '../hooks/useTrezorSecretWallet';
+import { navigateTo } from '../hooks/useNavigation';
 import {
   TrezorConnectCard,
   TrezorPinCard,
@@ -15,6 +16,21 @@ import {
   RailgunWalletCard,
   TrezorSuccessCard,
 } from '../components/Trezor';
+
+/**
+ * Derive Ethereum address from encryption key
+ * Simple deterministic derivation for display purposes
+ */
+const deriveEthAddressFromKey = (encryptionKey: string): string => {
+  // Remove 0x prefix if present
+  const key = encryptionKey.startsWith('0x') ? encryptionKey.slice(2) : encryptionKey;
+  
+  // Take last 40 characters (20 bytes) as address
+  // In production, this should use proper cryptographic derivation
+  const addressPart = key.slice(-40);
+  
+  return '0x' + addressPart;
+};
 
 export const WalletPage: React.FC = () => {
   // RAILGUN wallet hook
@@ -29,15 +45,42 @@ export const WalletPage: React.FC = () => {
     clearWallet,
   } = useRailgunWallet(11155111); // Sepolia
 
-  // Trezor hook
-  const trezor = useTrezorSecretWallet();
-
   // UI state
+  const [trezorDemoMode, setTrezorDemoMode] = useState(true); // Enable demo mode by default
+  
+  // Trezor hook (with demo mode support)
+  const trezor = useTrezorSecretWallet(trezorDemoMode);
+
   const [walletType, setWalletType] = useState<'trezor' | 'manual' | null>(null);
   const [encryptionKey, setEncryptionKey] = useState('');
   const [mnemonic, setMnemonic] = useState('');
   const [showMnemonic, setShowMnemonic] = useState(false);
   const [showEncryptionKey, setShowEncryptionKey] = useState(false);
+  const [ethAddress, setEthAddress] = useState<string>('');
+
+  // Derive ETH address when wallet is created
+  React.useEffect(() => {
+    if (wallet && encryptionKey) {
+      const derivedAddress = deriveEthAddressFromKey(encryptionKey);
+      setEthAddress(derivedAddress);
+      // Store in localStorage for persistence
+      localStorage.setItem('railgun_eth_address', derivedAddress);
+    }
+  }, [wallet, encryptionKey]);
+
+  // Restore ETH address and encryption key from localStorage
+  React.useEffect(() => {
+    const storedEthAddress = localStorage.getItem('railgun_eth_address');
+    const storedEncryptionKey = localStorage.getItem('railgun_encryption_key');
+    
+    if (storedEthAddress) {
+      setEthAddress(storedEthAddress);
+    }
+    
+    if (storedEncryptionKey) {
+      setEncryptionKey(storedEncryptionKey);
+    }
+  }, []);
 
   // If wallet is restored from localStorage, set walletType to 'manual'
   React.useEffect(() => {
@@ -103,14 +146,19 @@ export const WalletPage: React.FC = () => {
         await initializePrivacy(11155111);
       }
 
-      // Derive RAILGUN keys from Trezor (use default wallet ID)
-      const walletId = trezor.address || 'default-wallet';
+      // Derive RAILGUN keys from Trezor (use Trezor address as wallet ID)
+      const walletId = trezor.address || 'trezor-wallet';
       const railgunKeys = await trezor.deriveRailgunKeys(walletId);
       console.log('RAILGUN keys derived:', railgunKeys);
 
-      // TODO: Create RAILGUN wallet with Trezor-derived keys
-      // This would require updating the useRailgunWallet hook to accept external keys
+      // Save encryption key to state for ETH address derivation
+      setEncryptionKey(railgunKeys.spendingKey);
 
+      // Create RAILGUN wallet with Trezor-derived encryption key
+      // Note: We use the spending key as the encryption key for now
+      await createWallet(railgunKeys.spendingKey, undefined);
+      
+      console.log('✅ Trezor RAILGUN wallet created');
       setTrezorStep('complete');
     } catch (err) {
       console.error('Failed to initialize RAILGUN:', err);
@@ -118,8 +166,9 @@ export const WalletPage: React.FC = () => {
   };
 
   const handleTrezorComplete = () => {
-    // Navigate to dashboard or wallet view
-    console.log('Trezor setup complete');
+    // Navigate to dashboard
+    console.log('Trezor setup complete - navigating to dashboard');
+    navigateTo('dashboard');
   };
 
   // Manual wallet handlers
@@ -225,12 +274,75 @@ export const WalletPage: React.FC = () => {
 
       {/* Wallet Type Selection (if not selected yet) */}
       {!walletType && !wallet && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '20px',
-          marginBottom: '30px',
-        }}>
+        <>
+          {/* Demo Mode Toggle */}
+          <div style={{
+            background: 'rgba(251, 191, 36, 0.1)',
+            border: '2px solid #fbbf24',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '24px' }}>🎭</span>
+              <div>
+                <div style={{ fontWeight: '600', color: '#fbbf24', marginBottom: '4px' }}>
+                  Trezor Demo Mode
+                </div>
+                <div style={{ fontSize: '13px', color: '#fcd34d' }}>
+                  {trezorDemoMode 
+                    ? 'Simulating hardware wallet - no device required' 
+                    : 'Real Trezor device will be used'}
+                </div>
+              </div>
+            </div>
+            <label style={{ 
+              position: 'relative',
+              display: 'inline-block',
+              width: '60px',
+              height: '34px',
+            }}>
+              <input
+                type="checkbox"
+                checked={trezorDemoMode}
+                onChange={(e) => setTrezorDemoMode(e.target.checked)}
+                style={{ opacity: 0, width: 0, height: 0 }}
+              />
+              <span style={{
+                position: 'absolute',
+                cursor: 'pointer',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: trezorDemoMode ? '#10b981' : '#64748b',
+                borderRadius: '34px',
+                transition: '0.4s',
+              }}>
+                <span style={{
+                  position: 'absolute',
+                  content: '""',
+                  height: '26px',
+                  width: '26px',
+                  left: trezorDemoMode ? '30px' : '4px',
+                  bottom: '4px',
+                  background: 'white',
+                  borderRadius: '50%',
+                  transition: '0.4s',
+                }} />
+              </span>
+            </label>
+          </div>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '20px',
+            marginBottom: '30px',
+          }}>
           {/* Trezor Hardware Wallet Option */}
           <div
             onClick={() => setWalletType('trezor')}
@@ -255,6 +367,20 @@ export const WalletPage: React.FC = () => {
             <div style={{ fontSize: '64px', marginBottom: '20px' }}>💳</div>
             <h3 style={{ margin: '0 0 10px', color: '#fff', fontSize: '20px' }}>
               Trezor Hardware Wallet
+              {trezorDemoMode && (
+                <span style={{
+                  marginLeft: '8px',
+                  padding: '4px 8px',
+                  background: '#fbbf24',
+                  color: '#1a1a2e',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  verticalAlign: 'middle',
+                }}>
+                  🎭 DEMO
+                </span>
+              )}
             </h3>
             <p style={{ margin: '0 0 20px', color: '#bbb', fontSize: '14px', lineHeight: '1.6' }}>
               Maximum security with Trezor device + Secret Wallet passphrase protection
@@ -311,6 +437,7 @@ export const WalletPage: React.FC = () => {
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* Trezor Flow */}
@@ -325,7 +452,11 @@ export const WalletPage: React.FC = () => {
           )}
 
           {trezorStep === 'pin' && (
-            <TrezorPinCard deviceLabel={trezor.device || undefined} />
+            <TrezorPinCard 
+              deviceLabel={trezor.device || undefined}
+              demoMode={trezorDemoMode}
+              onAutoSkip={() => setTrezorStep('secret-wallet-choice')}
+            />
           )}
 
           {trezorStep === 'secret-wallet-choice' && (
@@ -334,11 +465,16 @@ export const WalletPage: React.FC = () => {
               onEnable={handleEnableSecretWallet}
               onSkip={handleSkipSecretWallet}
               isLoading={trezor.isLoading}
+              demoMode={trezorDemoMode}
             />
           )}
 
           {trezorStep === 'passphrase' && (
-            <PassphraseConfirmCard deviceLabel={trezor.device || undefined} />
+            <PassphraseConfirmCard 
+              deviceLabel={trezor.device || undefined}
+              demoMode={trezorDemoMode}
+              onAutoSkip={() => setTrezorStep('railgun')}
+            />
           )}
 
           {trezorStep === 'railgun' && (
@@ -347,6 +483,7 @@ export const WalletPage: React.FC = () => {
               deviceLabel={trezor.device || undefined}
               onInitializeRailgun={handleInitializeRailgun}
               onBack={() => setTrezorStep('secret-wallet-choice')}
+              demoMode={trezorDemoMode}
             />
           )}
 
@@ -704,6 +841,71 @@ export const WalletPage: React.FC = () => {
             </div>
           </div>
 
+          {/* ETH Address (for receiving tokens) */}
+          {ethAddress && (
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{
+                fontSize: '12px',
+                fontWeight: '600',
+                color: '#64748b',
+                marginBottom: '8px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span>ETH Address</span>
+                <span style={{
+                  fontSize: '10px',
+                  padding: '2px 6px',
+                  background: '#dbeafe',
+                  color: '#1e40af',
+                  borderRadius: '4px',
+                  fontWeight: '600'
+                }}>
+                  For Receiving Test Tokens
+                </span>
+              </div>
+              <div style={{
+                padding: '12px',
+                background: '#ecfdf5',
+                border: '1px solid #6ee7b7',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontFamily: 'monospace',
+                color: '#047857',
+                wordBreak: 'break-all',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px'
+              }}>
+                <span>{ethAddress}</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(ethAddress);
+                    alert('ETH Address copied to clipboard!');
+                  }}
+                  style={{
+                    padding: '6px 10px',
+                    background: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    flexShrink: 0
+                  }}
+                >
+                  📋 Copy
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Mnemonic */}
           {wallet.mnemonic && showMnemonic && (
             <div style={{
@@ -748,10 +950,27 @@ export const WalletPage: React.FC = () => {
 
           {/* Actions */}
           <div style={{
-            display: 'flex',
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr 1fr',
             gap: '12px',
             marginTop: '20px'
           }}>
+            <button
+              onClick={() => navigateTo('dashboard')}
+              style={{
+                padding: '12px 20px',
+                background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: 'white',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+              }}
+            >
+              📊 Go to Dashboard
+            </button>
             <button
               onClick={() => setShowMnemonic(!showMnemonic)}
               style={{
@@ -774,6 +993,8 @@ export const WalletPage: React.FC = () => {
                   setEncryptionKey('');
                   setMnemonic('');
                   setShowMnemonic(false);
+                  setEthAddress('');
+                  localStorage.removeItem('railgun_eth_address');
                 }
               }}
               style={{

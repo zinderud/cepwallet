@@ -79,6 +79,40 @@ async function initRailgun(chainId = 1) {
     );
     
     console.log('[ProofGen] RAILGUN Engine started successfully');
+    
+    // Load provider for the network
+    // Get RPC URL based on network
+    let rpcUrl;
+    if (networkName === NetworkName.EthereumSepolia) {
+      // Using public Sepolia RPC endpoints
+      rpcUrl = 'https://ethereum-sepolia-rpc.publicnode.com';
+    } else if (networkName === NetworkName.Ethereum) {
+      rpcUrl = 'https://eth.llamarpc.com';
+    } else {
+      console.warn(`[ProofGen] No RPC configured for ${networkName}, using Sepolia`);
+      rpcUrl = 'https://ethereum-sepolia-rpc.publicnode.com';
+    }
+    
+    // loadProvider expects FallbackProviderJsonConfig with providers array
+    // Note: Total weight must be >= 2 for fallback quorum
+    const fallbackProviderJsonConfig = {
+      chainId: chainId,
+      providers: [
+        {
+          provider: rpcUrl,
+          priority: 1,
+          weight: 2,  // Minimum weight is 2 for fallback quorum
+        },
+      ],
+    };
+    
+    await loadProvider(
+      fallbackProviderJsonConfig,
+      networkName,
+      10000 // pollingInterval in ms
+    );
+    console.log(`[ProofGen] Provider loaded for ${networkName}`);
+    
     railgunInitialized = true;
     return true;
     
@@ -123,28 +157,55 @@ async function generateShieldProof(params) {
   console.log('[ProofGen] Generating shield proof...');
   console.log('  Token:', params.token);
   console.log('  Amount:', params.amount);
-  console.log('  RAILGUN Address:', params.railgunAddress);
+  console.log('  RAILGUN Address:', params.recipient);
   
   try {
     const {
       populateShield,
       gasEstimateForShield,
     } = require('@railgun-community/wallet');
+    const { parseEther, parseUnits, randomBytes, hexlify } = require('ethers');
     
-    const networkName = chainIdToNetworkName(params.chainId || 1);
+    const networkName = chainIdToNetworkName(params.chain_id || params.chainId || 1);
+    
+    // Generate a random shield private key if not provided or if placeholder
+    let shieldPrivateKey = params.shield_private_key || params.shieldPrivateKey;
+    if (!shieldPrivateKey || shieldPrivateKey === 'RAILGUN_SHIELD' || shieldPrivateKey.length < 64) {
+      // Generate random 32-byte hex private key
+      shieldPrivateKey = hexlify(randomBytes(32));
+      console.log('  Generated random shield private key');
+    }
+    
+    // Convert amount to wei (BigInt)
+    // If amount is already a large number (>1e10), assume it's already in wei
+    let amountWei;
+    if (typeof params.amount === 'string') {
+      const amountFloat = parseFloat(params.amount);
+      if (amountFloat > 1e10) {
+        // Already in wei format
+        amountWei = BigInt(params.amount.split('.')[0]); // Remove any decimals
+      } else {
+        // Assume it's in ETH/token units, convert to wei (18 decimals)
+        amountWei = parseEther(params.amount);
+      }
+    } else {
+      amountWei = parseEther(params.amount.toString());
+    }
+    
+    console.log('  Amount (wei):', amountWei.toString());
     
     // Prepare ERC20 amount recipient
     const erc20AmountRecipients = [{
       tokenAddress: params.token,
-      amount: BigInt(params.amount),
-      recipientAddress: params.railgunAddress,
+      amount: amountWei,
+      recipientAddress: params.recipient, // Use 'recipient' field
     }];
     
     // Generate shield transaction with proof
     const shieldTx = await populateShield(
       TXIDVersion.V2_PoseidonMerkle, // Use V2 for RAILGUN v3
       networkName,
-      params.shieldPrivateKey,
+      shieldPrivateKey, // Use the generated/provided shield private key
       erc20AmountRecipients,
       [], // nftAmountRecipients (empty for now)
       undefined // gasDetails (optional)
@@ -156,9 +217,9 @@ async function generateShieldProof(params) {
       success: true,
       proof: Buffer.from(JSON.stringify(shieldTx.transaction)).toString('base64'),
       publicInputs: [
-        params.railgunAddress,
+        params.recipient,
         params.token,
-        params.amount,
+        amountWei.toString(),
       ],
     };
     
@@ -187,22 +248,68 @@ async function generateShieldProof(params) {
  */
 async function generateTransferProof(params) {
   console.log('[ProofGen] Generating private transfer proof...');
-  console.log('  To RAILGUN Address:', params.toRailgunAddress);
+  console.log('  To RAILGUN Address:', params.recipient || params.toRailgunAddress);
   console.log('  Token:', params.token);
   console.log('  Amount:', params.amount);
   
   try {
     const {
       generateTransferProof: railgunGenerateTransferProof,
+      createRailgunWallet,
     } = require('@railgun-community/wallet');
+    const { parseEther } = require('ethers');
     
     const networkName = chainIdToNetworkName(params.chainId || 1);
+    
+    // Import wallet if mnemonic provided (required for transfer)
+    if (params.mnemonic && params.encryptionKey) {
+      console.log('  Importing wallet from mnemonic...');
+      
+      // Remove 0x prefix if present
+      let encryptionKey = params.encryptionKey;
+      if (encryptionKey.startsWith('0x')) {
+        encryptionKey = encryptionKey.substring(2);
+      }
+      
+      // Import wallet into RAILGUN SDK
+      const walletInfo = await createRailgunWallet(
+        encryptionKey,
+        params.mnemonic,
+        undefined // creationBlockNumbers
+      );
+      
+      if (!walletInfo) {
+        throw new Error('Failed to import wallet into RAILGUN SDK');
+      }
+      
+      console.log('  Wallet imported ✓ ID:', walletInfo.id);
+      
+      // Use imported wallet ID
+      params.railgunWalletID = walletInfo.id;
+    }
+    
+    // Convert amount to wei (BigInt)
+    let amountWei;
+    if (typeof params.amount === 'string') {
+      const amountFloat = parseFloat(params.amount);
+      if (amountFloat > 1e10) {
+        // Already in wei format
+        amountWei = BigInt(params.amount.split('.')[0]);
+      } else {
+        // Assume it's in ETH/token units, convert to wei (18 decimals)
+        amountWei = parseEther(params.amount);
+      }
+    } else {
+      amountWei = parseEther(params.amount.toString());
+    }
+    
+    console.log('  Amount (wei):', amountWei.toString());
     
     // Prepare transfer recipients
     const erc20AmountRecipients = [{
       tokenAddress: params.token,
-      amount: BigInt(params.amount),
-      recipientAddress: params.toRailgunAddress,
+      amount: amountWei,
+      recipientAddress: params.toRailgunAddress || params.recipient,
     }];
     
     // Generate transfer proof
@@ -229,9 +336,9 @@ async function generateTransferProof(params) {
       success: true,
       proof: 'transfer_proof_cached', // Proof is cached in RAILGUN SDK
       publicInputs: [
-        params.toRailgunAddress,
+        params.recipient || params.toRailgunAddress,
         params.token,
-        params.amount,
+        amountWei.toString(),
       ],
     };
     
@@ -267,14 +374,60 @@ async function generateUnshieldProof(params) {
   try {
     const {
       generateUnshieldProof: railgunGenerateUnshieldProof,
+      createRailgunWallet,
     } = require('@railgun-community/wallet');
+    const { parseEther } = require('ethers');
     
     const networkName = chainIdToNetworkName(params.chainId || 1);
+    
+    // Import wallet if mnemonic provided (required for unshield)
+    if (params.mnemonic && params.encryptionKey) {
+      console.log('  Importing wallet from mnemonic...');
+      
+      // Remove 0x prefix if present
+      let encryptionKey = params.encryptionKey;
+      if (encryptionKey.startsWith('0x')) {
+        encryptionKey = encryptionKey.substring(2);
+      }
+      
+      // Import wallet into RAILGUN SDK
+      const walletInfo = await createRailgunWallet(
+        encryptionKey,
+        params.mnemonic,
+        undefined // creationBlockNumbers
+      );
+      
+      if (!walletInfo) {
+        throw new Error('Failed to import wallet into RAILGUN SDK');
+      }
+      
+      console.log('  Wallet imported ✓ ID:', walletInfo.id);
+      
+      // Use imported wallet ID
+      params.railgunWalletID = walletInfo.id;
+    }
+    
+    // Convert amount to wei (BigInt)
+    let amountWei;
+    if (typeof params.amount === 'string') {
+      const amountFloat = parseFloat(params.amount);
+      if (amountFloat > 1e10) {
+        // Already in wei format
+        amountWei = BigInt(params.amount.split('.')[0]);
+      } else {
+        // Assume it's in ETH/token units, convert to wei (18 decimals)
+        amountWei = parseEther(params.amount);
+      }
+    } else {
+      amountWei = parseEther(params.amount.toString());
+    }
+    
+    console.log('  Amount (wei):', amountWei.toString());
     
     // Prepare unshield recipients (public addresses)
     const erc20AmountRecipients = [{
       tokenAddress: params.token,
-      amount: BigInt(params.amount),
+      amount: amountWei,
       recipientAddress: params.recipient, // Public address
     }];
     
@@ -302,7 +455,7 @@ async function generateUnshieldProof(params) {
       publicInputs: [
         params.recipient,
         params.token,
-        params.amount,
+        amountWei.toString(),
       ],
     };
     
@@ -333,13 +486,14 @@ async function main() {
     
     // Support both formats:
     // 1. Two args: operation and params separately
-    // 2. One arg: JSON with operation field
+    // 2. One arg: JSON with operation or proof_type field
     let operation, operationParams;
     
     if (args.length === 1) {
       const params = JSON.parse(args[0]);
-      operation = params.operation;
-      const { operation: _, ...rest } = params;
+      // Support 'operation', 'proof_type', and 'proofType' field names
+      operation = params.operation || params.proof_type || params.proofType;
+      const { operation: _, proof_type: __, proofType: ___, ...rest } = params;
       operationParams = rest;
     } else {
       operation = args[0];
@@ -361,7 +515,9 @@ async function main() {
     } else {
       // Proof generation operations
       // Initialize SDK for proof operations
-      await initRailgun(operationParams.chainId || 1);
+      // Support both snake_case and camelCase for chain_id
+      const chainId = operationParams.chain_id || operationParams.chainId || 11155111;
+      await initRailgun(chainId);
       
       switch (operation) {
         case PROOF_TYPES.SHIELD:

@@ -94,6 +94,7 @@ impl RailgunManager {
         &self,
         railgun_wallet_id: &str,
         encryption_key: &str,
+        mnemonic: &str,
         to_railgun_address: &str,
         token: &str,
         amount: &str,
@@ -110,6 +111,7 @@ impl RailgunManager {
         let proof_response = generate_transfer_proof(
             railgun_wallet_id,
             encryption_key,
+            mnemonic,
             to_railgun_address,
             token,
             amount,
@@ -141,6 +143,7 @@ impl RailgunManager {
         &self,
         railgun_wallet_id: &str,
         encryption_key: &str,
+        mnemonic: &str,
         recipient_address: &str,
         token: &str,
         amount: &str,
@@ -157,6 +160,7 @@ impl RailgunManager {
         let proof_response = generate_unshield_proof(
             railgun_wallet_id,
             encryption_key,
+            mnemonic,
             recipient_address,
             token,
             amount,

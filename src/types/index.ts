@@ -79,6 +79,7 @@ export interface UnshieldTransactionParams {
   recipient: string;
   railgunWalletId: string;
   encryptionKey: string;
+  mnemonic: string;
 }
 
 export interface PrivateTransferParams {
@@ -87,6 +88,7 @@ export interface PrivateTransferParams {
   amount: string;
   railgunWalletId: string;
   encryptionKey: string;
+  mnemonic: string;
 }
 
 export interface GetShieldedBalanceParams {

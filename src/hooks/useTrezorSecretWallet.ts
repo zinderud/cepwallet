@@ -14,7 +14,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { trezorService } from '../services/TrezorSecretWallet';
+import { TrezorSecretWalletService } from '../services/TrezorSecretWallet';
 import type {
   DeviceInfo,
   WalletInfo,
@@ -32,7 +32,14 @@ interface TrezorState {
   error: string | null;
 }
 
-export function useTrezorSecretWallet() {
+export function useTrezorSecretWallet(demoMode = false) {
+  // Initialize service with demo mode (only once)
+  const serviceRef = useRef<TrezorSecretWalletService | null>(null);
+  
+  if (!serviceRef.current) {
+    serviceRef.current = new TrezorSecretWalletService(demoMode);
+  }
+  
   const [state, setState] = useState<TrezorState>({
     isConnected: false,
     isSecretWallet: false,
@@ -42,6 +49,12 @@ export function useTrezorSecretWallet() {
     isLoading: false,
     error: null,
   });
+
+  useEffect(() => {
+    if (demoMode) {
+      console.log('🎭 Trezor Hook: Running in DEMO mode');
+    }
+  }, [demoMode]);
 
   // Session timeout management
   const sessionTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -79,7 +92,7 @@ export function useTrezorSecretWallet() {
     updateActivity();
 
     try {
-      const deviceInfo = await trezorService.connect();
+      const deviceInfo = await serviceRef.current!.connect();
       
       setState(prev => ({
         ...prev,
@@ -112,7 +125,7 @@ export function useTrezorSecretWallet() {
     updateActivity();
 
     try {
-      const walletInfo = await trezorService.enableSecretWallet();
+      const walletInfo = await serviceRef.current!.enableSecretWallet();
       
       setState(prev => ({
         ...prev,
@@ -145,7 +158,7 @@ export function useTrezorSecretWallet() {
 
     try {
       // Derive all three RAILGUN keys
-      const keySet = await trezorService.deriveRailgunKeySet(walletId);
+      const keySet = await serviceRef.current!.deriveRailgunKeySet(walletId);
       
       setState(prev => ({ ...prev, isLoading: false }));
 
@@ -172,7 +185,7 @@ export function useTrezorSecretWallet() {
     updateActivity();
 
     try {
-      const signature = await trezorService.signTransaction(tx);
+      const signature = await serviceRef.current!.signTransaction(tx);
       
       setState(prev => ({ ...prev, isLoading: false }));
 
@@ -199,7 +212,7 @@ export function useTrezorSecretWallet() {
     updateActivity();
 
     try {
-      const result = await trezorService.signMessage(message);
+      const result = await serviceRef.current!.signMessage(message);
       
       setState(prev => ({ ...prev, isLoading: false }));
 
@@ -228,7 +241,7 @@ export function useTrezorSecretWallet() {
       sessionTimeout.current = null;
     }
 
-    await trezorService.disconnect();
+    await serviceRef.current!.disconnect();
     
     setState({
       isConnected: false,

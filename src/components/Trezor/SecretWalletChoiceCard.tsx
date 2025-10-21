@@ -4,13 +4,14 @@
  * Allows user to choose whether to enable Secret Wallet (passphrase)
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface SecretWalletChoiceCardProps {
   standardAddress?: string;
   onEnable: () => Promise<void>;
   onSkip: () => void;
   isLoading?: boolean;
+  demoMode?: boolean;
 }
 
 export const SecretWalletChoiceCard: React.FC<SecretWalletChoiceCardProps> = ({
@@ -18,7 +19,20 @@ export const SecretWalletChoiceCard: React.FC<SecretWalletChoiceCardProps> = ({
   onEnable,
   onSkip,
   isLoading = false,
+  demoMode = false,
 }) => {
+  // Auto-enable Secret Wallet in demo mode
+  useEffect(() => {
+    if (demoMode) {
+      const timer = setTimeout(() => {
+        console.log('🎭 Demo: Auto-enabling Secret Wallet');
+        onEnable();
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [demoMode, onEnable]);
+
   return (
     <div style={{
       background: '#1a1a2e',
@@ -28,6 +42,23 @@ export const SecretWalletChoiceCard: React.FC<SecretWalletChoiceCardProps> = ({
       margin: '0 auto',
       border: '1px solid #2d2d44',
     }}>
+      {/* Demo Mode Badge */}
+      {demoMode && (
+        <div style={{
+          background: 'rgba(251, 191, 36, 0.2)',
+          border: '1px solid #fbbf24',
+          borderRadius: '8px',
+          padding: '12px',
+          marginBottom: '20px',
+          color: '#fcd34d',
+          fontSize: '14px',
+          fontWeight: '600',
+          textAlign: 'center',
+        }}>
+          🎭 Demo Mode - Auto-enabling Secret Wallet in 2s...
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '30px' }}>
         <div style={{ fontSize: '48px', marginBottom: '10px' }}>🔓</div>

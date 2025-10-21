@@ -4,13 +4,31 @@
  * Displays while user enters PIN on Trezor device
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface TrezorPinCardProps {
   deviceLabel?: string;
+  demoMode?: boolean;
+  onAutoSkip?: () => void;
 }
 
-export const TrezorPinCard: React.FC<TrezorPinCardProps> = ({ deviceLabel = 'Trezor' }) => {
+export const TrezorPinCard: React.FC<TrezorPinCardProps> = ({ 
+  deviceLabel = 'Trezor',
+  demoMode = false,
+  onAutoSkip
+}) => {
+  // Auto-skip in demo mode after 2 seconds
+  useEffect(() => {
+    if (demoMode && onAutoSkip) {
+      const timer = setTimeout(() => {
+        console.log('🎭 Demo: Auto-skipping PIN entry');
+        onAutoSkip();
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [demoMode, onAutoSkip]);
+
   return (
     <div style={{
       background: '#1a1a2e',
@@ -21,6 +39,22 @@ export const TrezorPinCard: React.FC<TrezorPinCardProps> = ({ deviceLabel = 'Tre
       border: '1px solid #2d2d44',
       textAlign: 'center',
     }}>
+      {/* Demo Mode Badge */}
+      {demoMode && (
+        <div style={{
+          background: 'rgba(251, 191, 36, 0.2)',
+          border: '1px solid #fbbf24',
+          borderRadius: '8px',
+          padding: '12px',
+          marginBottom: '20px',
+          color: '#fcd34d',
+          fontSize: '14px',
+          fontWeight: '600',
+        }}>
+          🎭 Demo Mode - PIN entry simulated (auto-continuing in 2s...)
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ marginBottom: '30px' }}>
         <div style={{ fontSize: '48px', marginBottom: '10px' }}>🔐</div>

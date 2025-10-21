@@ -4,19 +4,18 @@
  * CepWallet - Privacy-First Hardware Wallet
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Sidebar } from './components/Navigation/Sidebar';
 import { DashboardPage } from './pages/DashboardPage';
 import { WalletPage } from './pages/WalletPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { useNavigation } from './hooks/useNavigation';
 import './styles/globals.css';
 
-export type NavigationPage = 'dashboard' | 'wallet' | 'privacy' | 'transactions' | 'settings';
-
 const App = () => {
-  const [currentPage, setCurrentPage] = useState<NavigationPage>('dashboard');
+  const { currentPage, navigate } = useNavigation();
 
   const renderPage = () => {
     switch (currentPage) {
@@ -45,7 +44,7 @@ const App = () => {
       {/* Sidebar Navigation */}
       <Sidebar 
         currentPage={currentPage} 
-        onNavigate={setCurrentPage} 
+        onNavigate={navigate} 
       />
 
       {/* Main Content Area */}

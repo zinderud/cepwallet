@@ -8,10 +8,14 @@ import React, { useEffect, useState } from 'react';
 
 interface PassphraseConfirmCardProps {
   deviceLabel?: string;
+  demoMode?: boolean;
+  onAutoSkip?: () => void;
 }
 
 export const PassphraseConfirmCard: React.FC<PassphraseConfirmCardProps> = ({
   deviceLabel = 'Trezor',
+  demoMode = false,
+  onAutoSkip,
 }) => {
   const [dots, setDots] = useState('');
 
@@ -23,6 +27,18 @@ export const PassphraseConfirmCard: React.FC<PassphraseConfirmCardProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-skip in demo mode
+  useEffect(() => {
+    if (demoMode && onAutoSkip) {
+      const timer = setTimeout(() => {
+        console.log('🎭 Demo: Auto-confirming passphrase');
+        onAutoSkip();
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [demoMode, onAutoSkip]);
+
   return (
     <div style={{
       background: '#1a1a2e',
@@ -32,6 +48,23 @@ export const PassphraseConfirmCard: React.FC<PassphraseConfirmCardProps> = ({
       margin: '0 auto',
       border: '1px solid #2d2d44',
     }}>
+      {/* Demo Mode Badge */}
+      {demoMode && (
+        <div style={{
+          background: 'rgba(251, 191, 36, 0.2)',
+          border: '1px solid #fbbf24',
+          borderRadius: '8px',
+          padding: '12px',
+          marginBottom: '20px',
+          color: '#fcd34d',
+          fontSize: '14px',
+          fontWeight: '600',
+          textAlign: 'center',
+        }}>
+          🎭 Demo Mode - Passphrase simulated (auto-confirming in 2s...)
+        </div>
+      )}
+
       {/* Animated Device */}
       <div style={{
         textAlign: 'center',

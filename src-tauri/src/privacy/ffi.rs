@@ -38,6 +38,8 @@ pub struct ProofRequest {
     pub railgun_wallet_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub encryption_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mnemonic: Option<String>,
     
     // Common fields
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -84,45 +86,70 @@ pub async fn generate_proof(request: ProofRequest) -> Result<ProofResponse> {
         .map_err(|e| anyhow::anyhow!("Failed to serialize proof request: {}", e))?;
     
     // Get proof-generator directory path
-    let proof_generator_dir = std::env::current_dir()
-        .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?
-        .join("proof-generator");
+    // During development: src-tauri/../proof-generator
+    // During production: relative to executable
+    let current_dir = std::env::current_dir()
+        .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?;
     
-    if !proof_generator_dir.exists() {
-        return Err(anyhow::anyhow!(
-            "proof-generator directory not found at {:?}",
-            proof_generator_dir
-        ).into());
-    }
+    tracing::debug!("Current directory: {:?}", current_dir);
+    
+    // Try multiple possible paths
+    let possible_paths = vec![
+        current_dir.join("proof-generator"),           // From project root
+        current_dir.join("../proof-generator"),        // From src-tauri
+        current_dir.join("../../proof-generator"),     // From target/debug
+    ];
+    
+    let proof_generator_dir = possible_paths.iter()
+        .find(|p| p.exists())
+        .ok_or_else(|| anyhow::anyhow!(
+            "proof-generator directory not found. Tried: {:?}",
+            possible_paths
+        ))?;
+    
+    tracing::debug!("Using proof-generator at: {:?}", proof_generator_dir);
     
     let script_path = proof_generator_dir.join("index.js");
     
     if !script_path.exists() {
         return Err(anyhow::anyhow!(
-            "proof-generator/index.js not found"
+            "proof-generator/index.js not found at {:?}",
+            script_path
         ).into());
     }
     
+    println!("📤 Sending JSON to Node.js: {}", request_json);
     tracing::debug!("Running: node {} '{}'", script_path.display(), request_json);
     
     // Execute Node.js script
     let output = Command::new("node")
         .arg(&script_path)
         .arg(&request_json)
+        .current_dir(proof_generator_dir) // Set working directory
         .output()
         .map_err(|e| anyhow::anyhow!("Failed to execute Node.js: {}. Make sure Node.js is installed.", e))?;
     
+    // Always log stdout and stderr for debugging
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    
+    if !stderr.is_empty() {
+        println!("Node.js stderr: {}", stderr);
+    }
+    if !stdout.is_empty() {
+        println!("Node.js stdout: {}", stdout);
+    }
+    
     // Check if command succeeded
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(anyhow::anyhow!(
-            "Proof generation failed: {}",
+            "Proof generation failed with exit code {:?}. Stderr: {}",
+            output.status.code(),
             stderr
         ).into());
     }
     
     // Parse stdout
-    let stdout = String::from_utf8_lossy(&output.stdout);
     tracing::debug!("Node.js output: {}", stdout);
     
     // Extract JSON from output (last line should be JSON)
@@ -130,7 +157,7 @@ pub async fn generate_proof(request: ProofRequest) -> Result<ProofResponse> {
         .lines()
         .rev()
         .find(|line| line.trim().starts_with('{'))
-        .ok_or_else(|| anyhow::anyhow!("No JSON output found from proof generator"))?;
+        .ok_or_else(|| anyhow::anyhow!("No JSON output found from proof generator. Output: {}", stdout))?;
     
     // Parse response
     let response: ProofResponse = serde_json::from_str(json_line)
@@ -168,6 +195,7 @@ pub async fn generate_shield_proof(
         railgun_wallet_id: None,
         encryption_key: None,
         shield_private_key: Some(shield_private_key.to_string()),
+        mnemonic: None,
     };
     
     generate_proof(request).await
@@ -177,6 +205,7 @@ pub async fn generate_shield_proof(
 pub async fn generate_transfer_proof(
     railgun_wallet_id: &str,
     encryption_key: &str,
+    mnemonic: &str,
     to_railgun_address: &str,
     token: &str,
     amount: &str,
@@ -187,6 +216,7 @@ pub async fn generate_transfer_proof(
         chain_id,
         railgun_wallet_id: Some(railgun_wallet_id.to_string()),
         encryption_key: Some(encryption_key.to_string()),
+        mnemonic: Some(mnemonic.to_string()),
         recipient: Some(to_railgun_address.to_string()),
         token: Some(token.to_string()),
         amount: Some(amount.to_string()),
@@ -204,6 +234,7 @@ pub async fn generate_transfer_proof(
 pub async fn generate_unshield_proof(
     railgun_wallet_id: &str,
     encryption_key: &str,
+    mnemonic: &str,
     recipient: &str,
     token: &str,
     amount: &str,
@@ -214,6 +245,7 @@ pub async fn generate_unshield_proof(
         chain_id,
         railgun_wallet_id: Some(railgun_wallet_id.to_string()),
         encryption_key: Some(encryption_key.to_string()),
+        mnemonic: Some(mnemonic.to_string()),
         recipient: Some(recipient.to_string()),
         token: Some(token.to_string()),
         amount: Some(amount.to_string()),
@@ -234,11 +266,12 @@ mod tests {
     #[tokio::test]
     #[ignore] // Only run if Node.js and proof-generator are set up
     async fn test_shield_proof_generation() {
+        let shield_key = format!("0x{}", "0".repeat(64)); // shield_private_key (32 bytes hex)
         let result = generate_shield_proof(
             "0x0000000000000000000000000000000000000000", // token
             "1000000000000000000", // amount
             "0zk1234...railgun_address...", // railgun_address
-            "0x" + &"0".repeat(64), // shield_private_key (32 bytes hex)
+            &shield_key,
             Some(11155111), // chain_id (Sepolia)
         ).await;
         

@@ -25,6 +25,14 @@ export class TrezorSecretWalletService {
   private isInitialized = false;
   private currentSession: string | null = null;
   private passphraseMode: 'device' | 'host' = 'device'; // Always use device for security
+  private demoMode = false; // Demo mode for testing without hardware
+
+  constructor(demoMode = false) {
+    this.demoMode = demoMode;
+    if (demoMode) {
+      console.log('🎭 Trezor Demo Mode: Simulating hardware wallet');
+    }
+  }
 
   /**
    * Initialize Trezor Connect
@@ -61,6 +69,19 @@ export class TrezorSecretWalletService {
    * Establishes connection and gets device state
    */
   async connect(): Promise<DeviceInfo> {
+    // Demo mode: simulate device connection
+    if (this.demoMode) {
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+      this.currentSession = 'demo-session-' + Date.now();
+      console.log('🎭 Demo: Simulated Trezor connection');
+      
+      return {
+        connected: true,
+        model: 'Trezor Model T (Demo)',
+        session: this.currentSession,
+      };
+    }
+
     await this.init();
 
     try {
@@ -99,6 +120,20 @@ export class TrezorSecretWalletService {
   async enableSecretWallet(): Promise<WalletInfo> {
     if (!this.currentSession) {
       throw new Error('Trezor not connected. Call connect() first.');
+    }
+
+    // Demo mode: simulate Secret Wallet activation
+    if (this.demoMode) {
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate passphrase entry
+      const demoAddress = '0x' + Math.random().toString(16).substring(2, 42).padEnd(40, '0');
+      console.log('🎭 Demo: Simulated Secret Wallet activation');
+      
+      return {
+        isSecretWallet: true,
+        address: demoAddress,
+        path: "m/44'/60'/0'/0/0",
+        deviceState: this.currentSession,
+      };
     }
 
     try {
@@ -156,6 +191,24 @@ export class TrezorSecretWalletService {
     purpose: KeyPurpose,
     walletId: string
   ): Promise<string> {
+    // Demo mode: generate deterministic mock keys
+    if (this.demoMode) {
+      await new Promise(resolve => setTimeout(resolve, 600)); // Simulate device interaction
+      
+      // Generate deterministic key based on purpose and walletId
+      const seed = `${purpose}-${walletId}-demo`;
+      let hash = 0;
+      for (let i = 0; i < seed.length; i++) {
+        hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      
+      const demoKey = '0x' + Math.abs(hash).toString(16).padStart(64, '0');
+      console.log(`🎭 Demo: Simulated ${purpose} key derivation`);
+      
+      return demoKey;
+    }
+
     if (!this.isInitialized) {
       throw new Error('Trezor not initialized. Call init() first.');
     }
@@ -368,5 +421,5 @@ export class TrezorSecretWalletService {
   }
 }
 
-// Export singleton instance
+// Export singleton instance (default, no demo mode)
 export const trezorService = new TrezorSecretWalletService();

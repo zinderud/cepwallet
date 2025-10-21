@@ -5,13 +5,14 @@
  * with Trezor-derived keys
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface RailgunWalletCardProps {
   secretWalletAddress: string;
   deviceLabel?: string;
   onInitializeRailgun: () => Promise<void>;
   onBack?: () => void;
+  demoMode?: boolean;
 }
 
 export const RailgunWalletCard: React.FC<RailgunWalletCardProps> = ({
@@ -19,9 +20,22 @@ export const RailgunWalletCard: React.FC<RailgunWalletCardProps> = ({
   deviceLabel = 'Trezor',
   onInitializeRailgun,
   onBack,
+  demoMode = false,
 }) => {
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-initialize in demo mode
+  useEffect(() => {
+    if (demoMode && !isInitializing) {
+      const timer = setTimeout(() => {
+        console.log('🎭 Demo: Auto-initializing RAILGUN wallet');
+        handleInitialize();
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [demoMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleInitialize = async () => {
     setIsInitializing(true);
@@ -44,6 +58,23 @@ export const RailgunWalletCard: React.FC<RailgunWalletCardProps> = ({
       margin: '0 auto',
       border: '1px solid #2d2d44',
     }}>
+      {/* Demo Mode Badge */}
+      {demoMode && (
+        <div style={{
+          background: 'rgba(251, 191, 36, 0.2)',
+          border: '1px solid #fbbf24',
+          borderRadius: '8px',
+          padding: '12px',
+          marginBottom: '20px',
+          color: '#fcd34d',
+          fontSize: '14px',
+          fontWeight: '600',
+          textAlign: 'center',
+        }}>
+          🎭 Demo Mode - Auto-initializing RAILGUN in 2s...
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '30px' }}>
         <div style={{
