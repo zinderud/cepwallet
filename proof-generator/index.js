@@ -212,6 +212,7 @@ async function generateShieldProof(params) {
     );
     
     console.log('[ProofGen] Shield proof generated ✓');
+    console.log('[ProofGen] Transaction data:', JSON.stringify(shieldTx.transaction, null, 2));
     
     return {
       success: true,
@@ -221,6 +222,7 @@ async function generateShieldProof(params) {
         params.token,
         amountWei.toString(),
       ],
+      transaction: shieldTx.transaction, // Include raw transaction for frontend
     };
     
   } catch (error) {
