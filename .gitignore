@@ -90,14 +90,15 @@ src-tauri/bundle/
 **/.wallets/
 **/*_mnemonic.txt
 **/*_seed.txt
-
+**/target/
 # RAILGUN privacy data
 **/railgun_data/
 **/railgun_db/
 **/test_railgun_db/
 **/merkle_cache/
 **/nullifier_cache/
-
+src-tauri/target/
+**/src-tauri/target/
 # ========================================
 # BLOCKCHAIN & WEB3
 # ========================================
