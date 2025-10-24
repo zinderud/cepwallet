@@ -56,6 +56,8 @@ pub struct ProofResponse {
     pub public_inputs: Vec<String>,
     #[serde(default)]
     pub error: Option<String>,
+    #[serde(default)]
+    pub transaction: Option<serde_json::Value>,
 }
 
 /// Generate a ZK-SNARK proof by calling Node.js proof generator

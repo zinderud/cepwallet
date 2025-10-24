@@ -6,6 +6,8 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { tauriApi } from '../api/tauri';
+import { createSepoliaTransactionService } from '../services/TransactionService';
+import { ethers } from 'ethers';
 import type {
   RailgunWallet,
   CreateRailgunWalletParams,
@@ -193,13 +195,44 @@ export function useRailgunWallet(
     setError(null);
 
     try {
+      console.log('🔒 Step 1: Generating shield proof...');
       const result = await tauriApi.privacy.shield({
         ...params,
         railgunAddress: wallet.railgunAddress,
         shieldPrivateKey,
       });
 
-      console.log('✅ Tokens shielded successfully');
+      console.log('✅ Shield proof generated');
+      console.log('� [TypeScript] Result received from Tauri:', JSON.stringify(result, null, 2));
+      console.log('🔍 [TypeScript] Transaction field type:', typeof result.transaction);
+      console.log('🔍 [TypeScript] Transaction data:', result.transaction);
+
+      // Check if transaction data is available
+      if (result.transaction) {
+        console.log('🚀 Step 2: Broadcasting transaction to blockchain...');
+        console.log('📍 Wallet Address to Fund:', wallet.mnemonic ? 
+          ethers.Wallet.fromPhrase(wallet.mnemonic).address : 
+          'No mnemonic available');
+        
+        const txService = createSepoliaTransactionService();
+        const txResult = await txService.broadcastShieldTransaction(
+          result.transaction,
+          wallet.mnemonic
+        );
+
+        if (!txResult.success) {
+          throw new Error(`Transaction broadcast failed: ${txResult.error}`);
+        }
+
+        console.log('✅ Transaction broadcast successful!');
+        console.log('📝 Transaction hash:', txResult.txHash);
+        console.log('🔗 View on Etherscan:', `https://sepolia.etherscan.io/tx/${txResult.txHash}`);
+        
+        // TODO: Trigger merkletree scan after confirmation
+        console.log('⏳ Next: Scan merkletree to update balance (not implemented yet)');
+      }
+
+      console.log('✅ Shield operation completed');
       return result;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Shield failed';

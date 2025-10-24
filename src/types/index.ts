@@ -37,6 +37,11 @@ export interface ShieldedTransaction {
   proof?: string;
   merkle_root?: string;
   nullifier?: string;
+  transaction?: {
+    to: string;
+    data: string;
+    value?: string;
+  };
 }
 
 export interface RailgunWallet {

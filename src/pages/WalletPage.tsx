@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { useRailgunWallet } from '../hooks/useRailgunWallet';
 import { useTrezorSecretWallet } from '../hooks/useTrezorSecretWallet';
 import { navigateTo } from '../hooks/useNavigation';
+import { getDemoMnemonic, getDemoAddress, validateDemoConfig } from '../utils/demoConfig';
 import {
   TrezorConnectCard,
   TrezorPinCard,
@@ -154,9 +155,24 @@ export const WalletPage: React.FC = () => {
       // Save encryption key to state for ETH address derivation
       setEncryptionKey(railgunKeys.spendingKey);
 
+      // Demo mode: Use fixed mnemonic from environment for consistent wallet addresses
+      // This ensures the same addresses are used across sessions
+      const demoMnemonic = trezorDemoMode ? getDemoMnemonic() : undefined;
+
+      // Validate demo configuration
+      if (trezorDemoMode) {
+        const validation = validateDemoConfig();
+        if (!validation.valid) {
+          console.error('❌ Demo configuration error:', validation.message);
+          throw new Error(`Demo configuration error: ${validation.message}`);
+        }
+        console.log('✅ Demo configuration validated');
+        console.log('🎭 Demo Address:', getDemoAddress());
+      }
+
       // Create RAILGUN wallet with Trezor-derived encryption key
       // Note: We use the spending key as the encryption key for now
-      await createWallet(railgunKeys.spendingKey, undefined);
+      await createWallet(railgunKeys.spendingKey, demoMnemonic);
       
       console.log('✅ Trezor RAILGUN wallet created');
       setTrezorStep('complete');

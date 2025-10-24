@@ -59,6 +59,8 @@ pub struct ShieldedTransaction {
     pub merkle_root: Option<String>,
     /// Nullifier (to prevent double-spending)
     pub nullifier: Option<String>,
+    /// Transaction data for broadcasting
+    pub transaction: Option<serde_json::Value>,
 }
 
 /// Shielded transaction type

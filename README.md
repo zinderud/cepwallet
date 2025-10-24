@@ -2,87 +2,89 @@
 
 <div align="center">
 
-**Güvenli • Privacy-First • Web3 Native • Trezor Powered**
+**Secure • Privacy-First • Web3 Native • Trezor Powered**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 [![Version](https://img.shields.io/badge/version-0.1.0-orange.svg)]()
 [![Kohaku](https://img.shields.io/badge/privacy-Kohaku-purple.svg)]()
 
-[Hızlı Başlangıç](QUICKSTART.md) •
-[Dokümantasyon](docs/INDEX.md) •
-[Privacy Features](#-gizlilik-özellikleri-kohaku) •
+[Quick Start](QUICKSTART.md) •
+[Documentation](docs/INDEX.md) •
+[Privacy Features](#-privacy-features-kohaku) •
 [Roadmap](docs/ROADMAP.md)
 
 </div>
 
 ---
 
-## 🎯 Proje Özeti
+## 🎯 Project Summary
 
-**CepWallet**, Trezor hardware wallet güvenliği ile **Ethereum Foundation'ın Kohaku** gizlilik protokollerini birleştirerek geliştirilmiş, **privacy-first** bir kripto cüzdan + Web3 browser uygulamasıdır.
+**CepWallet** is a **privacy-first** crypto wallet + Web3 browser application developed by combining Trezor hardware wallet security with **Ethereum Foundation's Kohaku** privacy protocols.
 
-### 🔐 Temel Özellikler
+### 🔐 Key Features
 
-#### Hardware Güvenlik (Trezor)
-- ✅ USB tabanlı hardware wallet (soğuk cüzdan)
-- ✅ Private key'ler hiçbir zaman cihazdan çıkmaz
-- ✅ İşlem imzalama tamamen offline
+#### Hardware Security (Trezor)
+- ✅ USB-based hardware wallet (cold wallet)
+- ✅ Private keys never leave the device
+- ✅ Transaction signing completely offline
 - ✅ PIN protection & recovery phrase
-- ✅ BIP32/39/44 HD wallet desteği
+- ✅ BIP32/39/44 HD wallet support
 
-#### 🕵️ Gizlilik Özellikleri (Kohaku)
+#### 🕵️ Privacy Features (Kohaku)
 - ✅ **RAILGUN Protocol**: Zero-knowledge shielded transactions
 - ✅ **Privacy Pools**: Compliance-friendly privacy
 - ✅ **Privacy Levels**: User-selectable modes
 - ✅ **Anonymous DeFi**: Private swaps, lending, staking
 
 #### 🌐 Web3 Integration
-- ✅ Cross-platform desteği (Windows, macOS, Linux, iOS)
-- ✅ Özelleştirilmiş web browser ile Web3 etkileşimi
-- ✅ Uniswap, OpenSea gibi dApps ile doğrudan çalışma
+- ✅ Cross-platform support (Windows, macOS, Linux, iOS)
+- ✅ Customized web browser for Web3 interaction
+- ✅ Direct integration with dApps like Uniswap, OpenSea
 - ✅ Multi-chain support (Ethereum, BSC, Polygon, Arbitrum)
 
 ---
 
-## 🛡️ Gizlilik Özellikleri (Kohaku)
+## 🛡️ Privacy Features (Kohaku)
 
 ### Zero-Knowledge Privacy
 
-CepWallet, Ethereum Foundation'ın **Kohaku** privacy tooling'ini kullanarak aşağıdaki özellikleri sağlar:
+CepWallet provides the following features using **Kohaku** privacy tooling from the Ethereum Foundation:
 
 #### 1. RAILGUN Shielded Transactions
 
-**RAILGUN**, Ethereum üzerinde zero-knowledge proof tabanlı gizlilik sağlar.
+**RAILGUN** provides zero-knowledge proof-based privacy on Ethereum.
 
-**Nasıl Çalışır:**
+**How It Works:**
 ```
-Normal İşlem:
-Alice → [100 ETH görünür] → Bob
-❌ Herkes görüyor: kimden kime, ne kadar
+Normal Transaction:
+Alice → [100 ETH visible] → Bob
+❌ Everyone can see: from whom to whom, how much
 
-RAILGUN ile:
+With RAILGUN:
 Alice → [Shield] → [Private Pool] → [Unshield] → Bob
-✅ Sadece Alice ve Bob biliyor miktarı
-✅ On-chain sadece proof görünür
+✅ Only Alice and Bob know the amount
+✅ Only proof is visible on-chain
 ```
 
-**Kod Örneği:**
+![RAILGUN Shielded Transactions](docs/images/railgun.png)
+
+**Code Example:**
 ```typescript
-// Public ETH'yi RAILGUN private pool'a gönder
+// Send public ETH to RAILGUN private pool
 await wallet.shield({
   token: '0x0', // ETH
   amount: '1.0'
 });
 
-// Private transfer (miktar ve alıcı gizli)
+// Private transfer (amount and recipient hidden)
 await wallet.shieldedTransfer({
   to: '0xRECIPIENT_RAILGUN_ADDRESS',
   token: '0x0',
   amount: '0.5'
 });
 
-// Private pool'dan public address'e çıkar
+// Withdraw from private pool to public address
 await wallet.unshield({
   token: '0x0',
   amount: '0.3',
@@ -90,32 +92,34 @@ await wallet.unshield({
 });
 ```
 
-**Avantajlar:**
-- 🔒 Transaction amounts tamamen gizli
-- 🕵️ Recipient addresses anonim
-- 📊 On-chain analizi imkansız
+**Advantages:**
+- 🔒 Transaction amounts completely hidden
+- 🕵️ Recipient addresses anonymous
+- 📊 On-chain analysis impossible
 - ⚡ Gas-efficient ZK proofs
 
 #### 2. Privacy Pools (Compliance-Friendly)
 
-Privacy Pools, düzenleyici uyumluluk ile gizliliği birleştirir.
+Privacy Pools combine regulatory compliance with privacy.
 
-**Özellikler:**
+**Features:**
 - 🌊 Pool-based private transfers
 - 📋 Regulatory compliance proofs
 - 🔐 Zero-knowledge pool membership
-- ⚖️ Hukuki güvence ile gizlilik
+- ⚖️ Privacy with legal assurance
 
-**Kod Örneği:**
+![Privacy Pools](docs/images/privacy.png)
+
+**Code Example:**
 ```typescript
-// Privacy pool'a katıl
+// Join privacy pool
 await wallet.joinPool({
   poolId: 'compliance-pool-1',
   amount: '10.0',
   token: '0x0'
 });
 
-// Pool içinde private transfer
+// Private transfer within pool
 await wallet.poolTransfer({
   to: '0xRECIPIENT',
   amount: '2.5',
@@ -125,94 +129,94 @@ await wallet.poolTransfer({
 
 #### 3. Privacy Levels
 
-Kullanıcılar gizlilik seviyelerini seçebilir:
+Users can select privacy levels:
 
-| Seviye | Açıklama | Kullanım Alanı |
-|--------|----------|----------------|
-| 🌐 **Public** | Standard Ethereum | Normal işlemler |
+| Level | Description | Use Case |
+|-------|-------------|----------|
+| 🌐 **Public** | Standard Ethereum | Normal transactions |
 | 🛡️ **RAILGUN** | Shielded transactions | Private DeFi |
-| 🌊 **Privacy Pool** | Compliance-friendly | Kurumsal kullanım |
-| 🔒 **Maximum** | RAILGUN + Privacy Pool | Maksimum gizlilik |
+| 🌊 **Privacy Pool** | Compliance-friendly | Corporate use |
+| 🔒 **Maximum** | RAILGUN + Privacy Pool | Maximum privacy |
 
 ---
 
-## 🌟 Neden CepWallet?
+## 🌟 Why CepWallet?
 
 ### vs Standard Trezor
-- ✅ **Gizlilik**: Kohaku protokolü ile private transactions
-- ✅ **Modern UI**: Custom uygulama, Trezor Suite değil
-- ✅ **Web3 Odaklı**: Built-in browser ile direkt dApp erişimi
+- ✅ **Privacy**: Private transactions with Kohaku protocol
+- ✅ **Modern UI**: Custom application, not Trezor Suite
+- ✅ **Web3 Focused**: Direct dApp access with built-in browser
 
 ### vs MetaMask
-- ✅ **Hardware Güvenlik**: Private key'ler USB cihazda
-- ✅ **Gizlilik**: Transaction privacy (Kohaku)
-- ✅ **Standalone**: Browser extension değil, tam uygulama
+- ✅ **Hardware Security**: Private keys on USB device
+- ✅ **Privacy**: Transaction privacy (Kohaku)
+- ✅ **Standalone**: Full application, not browser extension
 
-### vs Diğer Privacy Wallets
-- ✅ **Hardware Security**: Yazılım cüzdanlardan daha güvenli
-- ✅ **Kanıtlanmış Protokol**: Ethereum Foundation desteği
-- ✅ **Açık Kaynak**: Tamamen şeffaf
+### vs Other Privacy Wallets
+- ✅ **Hardware Security**: More secure than software wallets
+- ✅ **Proven Protocol**: Ethereum Foundation support
+- ✅ **Open Source**: Fully transparent
 
 ---
 
-## 🚀 Hızlı Başlangıç
+## 🚀 Quick Start
 
-### Kullanıcılar İçin
+### For Users
 
-1. **Trezor Cihazı Edinin**
-   - Trezor One veya Model T satın alın
-   - https://trezor.io adresinden
+1. **Get a Trezor Device**
+   - Purchase Trezor One or Model T
+   - From https://trezor.io
 
-2. **CepWallet'i İndirin**
-   - [Releases](https://github.com/zinderud/cepwallet/releases) sayfasından
-   - Windows, macOS veya Linux sürümünü seçin
+2. **Download CepWallet**
+   - From [Releases](https://github.com/zinderud/cepwallet/releases) page
+   - Choose Windows, macOS or Linux version
 
-3. **Kurulum Yapın**
-   - Trezor'u bilgisayara bağlayın
-   - CepWallet'i başlatın
-   - Cüzdan kurulumunu tamamlayın
+3. **Install**
+   - Connect Trezor to your computer
+   - Launch CepWallet
+   - Complete wallet setup
 
-4. **Web3 Kullanmaya Başlayın**
-   - Built-in browser ile Uniswap, OpenSea gibi dApps'lere erişin
-   - Privacy özelliklerini aktif edin
-   - Güvenli işlem yapın!
+4. **Start Using Web3**
+   - Access dApps like Uniswap, OpenSea with built-in browser
+   - Activate privacy features
+   - Make secure transactions!
 
-### Geliştiriciler İçin
+### For Developers
 
-Detaylı kurulum ve geliştirme için:
+For detailed setup and development:
 
-👉 **[QUICKSTART.md](QUICKSTART.md)** - 10 dakikada başlangıç  
-👉 **[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)** - Detaylı rehber
+👉 **[QUICKSTART.md](QUICKSTART.md)** - Get started in 10 minutes  
+👉 **[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)** - Detailed guide
 
 ```bash
-# 🚀 Hızlı başlangıç - Tauri ile tek komut!
+# 🚀 Quick start - Single command with Tauri!
 git clone https://github.com/zinderud/cepwallet.git
 cd cepwallet
 pnpm install
 pnpm tauri dev
 ```
 
-> **🎉 Yeni:** Artık tek bir komutla çalışıyor! `pnpm tauri dev`
+> **🎉 New:** Now works with a single command! `pnpm tauri dev`
 
 ---
 
-## 📁 Proje Yapısı
+## 📁 Project Structure
 
 ```
 cepwallet/
-├── README.md                    # Bu dosya
-├── QUICKSTART.md               # Hızlı başlangıç
-├── TAURI_MIGRATION_COMPLETE.md # ✨ Tauri geçiş raporu
+├── README.md                    # This file
+├── QUICKSTART.md               # Quick start
+├── TAURI_MIGRATION_COMPLETE.md # ✨ Tauri migration report
 ├── LICENSE                      # GPL v3
 │
-├── docs/                        # Dokümantasyon
-│   ├── INDEX.md                # Dokümantasyon indeksi
-│   ├── GETTING_STARTED.md      # Detaylı başlangıç
-│   ├── ARCHITECTURE.md         # Teknik mimari (Tauri)
-│   ├── PRIVACY_FEATURES.md     # Kohaku entegrasyonu
-│   ├── HARDWARE.md             # Hardware geliştirme
-│   ├── PROJECT_STRUCTURE.md    # Proje yapısı
-│   └── ROADMAP.md              # Yol haritası
+├── docs/                        # Documentation
+│   ├── INDEX.md                # Documentation index
+│   ├── GETTING_STARTED.md      # Detailed start
+│   ├── ARCHITECTURE.md         # Technical architecture (Tauri)
+│   ├── PRIVACY_FEATURES.md     # Kohaku integration
+│   ├── HARDWARE.md             # Hardware development
+│   ├── PROJECT_STRUCTURE.md    # Project structure
+│   └── ROADMAP.md              # Roadmap
 │
 ├── cepwallet/                   # 🎉 Tauri Desktop App
 │   ├── src-tauri/              # Rust backend (Trezor, Crypto)
@@ -228,120 +232,126 @@ cepwallet/
 ├── bridge/                      # ⚠️  Deprecated (migrated to Tauri)
 ```
 
-Detaylı yapı için: [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)
+Detailed structure: [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)
 
 ---
 
-## 💡 Kullanım Senaryoları
+## 💡 Use Cases
 
 ### 1. Private DeFi Trading
 ```
-Senaryo: Alice, Uniswap'te swap yapmak istiyor ama işlemini gizli tutmak istiyor
+Scenario: Alice wants to swap on Uniswap but keep her transaction private
 
-1. Alice CepWallet'te RAILGUN modunu aktif eder
-2. ETH'sini RAILGUN pool'a shield eder
-3. Built-in browser'da Uniswap'i açar
-4. Private pool'dan direkt swap yapar
-5. Token'ları yine private pool'da tutar
-→ Kimse Alice'in ne kadar swap yaptığını göremez
+1. Alice activates RAILGUN mode in CepWallet
+2. Shields her ETH to RAILGUN pool
+3. Opens Uniswap in built-in browser
+4. Swaps directly from private pool
+5. Keeps tokens in private pool
+→ No one can see how much Alice swapped
 ```
+
+![Dashboard](docs/images/dashboard.png)
 
 ### 2. NFT Privacy
 ```
-Senaryo: Bob, değerli bir NFT aldı ve kimlik gizliliğini korumak istiyor
+Scenario: Bob bought a valuable NFT and wants to protect his identity privacy
 
-1. Bob NFT'yi privacy pool'a transfer eder
-2. Pool içinde NFT'yi yeni bir adrese taşır
-3. Pool'dan çıkararak gerçek wallet'ına alır
-→ NFT'nin orijinal alıcısı ile şu anki sahibi arasındaki bağlantı koptu
+1. Bob transfers NFT to privacy pool
+2. Moves NFT to new address within pool
+3. Withdraws to his real wallet
+→ Connection between original buyer and current owner is broken
 ```
+
+![Wallet](docs/images/wallet.png)
 
 ### 3. Corporate Compliance
 ```
-Senaryo: Bir şirket, çalışan maaşlarını privacy ile ödemek istiyor ama denetlenebilir olmalı
+Scenario: A company wants to pay employee salaries with privacy but remain auditable
 
-1. Şirket Privacy Pool kullanır
-2. Maaşları pool içinden dağıtır (tutarlar gizli)
-3. Gerekirse compliance proof oluşturur
-4. Denetçiye sadece gerekli bilgileri gösterir
-→ Hem çalışan gizliliği korunur hem de denetim mümkün
+1. Company uses Privacy Pool
+2. Distributes salaries from within pool (amounts hidden)
+3. Generates compliance proof if needed
+4. Shows only necessary information to auditors
+→ Employee privacy protected while audit possible
 ```
+
+![Settings](docs/images/setting.png)
 
 ---
 
 ## 🗺️ Roadmap
 
-### ✅ Faz 0: Platform Migration (TAMAMLANDI)
-- [x] **Electron → Tauri** geçişi
-- [x] 97% daha küçük bundle size (~5MB vs 180MB)
-- [x] Native IPC ile 99% daha hızlı iletişim
-- [x] Tek komut deployment (`pnpm tauri dev`)
-- [x] Rust backend ile type-safe IPC
+### ✅ Phase 0: Platform Migration (COMPLETED)
+- [x] **Electron → Tauri** migration
+- [x] 97% smaller bundle size (~5MB vs 180MB)
+- [x] 99% faster communication with native IPC
+- [x] Single command deployment (`pnpm tauri dev`)
+- [x] Type-safe IPC with Rust backend
 
-### Faz 1: MVP (4-6 hafta) - Şu An
-- [x] Araştırma ve planlama
-- [x] Tauri desktop app kurulumu
-- [ ] Trezor entegrasyonu (USB HID implementation)
-- [ ] Web3 browser integration
-- [ ] Temel privacy features (Kohaku)
+### Phase 1: MVP (4-6 weeks) - Current
+- [x] Research and planning
+- [x] Tauri desktop app setup
+- [x] Trezor integration (USB HID implementation)
+- [x] Web3 browser integration
+- [x] Basic privacy features (Kohaku)
 
-### Faz 2: Gelişmiş Özellikler (6-8 hafta)
-- [ ] Multi-chain support
-- [ ] Token & NFT yönetimi
-- [ ] DeFi entegrasyonları
-- [ ] Gelişmiş güvenlik
+### Phase 2: Advanced Features (6-8 weeks)
+- [x] Multi-chain support
+- [ ] Token & NFT management
+- [ ] DeFi integrations
+- [ ] Advanced security
 
-### Faz 3: Mobile & Beta (8-12 hafta)
-- [ ] React Native app
-- [ ] iOS/Android desteği
+### Phase 3: Mobile & Beta (8-12 weeks)
+- [x] React Native app
+- [ ] iOS/Android support
 - [ ] Beta testing
 - [ ] Community feedback
 
-### Faz 4: Production (12+ hafta)
+### Phase 4: Production (12+ weeks)
 - [ ] v1.0 release
 - [ ] Marketing
 - [ ] Community growth
-- [ ] Custom hardware (opsiyonel)
+- [ ] Custom hardware (optional)
 
-Detaylı roadmap: [docs/ROADMAP.md](docs/ROADMAP.md)
+Detailed roadmap: [docs/ROADMAP.md](docs/ROADMAP.md)
 
 ---
 
  
-## 🔒 Güvenlik
+## 🔒 Security
 
-- **Hardware Isolation**: Private key'ler hiçbir zaman cihazdan çıkmaz
-- **PIN Protection**: 10 yanlış denemeden sonra cihaz kilitlenir
-- **Recovery Phrase**: 24 kelimelik BIP39 seed
+- **Hardware Isolation**: Private keys never leave the device
+- **PIN Protection**: Device locks after 10 wrong attempts
+- **Recovery Phrase**: 24-word BIP39 seed
 - **Firmware Verification**: Signed firmware updates
 - **Zero-Knowledge Proofs**: Transaction privacy
-- **Open Source**: Topluluk tarafından denetlenebilir
+- **Open Source**: Auditable by community
 
-Güvenlik raporları ve audits: [docs/SECURITY.md](docs/SECURITY.md)
-
----
-
-## 🤝 Katkıda Bulunma
-
-CepWallet açık kaynak bir projedir ve katkılarınızı bekliyoruz!
-
-1. Fork edin
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit edin (`git commit -m 'Add amazing feature'`)
-4. Push edin (`git push origin feature/amazing-feature`)
-5. Pull Request açın
-
-Detaylı katkı rehberi: [CONTRIBUTING.md](CONTRIBUTING.md)
+Security reports and audits: [docs/SECURITY.md](docs/SECURITY.md)
 
 ---
 
-## 📝 Lisans
+## 🤝 Contributing
 
-Bu proje [GNU General Public License v3.0](LICENSE) ile lisanslanmıştır.
+CepWallet is an open source project and we welcome your contributions!
+
+1. Fork it
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Detailed contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
-## 📞 İletişim
+## 📝 License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+
+---
+
+## 📞 Contact
 
 - **GitHub Issues**: [github.com/zinderud/cepwallet/issues](https://github.com/zinderud/cepwallet/issues)
 - **Discord**: [discord.gg/cepwallet](https://discord.gg/cepwallet)
@@ -350,18 +360,18 @@ Bu proje [GNU General Public License v3.0](LICENSE) ile lisanslanmıştır.
 
 ---
 
-## 🙏 Teşekkürler
+## 🙏 Acknowledgments
 
-- **Trezor** - Açık kaynak hardware wallet firmware
+- **Trezor** - Open source hardware wallet firmware
 - **Ethereum Foundation** - Kohaku privacy protocols
 - **RAILGUN** - Zero-knowledge privacy protocol
-- **Community** - Feedback ve katkılar
+- **Community** - Feedback and contributions
 
 ---
 
 <div align="center">
 
-**⭐ Projeyi beğendiyseniz yıldız vermeyi unutmayın!**
+**⭐ Don't forget to star the project if you like it!**
 
 Made with ❤️ by the CepWallet Team
 

@@ -78,6 +78,14 @@ impl RailgunManager {
 
         println!("✓ Shield proof generated successfully");
 
+        // Debug: Log transaction data
+        if let Some(ref tx) = proof_response.transaction {
+            println!("🔍 [Rust] Transaction data received:");
+            println!("{}", serde_json::to_string_pretty(tx).unwrap_or_else(|_| "Failed to serialize".to_string()));
+        } else {
+            println!("⚠️  [Rust] No transaction data in proof response!");
+        }
+
         Ok(ShieldedTransaction {
             tx_type: ShieldedTxType::Shield,
             token: token.to_string(),
@@ -86,6 +94,7 @@ impl RailgunManager {
             proof: Some(proof_response.proof),
             merkle_root: None,
             nullifier: None,
+            transaction: proof_response.transaction,
         })
     }
 
@@ -135,6 +144,7 @@ impl RailgunManager {
             proof: Some(proof_response.proof),
             merkle_root: None,
             nullifier: None,
+            transaction: None,
         })
     }
 
@@ -184,6 +194,7 @@ impl RailgunManager {
             proof: Some(proof_response.proof),
             merkle_root: None,
             nullifier: None,
+            transaction: None,
         })
     }
 

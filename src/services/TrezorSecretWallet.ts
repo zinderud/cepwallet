@@ -20,6 +20,7 @@ import type {
   TransactionRequest,
   KeyPurpose,
 } from '../types/trezor';
+import { getDemoMnemonic, getDemoAddress } from '../utils/demoConfig';
 
 export class TrezorSecretWalletService {
   private isInitialized = false;
@@ -125,8 +126,14 @@ export class TrezorSecretWalletService {
     // Demo mode: simulate Secret Wallet activation
     if (this.demoMode) {
       await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate passphrase entry
-      const demoAddress = '0x' + Math.random().toString(16).substring(2, 42).padEnd(40, '0');
+      
+      // Use demo address derived from environment mnemonic
+      const demoAddress = getDemoAddress();
+      const demoMnemonic = getDemoMnemonic();
+      
       console.log('🎭 Demo: Simulated Secret Wallet activation');
+      console.log('🎭 Demo Address:', demoAddress);
+      console.log('🎭 Demo Mnemonic (first 3 words):', demoMnemonic.split(' ').slice(0, 3).join(' ') + '...');
       
       return {
         isSecretWallet: true,

@@ -201,6 +201,14 @@ async function generateShieldProof(params) {
       recipientAddress: params.recipient, // Use 'recipient' field
     }];
     
+    // Prepare gas details (Sepolia uses EIP-1559)
+    const gasDetails = {
+      evmGasType: 2, // Type 2 = EIP-1559 (required for Sepolia)
+      gasEstimate: BigInt(500000), // 500k gas limit as BigInt
+      maxFeePerGas: undefined, // Let SDK determine
+      maxPriorityFeePerGas: undefined, // Let SDK determine
+    };
+    
     // Generate shield transaction with proof
     const shieldTx = await populateShield(
       TXIDVersion.V2_PoseidonMerkle, // Use V2 for RAILGUN v3
@@ -208,21 +216,40 @@ async function generateShieldProof(params) {
       shieldPrivateKey, // Use the generated/provided shield private key
       erc20AmountRecipients,
       [], // nftAmountRecipients (empty for now)
-      undefined // gasDetails (optional)
+      gasDetails // Provide gas details
     );
     
     console.log('[ProofGen] Shield proof generated ✓');
-    console.log('[ProofGen] Transaction data:', JSON.stringify(shieldTx.transaction, null, 2));
+    console.log('[ProofGen] SDK transaction keys:', Object.keys(shieldTx.transaction));
+    console.log('[ProofGen] SDK transaction.to:', shieldTx.transaction.to);
+    console.log('[ProofGen] SDK transaction.data length:', shieldTx.transaction.data?.length);
+    console.log('[ProofGen] SDK transaction.value:', shieldTx.transaction.value);
+    
+    // IMPORTANT: RAILGUN doesn't support native ETH directly
+    // For native ETH (0x0), users must wrap to WETH first
+    // However, we'll try to add value field for native ETH shield
+    const isNativeETH = params.token.toLowerCase() === '0x0000000000000000000000000000000000000000';
+    
+    const transaction = {
+      to: shieldTx.transaction.to,
+      data: shieldTx.transaction.data,
+      // If SDK returns value, use it. Otherwise, for native ETH, use the amount
+      value: shieldTx.transaction.value 
+        ? shieldTx.transaction.value.toString() 
+        : (isNativeETH ? amountWei.toString() : '0'),
+    };
+    
+    console.log('[ProofGen] Final transaction:', JSON.stringify(transaction, null, 2));
     
     return {
       success: true,
-      proof: Buffer.from(JSON.stringify(shieldTx.transaction)).toString('base64'),
+      proof: Buffer.from(JSON.stringify(transaction)).toString('base64'),
       publicInputs: [
         params.recipient,
         params.token,
         amountWei.toString(),
       ],
-      transaction: shieldTx.transaction, // Include raw transaction for frontend
+      transaction: transaction, // Include transaction with value field
     };
     
   } catch (error) {
