@@ -6,8 +6,9 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { tauriApi } from '../api/tauri';
-import { createSepoliaTransactionService } from '../services/TransactionService';
+import { createSepoliaTransactionService, createMainnetTransactionService } from '../services/TransactionService';
 import { ethers } from 'ethers';
+import { getWrappedNativeToken, isNativeToken } from '../config/contracts';
 import type {
   RailgunWallet,
   CreateRailgunWalletParams,
@@ -214,10 +215,20 @@ export function useRailgunWallet(
           ethers.Wallet.fromPhrase(wallet.mnemonic).address : 
           'No mnemonic available');
         
-        const txService = createSepoliaTransactionService();
+        const txService = chainId === 1 
+          ? createMainnetTransactionService() 
+          : createSepoliaTransactionService();
+        
+        // Determine the actual token address for approval (convert native ETH to WETH)
+        const tokenAddressForApproval = isNativeToken(params.token) 
+          ? getWrappedNativeToken(chainId) 
+          : params.token;
+        
         const txResult = await txService.broadcastShieldTransaction(
           result.transaction,
-          wallet.mnemonic
+          wallet.mnemonic,
+          tokenAddressForApproval, // Token address for approval check
+          params.amount // Amount for approval check
         );
 
         if (!txResult.success) {

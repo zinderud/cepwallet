@@ -5,6 +5,7 @@
  */
 
 import { ethers } from 'ethers';
+import { getChainContracts, isNativeToken, requiresApproval } from '../config/contracts';
 
 interface TransactionData {
   to: string;
@@ -93,11 +94,15 @@ export class TransactionService {
    * 
    * @param transactionData - Shield transaction from RAILGUN proof
    * @param mnemonic - Wallet mnemonic for signing
+   * @param tokenAddress - Token being shielded (for approval check)
+   * @param amount - Amount being shielded (for approval check)
    * @returns Transaction result with hash and receipt
    */
   async broadcastShieldTransaction(
     transactionData: TransactionData,
-    mnemonic: string
+    mnemonic: string,
+    tokenAddress?: string,
+    amount?: string
   ): Promise<TransactionResult> {
     try {
       console.log('🚀 Broadcasting shield transaction...');
@@ -117,6 +122,12 @@ export class TransactionService {
 
       if (balance === 0n) {
         throw new Error('Insufficient balance. Please fund your wallet with Sepolia ETH.');
+      }
+
+      // Check token approval if needed
+      if (tokenAddress && amount && requiresApproval(tokenAddress)) {
+        console.log('🛡️ Checking token approval...');
+        await this.checkAndApproveToken(wallet, tokenAddress, amount);
       }
 
       // Estimate gas
@@ -222,6 +233,76 @@ export class TransactionService {
       };
     } catch (error) {
       throw new Error('Failed to get transaction status: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+  }
+
+  /**
+   * Check and approve token spending for RAILGUN contract if needed
+   */
+  async checkAndApproveToken(
+    wallet: ethers.HDNodeWallet,
+    tokenAddress: string,
+    amount: string
+  ): Promise<boolean> {
+    try {
+      // Skip approval for native tokens
+      if (isNativeToken(tokenAddress)) {
+        console.log('✅ Native token, no approval needed');
+        return true;
+      }
+
+      console.log(`🔍 Checking ${tokenAddress} allowance...`);
+
+      const contracts = getChainContracts(this.chainId);
+      const railgunAddress = contracts.railgun;
+
+      const erc20Abi = [
+        'function allowance(address,address) view returns (uint256)',
+        'function approve(address,uint256) returns (bool)',
+        'function balanceOf(address) view returns (uint256)',
+        'function symbol() view returns (string)',
+        'function decimals() view returns (uint8)'
+      ];
+
+      const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, wallet);
+
+      // Get token info
+      const symbol = await tokenContract.symbol().catch(() => 'UNKNOWN');
+      const decimals = await tokenContract.decimals().catch(() => 18);
+
+      // Check current allowance
+      const currentAllowance = await tokenContract.allowance(wallet.address, railgunAddress);
+      const requiredAmount = ethers.parseUnits(amount, decimals);
+
+      console.log(`  Current ${symbol} allowance:`, ethers.formatUnits(currentAllowance, decimals));
+      console.log(`  Required ${symbol} amount:`, ethers.formatUnits(requiredAmount, decimals));
+
+      if (currentAllowance >= requiredAmount) {
+        console.log(`✅ Sufficient ${symbol} allowance already exists`);
+        return true;
+      }
+
+      // Check token balance
+      const balance = await tokenContract.balanceOf(wallet.address);
+      console.log(`  ${symbol} balance:`, ethers.formatUnits(balance, decimals));
+
+      if (balance < requiredAmount) {
+        throw new Error(`Insufficient ${symbol} balance. Have ${ethers.formatUnits(balance, decimals)} ${symbol}, need ${ethers.formatUnits(requiredAmount, decimals)} ${symbol}`);
+      }
+
+      console.log(`🔄 Approving ${symbol} spending...`);
+
+      // Approve maximum amount to avoid future approvals
+      const tx = await tokenContract.approve(railgunAddress, ethers.MaxUint256);
+      console.log(`  Approval transaction sent:`, tx.hash);
+
+      await tx.wait(1);
+      console.log(`✅ ${symbol} approval confirmed`);
+
+      return true;
+    } catch (error) {
+      console.error('❌ Token approval failed:', error);
+      throw error;
     }
   }
 }

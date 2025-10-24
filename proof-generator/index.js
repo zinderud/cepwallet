@@ -17,6 +17,30 @@ const {
 const LevelDOWN = require('leveldown');
 const { NetworkName, TXIDVersion } = require('@railgun-community/shared-models');
 
+// Chain-specific contract addresses
+const CHAIN_CONTRACTS = {
+  1: { // Ethereum Mainnet
+    railgun: '0xFA7093CDD9EE6932B4eb2c9e1cde21625Cb940291',
+    weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  },
+  11155111: { // Sepolia Testnet
+    railgun: '0xeCFCf3b4eC647c4Ca6D49108b311b7a7C9543fea',
+    weth: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
+  },
+  137: { // Polygon
+    railgun: '0xFA7093CDD9EE6932B4eb2c9e1cde21625Cb940291',
+    weth: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+  },
+  56: { // BSC
+    railgun: '0xFA7093CDD9EE6932B4eb2c9e1cde21625Cb940291',
+    weth: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+  },
+  42161: { // Arbitrum
+    railgun: '0xFA7093CDD9EE6932B4eb2c9e1cde21625Cb940291',
+    weth: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+  },
+};
+
 const PROOF_TYPES = {
   SHIELD: 'shield',
   TRANSFER: 'transfer',
@@ -194,9 +218,16 @@ async function generateShieldProof(params) {
     
     console.log('  Amount (wei):', amountWei.toString());
     
+    // IMPORTANT: RAILGUN doesn't support native ETH directly
+    // For native ETH (0x0), we use WETH instead
+    const chainId = params.chain_id || params.chainId || 1;
+    const contracts = CHAIN_CONTRACTS[chainId] || CHAIN_CONTRACTS[1]; // Fallback to mainnet
+    const isNativeETH = params.token.toLowerCase() === '0x0000000000000000000000000000000000000000';
+    const tokenAddress = isNativeETH ? contracts.weth : params.token;
+    
     // Prepare ERC20 amount recipient
     const erc20AmountRecipients = [{
-      tokenAddress: params.token,
+      tokenAddress: tokenAddress,
       amount: amountWei,
       recipientAddress: params.recipient, // Use 'recipient' field
     }];
@@ -225,18 +256,12 @@ async function generateShieldProof(params) {
     console.log('[ProofGen] SDK transaction.data length:', shieldTx.transaction.data?.length);
     console.log('[ProofGen] SDK transaction.value:', shieldTx.transaction.value);
     
-    // IMPORTANT: RAILGUN doesn't support native ETH directly
-    // For native ETH (0x0), users must wrap to WETH first
-    // However, we'll try to add value field for native ETH shield
-    const isNativeETH = params.token.toLowerCase() === '0x0000000000000000000000000000000000000000';
-    
     const transaction = {
       to: shieldTx.transaction.to,
       data: shieldTx.transaction.data,
-      // If SDK returns value, use it. Otherwise, for native ETH, use the amount
-      value: shieldTx.transaction.value 
-        ? shieldTx.transaction.value.toString() 
-        : (isNativeETH ? amountWei.toString() : '0'),
+      // For WETH (which we're using for native ETH), value should be 0
+      // SDK handles the token transfer
+      value: '0',
     };
     
     console.log('[ProofGen] Final transaction:', JSON.stringify(transaction, null, 2));
@@ -246,7 +271,7 @@ async function generateShieldProof(params) {
       proof: Buffer.from(JSON.stringify(transaction)).toString('base64'),
       publicInputs: [
         params.recipient,
-        params.token,
+        tokenAddress, // Use the actual token address (WETH for native ETH)
         amountWei.toString(),
       ],
       transaction: transaction, // Include transaction with value field
