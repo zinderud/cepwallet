@@ -354,9 +354,7 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 ## 📞 Contact
 
 - **GitHub Issues**: [github.com/zinderud/cepwallet/issues](https://github.com/zinderud/cepwallet/issues)
-- **Discord**: [discord.gg/cepwallet](https://discord.gg/cepwallet)
-- **Twitter**: [@cepwallet](https://twitter.com/cepwallet)
-- **Email**: dev@cepwallet.com
+ 
 
 ---
 
