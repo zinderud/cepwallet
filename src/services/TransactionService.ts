@@ -90,6 +90,30 @@ export class TransactionService {
   }
 
   /**
+   * Wait for transaction with timeout
+   */
+  private async waitForTransaction(
+    txHash: string,
+    confirmations: number = 1,
+    timeout: number = 300000 // 5 minutes default
+  ): Promise<ethers.TransactionReceipt | null> {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < timeout) {
+      const receipt = await this.provider.getTransactionReceipt(txHash);
+      
+      if (receipt && receipt.confirmations >= confirmations) {
+        return receipt;
+      }
+      
+      // Wait 2 seconds before checking again
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+    
+    throw new Error(`Transaction ${txHash} timed out after ${timeout}ms`);
+  }
+
+  /**
    * Broadcast a shield transaction
    * 
    * @param transactionData - Shield transaction from RAILGUN proof
@@ -171,6 +195,10 @@ export class TransactionService {
       console.log('  Block:', receipt.blockNumber);
       console.log('  Gas used:', receipt.gasUsed.toString());
       console.log('  Status:', receipt.status === 1 ? 'Success' : 'Failed');
+
+      if (receipt.status !== 1) {
+        throw new Error('Transaction failed on-chain');
+      }
 
       return {
         success: true,

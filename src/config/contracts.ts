@@ -90,3 +90,50 @@ export function getWrappedNativeToken(chainId: number): string {
 export function requiresApproval(tokenAddress: string): boolean {
   return !isNativeToken(tokenAddress);
 }
+
+/**
+ * Validate chain configuration
+ */
+export function validateChainConfig(chainId: number): boolean {
+  try {
+    const contracts = getChainContracts(chainId);
+    
+    // Check required fields
+    if (!contracts.railgun || !contracts.weth) {
+      console.error(`Chain ${chainId} missing required contracts`);
+      return false;
+    }
+    
+    // Validate address format
+    const addressRegex = /^0x[a-fA-F0-9]{40}$/;
+    
+    if (!addressRegex.test(contracts.railgun)) {
+      console.error(`Invalid RAILGUN address for chain ${chainId}`);
+      return false;
+    }
+    
+    if (!addressRegex.test(contracts.weth)) {
+      console.error(`Invalid WETH address for chain ${chainId}`);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Chain ${chainId} validation failed:`, error);
+    return false;
+  }
+}
+
+/**
+ * Get supported chain IDs
+ */
+export function getSupportedChains(): number[] {
+  return Object.keys(CHAIN_CONTRACTS).map(Number);
+}
+
+/**
+ * Check if a chain is supported
+ */
+export function isChainSupported(chainId: number): boolean {
+  return chainId in CHAIN_CONTRACTS;
+}

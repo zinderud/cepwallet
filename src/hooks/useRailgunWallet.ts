@@ -7,6 +7,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { tauriApi } from '../api/tauri';
 import { createSepoliaTransactionService, createMainnetTransactionService } from '../services/TransactionService';
+import { scanMerkletreeAfterShield } from '../utils/merkletree';
 import { ethers } from 'ethers';
 import { getWrappedNativeToken, isNativeToken } from '../config/contracts';
 import type {
@@ -239,8 +240,21 @@ export function useRailgunWallet(
         console.log('📝 Transaction hash:', txResult.txHash);
         console.log('🔗 View on Etherscan:', `https://sepolia.etherscan.io/tx/${txResult.txHash}`);
         
-        // TODO: Trigger merkletree scan after confirmation
-        console.log('⏳ Next: Scan merkletree to update balance (not implemented yet)');
+        // Trigger merkletree scan after confirmation
+        console.log('🔍 Triggering merkletree scan to update balance...');
+        try {
+          await scanMerkletreeAfterShield(
+            chainId,
+            txResult.txHash!,
+            (progress) => {
+              console.log(`📊 Scan progress: ${progress.percentage}%`);
+            }
+          );
+          console.log('✅ Balance updated after merkletree scan');
+        } catch (scanError) {
+          console.error('⚠️ Merkletree scan failed (balance may not be updated):', scanError);
+          // Don't fail the entire operation if scan fails
+        }
       }
 
       console.log('✅ Shield operation completed');
