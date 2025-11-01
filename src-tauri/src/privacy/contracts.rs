@@ -1,13 +1,12 @@
 /// RAILGUN Smart Contract Addresses
-/// 
+///
 /// This module contains deployed RAILGUN contract addresses for various networks.
-/// 
+///
 /// RAILGUN v3.0 Architecture:
 /// - RailgunLogic: Core privacy logic
 /// - RailgunProxy: Upgradeable proxy
 /// - Treasury: Fee collection
 /// - Relayer: Transaction relay for privacy
-
 use ethers::types::Address;
 use std::str::FromStr;
 
@@ -33,8 +32,7 @@ impl RailgunContracts {
             proxy: Address::from_str("0x3b5FFC4842Eb34e28Faff7E6c08Bdc7dE88d1a28")
                 .expect("Invalid RAILGUN Proxy address"),
             // Treasury
-            treasury: Address::from_str("0x...")
-                .expect("Invalid Treasury address"),
+            treasury: Address::from_str("0x...").expect("Invalid Treasury address"),
         }
     }
 

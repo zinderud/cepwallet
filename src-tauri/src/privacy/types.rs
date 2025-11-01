@@ -159,8 +159,10 @@ mod tests {
     fn test_privacy_level_proof_time() {
         assert_eq!(PrivacyLevel::Public.proof_generation_time(), 0);
         assert!(PrivacyLevel::Railgun.proof_generation_time() > 0);
-        assert!(PrivacyLevel::Maximum.proof_generation_time() > 
-                PrivacyLevel::Railgun.proof_generation_time());
+        assert!(
+            PrivacyLevel::Maximum.proof_generation_time()
+                > PrivacyLevel::Railgun.proof_generation_time()
+        );
     }
 
     #[test]
@@ -177,7 +179,7 @@ mod tests {
 
         let json = serde_json::to_string(&tx).unwrap();
         let deserialized: ShieldedTransaction = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(tx.tx_type, deserialized.tx_type);
         assert_eq!(tx.amount, deserialized.amount);
     }

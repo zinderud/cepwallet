@@ -49,6 +49,7 @@ export const PrivacyPage: React.FC = () => {
           recipient: recipientAddress,
           token: selectedToken.address,
           amount,
+          mnemonic: wallet?.mnemonic || '',
         });
         setSuccessMessage(`✅ Successfully transferred ${amount} ${selectedToken.symbol}`);
       } else if (operationType === 'unshield') {
@@ -59,6 +60,7 @@ export const PrivacyPage: React.FC = () => {
           token: selectedToken.address,
           amount,
           recipient: recipientAddress,
+          mnemonic: wallet?.mnemonic || '',
         });
         setSuccessMessage(`✅ Successfully unshielded ${amount} ${selectedToken.symbol}`);
       }
@@ -192,8 +194,8 @@ export const PrivacyPage: React.FC = () => {
                 setOperationType('transfer');
                 setSelectedToken(TOKENS[0]);
                 setAmount('0.05');
-                setRecipientAddress('0zk1qy...');
-                setSuccessMessage('🧪 Test: Ready to transfer 0.05 ETH');
+                setRecipientAddress('0zk1qyhxaafkj50hg9j0kr477jq5hxxpzjpklyamnczd4waa6t08uskjtrv7j6fe3z53lu48668ng0jjy5uxepd4nq84vuznvndws0f2cw72stfsjdlzhfsuv746jnk'); // Demo recipient address
+                setSuccessMessage('🧪 Demo: Transfer test (will fail without balance - shield funds first!)');
               }}
               style={{
                 padding: '10px 16px',
@@ -460,7 +462,7 @@ export const PrivacyPage: React.FC = () => {
             {operationType === 'transfer' && (
               <>
                 <strong>Private Transfer:</strong> Sends tokens between shielded addresses. 
-                The amount and recipient are completely private.
+                The amount and recipient are completely private. <em>Note: You must have shielded funds first before you can transfer.</em>
               </>
             )}
             {operationType === 'unshield' && (

@@ -1,12 +1,11 @@
+use crate::error::Result;
+use serde::{Deserialize, Serialize};
 /// FFI Bridge for Node.js Proof Generator
-/// 
+///
 /// This module provides an interface to call the Node.js proof generator
 /// from Rust code. It uses subprocess to execute the Node.js script and
 /// captures the JSON output.
-
 use std::process::Command;
-use serde::{Deserialize, Serialize};
-use crate::error::Result;
 
 /// Request structure sent to Node.js proof generator
 #[derive(Debug, Serialize)]
@@ -14,7 +13,7 @@ use crate::error::Result;
 pub struct ProofRequest {
     pub proof_type: String,
     pub chain_id: Option<u64>,
-    
+
     // Shield-specific
     #[serde(skip_serializing_if = "Option::is_none")]
     pub token: Option<String>,
@@ -24,7 +23,7 @@ pub struct ProofRequest {
     pub commitment: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub shield_private_key: Option<String>,
-    
+
     // Transfer-specific
     #[serde(skip_serializing_if = "Option::is_none")]
     pub merkle_root: Option<String>,
@@ -32,15 +31,15 @@ pub struct ProofRequest {
     pub nullifier: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub output_commitment: Option<String>,
-    
-    // Transfer/Unshield-specific  
+
+    // Transfer/Unshield-specific
     #[serde(skip_serializing_if = "Option::is_none")]
     pub railgun_wallet_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub encryption_key: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mnemonic: Option<String>,
-    
+
     // Common fields
     #[serde(skip_serializing_if = "Option::is_none")]
     pub recipient: Option<String>,
@@ -61,13 +60,13 @@ pub struct ProofResponse {
 }
 
 /// Generate a ZK-SNARK proof by calling Node.js proof generator
-/// 
+///
 /// # Arguments
 /// * `request` - Proof generation parameters
-/// 
+///
 /// # Returns
 /// * `Result<ProofResponse>` - Generated proof or error
-/// 
+///
 /// # Example
 /// ```rust
 /// let request = ProofRequest {
@@ -77,101 +76,128 @@ pub struct ProofResponse {
 ///     commitment: Some("0xabcd...".to_string()),
 ///     ..Default::default()
 /// };
-/// 
+///
 /// let proof = generate_proof(request).await?;
 /// ```
 pub async fn generate_proof(request: ProofRequest) -> Result<ProofResponse> {
     tracing::info!("Calling Node.js proof generator: {}", request.proof_type);
-    
+
+    // Map proof type to proof-generator command name
+    let command_name = match request.proof_type.as_str() {
+        "shield" | "generate_shield_proof" => "generate_shield_proof",
+        "transfer" | "generate_transfer_proof" => "generate_transfer_proof",
+        "unshield" | "generate_unshield_proof" => "generate_unshield_proof",
+        other => other,
+    };
+
     // Serialize request to JSON
     let request_json = serde_json::to_string(&request)
         .map_err(|e| anyhow::anyhow!("Failed to serialize proof request: {}", e))?;
-    
+
     // Get proof-generator directory path
     // During development: src-tauri/../proof-generator
     // During production: relative to executable
     let current_dir = std::env::current_dir()
         .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?;
-    
+
     tracing::debug!("Current directory: {:?}", current_dir);
-    
+
     // Try multiple possible paths
     let possible_paths = vec![
-        current_dir.join("proof-generator"),           // From project root
-        current_dir.join("../proof-generator"),        // From src-tauri
-        current_dir.join("../../proof-generator"),     // From target/debug
+        current_dir.join("proof-generator"),       // From project root
+        current_dir.join("../proof-generator"),    // From src-tauri
+        current_dir.join("../../proof-generator"), // From target/debug
     ];
-    
-    let proof_generator_dir = possible_paths.iter()
-        .find(|p| p.exists())
-        .ok_or_else(|| anyhow::anyhow!(
+
+    let proof_generator_dir = possible_paths.iter().find(|p| p.exists()).ok_or_else(|| {
+        anyhow::anyhow!(
             "proof-generator directory not found. Tried: {:?}",
             possible_paths
-        ))?;
-    
+        )
+    })?;
+
     tracing::debug!("Using proof-generator at: {:?}", proof_generator_dir);
-    
+
     let script_path = proof_generator_dir.join("index.js");
-    
+
     if !script_path.exists() {
-        return Err(anyhow::anyhow!(
-            "proof-generator/index.js not found at {:?}",
-            script_path
-        ).into());
+        return Err(
+            anyhow::anyhow!("proof-generator/index.js not found at {:?}", script_path).into(),
+        );
     }
-    
+
     println!("📤 Sending JSON to Node.js: {}", request_json);
-    tracing::debug!("Running: node {} '{}'", script_path.display(), request_json);
-    
+    tracing::debug!(
+        "Running: node {} {} '{}'",
+        script_path.display(),
+        command_name,
+        request_json
+    );
+
     // Execute Node.js script
     let output = Command::new("node")
         .arg(&script_path)
+        .arg(command_name)
         .arg(&request_json)
         .current_dir(proof_generator_dir) // Set working directory
         .output()
-        .map_err(|e| anyhow::anyhow!("Failed to execute Node.js: {}. Make sure Node.js is installed.", e))?;
-    
+        .map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to execute Node.js: {}. Make sure Node.js is installed.",
+                e
+            )
+        })?;
+
     // Always log stdout and stderr for debugging
     let stderr = String::from_utf8_lossy(&output.stderr);
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     if !stderr.is_empty() {
         println!("Node.js stderr: {}", stderr);
     }
     if !stdout.is_empty() {
         println!("Node.js stdout: {}", stdout);
     }
-    
+
     // Check if command succeeded
     if !output.status.success() {
         return Err(anyhow::anyhow!(
             "Proof generation failed with exit code {:?}. Stderr: {}",
             output.status.code(),
             stderr
-        ).into());
+        )
+        .into());
     }
-    
+
     // Parse stdout
     tracing::debug!("Node.js output: {}", stdout);
-    
+
     // Extract JSON from output (last line should be JSON)
     let json_line = stdout
         .lines()
         .rev()
         .find(|line| line.trim().starts_with('{'))
-        .ok_or_else(|| anyhow::anyhow!("No JSON output found from proof generator. Output: {}", stdout))?;
-    
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "No JSON output found from proof generator. Output: {}",
+                stdout
+            )
+        })?;
+
     // Parse response
     let response: ProofResponse = serde_json::from_str(json_line)
         .map_err(|e| anyhow::anyhow!("Failed to parse proof response: {}", e))?;
-    
+
     if !response.success {
         return Err(anyhow::anyhow!(
             "Proof generation failed: {}",
-            response.error.unwrap_or_else(|| "Unknown error".to_string())
-        ).into());
+            response
+                .error
+                .unwrap_or_else(|| "Unknown error".to_string())
+        )
+        .into());
     }
-    
+
     tracing::info!("Proof generated successfully");
     Ok(response)
 }
@@ -199,7 +225,7 @@ pub async fn generate_shield_proof(
         shield_private_key: Some(shield_private_key.to_string()),
         mnemonic: None,
     };
-    
+
     generate_proof(request).await
 }
 
@@ -228,7 +254,7 @@ pub async fn generate_transfer_proof(
         commitment: None,
         shield_private_key: None,
     };
-    
+
     generate_proof(request).await
 }
 
@@ -257,7 +283,31 @@ pub async fn generate_unshield_proof(
         commitment: None,
         shield_private_key: None,
     };
-    
+
+    generate_proof(request).await
+}
+
+/// Scan merkletree for wallet balance updates
+pub async fn scan_merkletree(
+    railgun_wallet_id: &str,
+    chain_id: Option<u64>,
+) -> Result<ProofResponse> {
+    let request = ProofRequest {
+        proof_type: "scanMerkletree".to_string(),
+        chain_id,
+        railgun_wallet_id: Some(railgun_wallet_id.to_string()),
+        token: None,
+        amount: None,
+        commitment: None,
+        merkle_root: None,
+        nullifier: None,
+        output_commitment: None,
+        recipient: None,
+        encryption_key: None,
+        shield_private_key: None,
+        mnemonic: None,
+    };
+
     generate_proof(request).await
 }
 
@@ -271,12 +321,13 @@ mod tests {
         let shield_key = format!("0x{}", "0".repeat(64)); // shield_private_key (32 bytes hex)
         let result = generate_shield_proof(
             "0x0000000000000000000000000000000000000000", // token
-            "1000000000000000000", // amount
-            "0zk1234...railgun_address...", // railgun_address
+            "1000000000000000000",                        // amount
+            "0zk1234...railgun_address...",               // railgun_address
             &shield_key,
             Some(11155111), // chain_id (Sepolia)
-        ).await;
-        
+        )
+        .await;
+
         assert!(result.is_ok());
         let proof = result.unwrap();
         assert!(proof.success);

@@ -1,14 +1,15 @@
+use super::ffi::{
+    generate_shield_proof, generate_transfer_proof, generate_unshield_proof, scan_merkletree,
+};
+use super::types::{ShieldedTransaction, ShieldedTxType};
 /// RAILGUN Protocol Implementation
-/// 
+///
 /// Integrates with RAILGUN SDK via FFI to Node.js for ZK-SNARK proof generation.
 /// Architecture:
 /// 1. Rust handles contract interaction (ethers-rs)
 /// 2. Node.js handles ZK proof generation (@railgun-community/wallet)
 /// 3. FFI bridge for communication (subprocess + JSON)
-
 use crate::error::{CepWalletError, Result};
-use super::types::{ShieldedTransaction, ShieldedTxType};
-use super::ffi::{generate_shield_proof, generate_transfer_proof, generate_unshield_proof};
 
 pub struct RailgunManager {
     initialized: bool,
@@ -32,7 +33,7 @@ impl RailgunManager {
         // 2. Connect to RPC provider
         // 3. Load Merkle tree state
         // 4. Initialize ZK circuit parameters
-        
+
         println!("🚀 Initializing RAILGUN for chain {}...", self.chain_id);
         // TODO: Call initRailgun via FFI
         self.initialized = true;
@@ -55,11 +56,14 @@ impl RailgunManager {
     ) -> Result<ShieldedTransaction> {
         if !self.initialized {
             return Err(CepWalletError::NotInitialized(
-                "RAILGUN not initialized".to_string()
+                "RAILGUN not initialized".to_string(),
             ));
         }
 
-        println!("🛡️  Generating shield proof for {} of token {}...", amount, token);
+        println!(
+            "🛡️  Generating shield proof for {} of token {}...",
+            amount, token
+        );
 
         // Generate ZK-SNARK proof via FFI
         let proof_response = generate_shield_proof(
@@ -68,11 +72,14 @@ impl RailgunManager {
             railgun_address,
             shield_private_key,
             Some(self.chain_id),
-        ).await?;
+        )
+        .await?;
 
         if !proof_response.success {
             return Err(CepWalletError::PrivacyError(
-                proof_response.error.unwrap_or_else(|| "Shield proof generation failed".to_string())
+                proof_response
+                    .error
+                    .unwrap_or_else(|| "Shield proof generation failed".to_string()),
             ));
         }
 
@@ -81,7 +88,11 @@ impl RailgunManager {
         // Debug: Log transaction data
         if let Some(ref tx) = proof_response.transaction {
             println!("🔍 [Rust] Transaction data received:");
-            println!("{}", serde_json::to_string_pretty(tx).unwrap_or_else(|_| "Failed to serialize".to_string()));
+            println!(
+                "{}",
+                serde_json::to_string_pretty(tx)
+                    .unwrap_or_else(|_| "Failed to serialize".to_string())
+            );
         } else {
             println!("⚠️  [Rust] No transaction data in proof response!");
         }
@@ -110,11 +121,14 @@ impl RailgunManager {
     ) -> Result<ShieldedTransaction> {
         if !self.initialized {
             return Err(CepWalletError::NotInitialized(
-                "RAILGUN not initialized".to_string()
+                "RAILGUN not initialized".to_string(),
             ));
         }
 
-        println!("🔒 Generating private transfer proof for {} of token {}...", amount, token);
+        println!(
+            "🔒 Generating private transfer proof for {} of token {}...",
+            amount, token
+        );
 
         // Generate ZK-SNARK proof via FFI
         let proof_response = generate_transfer_proof(
@@ -125,11 +139,14 @@ impl RailgunManager {
             token,
             amount,
             Some(self.chain_id),
-        ).await?;
+        )
+        .await?;
 
         if !proof_response.success {
             return Err(CepWalletError::PrivacyError(
-                proof_response.error.unwrap_or_else(|| "Transfer proof generation failed".to_string())
+                proof_response
+                    .error
+                    .unwrap_or_else(|| "Transfer proof generation failed".to_string()),
             ));
         }
 
@@ -160,11 +177,14 @@ impl RailgunManager {
     ) -> Result<ShieldedTransaction> {
         if !self.initialized {
             return Err(CepWalletError::NotInitialized(
-                "RAILGUN not initialized".to_string()
+                "RAILGUN not initialized".to_string(),
             ));
         }
 
-        println!("🔓 Generating unshield proof for {} of token {}...", amount, token);
+        println!(
+            "🔓 Generating unshield proof for {} of token {}...",
+            amount, token
+        );
 
         // Generate ZK-SNARK proof via FFI
         let proof_response = generate_unshield_proof(
@@ -175,11 +195,14 @@ impl RailgunManager {
             token,
             amount,
             Some(self.chain_id),
-        ).await?;
+        )
+        .await?;
 
         if !proof_response.success {
             return Err(CepWalletError::PrivacyError(
-                proof_response.error.unwrap_or_else(|| "Unshield proof generation failed".to_string())
+                proof_response
+                    .error
+                    .unwrap_or_else(|| "Unshield proof generation failed".to_string()),
             ));
         }
 
@@ -202,7 +225,7 @@ impl RailgunManager {
     pub async fn get_shielded_balance(&self, token: &str) -> Result<String> {
         if !self.initialized {
             return Err(CepWalletError::NotInitialized(
-                "RAILGUN not initialized".to_string()
+                "RAILGUN not initialized".to_string(),
             ));
         }
 
@@ -215,11 +238,36 @@ impl RailgunManager {
         Ok("0".to_string()) // Placeholder
     }
 
+    /// Scan merkletree to update wallet balances
+    pub async fn scan_merkletree(&self, railgun_wallet_id: &str) -> Result<()> {
+        if !self.initialized {
+            return Err(CepWalletError::NotInitialized(
+                "RAILGUN not initialized".to_string(),
+            ));
+        }
+
+        println!("🔍 Scanning merkletree for wallet: {}", railgun_wallet_id);
+
+        // Call Node.js to scan merkletree
+        let scan_result = scan_merkletree(railgun_wallet_id, Some(self.chain_id)).await?;
+
+        if !scan_result.success {
+            return Err(CepWalletError::PrivacyError(
+                scan_result
+                    .error
+                    .unwrap_or_else(|| "Merkletree scan failed".to_string()),
+            ));
+        }
+
+        println!("✅ Merkletree scan completed successfully");
+        Ok(())
+    }
+
     /// Get transaction history
     pub async fn get_transaction_history(&self) -> Result<Vec<ShieldedTransaction>> {
         if !self.initialized {
             return Err(CepWalletError::NotInitialized(
-                "RAILGUN not initialized".to_string()
+                "RAILGUN not initialized".to_string(),
             ));
         }
 
@@ -255,10 +303,12 @@ mod tests {
         let mut manager = RailgunManager::new().unwrap();
         manager.initialize().await.unwrap();
 
-        let result = manager.shield(
-            "0x0000000000000000000000000000000000000000",
-            "1000000000000000000"
-        ).await;
+        let result = manager
+            .shield(
+                "0x0000000000000000000000000000000000000000",
+                "1000000000000000000",
+            )
+            .await;
 
         assert!(result.is_ok());
         let tx = result.unwrap();
@@ -268,11 +318,13 @@ mod tests {
     #[tokio::test]
     async fn test_operations_before_init() {
         let manager = RailgunManager::new().unwrap();
-        
-        let result = manager.shield(
-            "0x0000000000000000000000000000000000000000",
-            "1000000000000000000"
-        ).await;
+
+        let result = manager
+            .shield(
+                "0x0000000000000000000000000000000000000000",
+                "1000000000000000000",
+            )
+            .await;
 
         assert!(result.is_err());
     }

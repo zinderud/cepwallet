@@ -4,21 +4,40 @@
 )]
 
 mod commands;
+mod crypto;
 mod error;
 mod hardware;
-mod crypto;
-mod utils;
 mod privacy;
+mod utils;
 
 use commands::{
-    connect_device, disconnect_device, get_address, get_addresses, get_device_info,
-    get_public_key, sign_message, sign_transaction, sign_typed_data, greet, AppState,
-    // Privacy commands
-    initialize_privacy, is_privacy_ready, shield_transaction, unshield_transaction,
-    private_transfer, get_shielded_balance, join_privacy_pool, exit_privacy_pool,
-    privacy_pool_swap, generate_zk_proof, estimate_proof_time,
+    connect_device,
     // RAILGUN Wallet Management
-    create_railgun_wallet, get_shield_key,
+    create_railgun_wallet,
+    disconnect_device,
+    estimate_proof_time,
+    exit_privacy_pool,
+    generate_zk_proof,
+    get_address,
+    get_addresses,
+    get_device_info,
+    get_public_key,
+    get_shield_key,
+    get_shielded_balance,
+    greet,
+    // Privacy commands
+    initialize_privacy,
+    is_privacy_ready,
+    join_privacy_pool,
+    privacy_pool_swap,
+    private_transfer,
+    scan_merkletree,
+    shield_transaction,
+    sign_message,
+    sign_transaction,
+    sign_typed_data,
+    unshield_transaction,
+    AppState,
 };
 use tokio::sync::Mutex;
 
@@ -50,6 +69,7 @@ fn main() {
             unshield_transaction,
             private_transfer,
             get_shielded_balance,
+            scan_merkletree,
             join_privacy_pool,
             exit_privacy_pool,
             privacy_pool_swap,

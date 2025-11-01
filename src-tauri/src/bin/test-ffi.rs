@@ -2,8 +2,8 @@
 // Run with: cargo run --bin test-ffi
 
 use cepwallet::privacy::ffi::{ProofRequest, ProofResponse};
-use std::process::Command;
 use serde_json;
+use std::process::Command;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,6 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         recipient: Some("0zk1234test".to_string()),
         railgun_wallet_id: None,
         encryption_key: None,
+        mnemonic: None,
     };
 
     let json = serde_json::to_string(&request)?;
@@ -37,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Test 3: Execute Node.js process
     println!("Test 3: Calling Node.js proof generator...");
-    
+
     // Get current directory
     let current_dir = std::env::current_dir()?;
     let proof_generator_dir = current_dir.join("proof-generator");
@@ -50,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("  Script path: {}", script_path.display());
-    
+
     let output = Command::new("node")
         .arg(script_path)
         .current_dir(&proof_generator_dir)
@@ -58,12 +59,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if output.status.success() {
         println!("  ✓ Node.js execution successful");
-        
+
         // Show last few lines of output
         let stdout = String::from_utf8_lossy(&output.stdout);
         let lines: Vec<&str> = stdout.lines().collect();
         let last_lines = &lines[lines.len().saturating_sub(5)..];
-        
+
         println!("\n  Node.js output (last 5 lines):");
         for line in last_lines {
             println!("    {}", line);

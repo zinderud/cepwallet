@@ -1,11 +1,10 @@
 /// Zero-Knowledge Proof Generation (Placeholder)
-/// 
+///
 /// This module handles ZK proof generation for privacy transactions.
 /// In production, this would use actual ZK-SNARK libraries like:
 /// - ark-groth16 (Rust)
 /// - bellman (Rust)
 /// - circom + snarkjs (via FFI)
-
 use crate::error::{CepWalletError, Result};
 
 /// Proof type
@@ -31,9 +30,7 @@ pub struct ZKProofGenerator {
 impl ZKProofGenerator {
     /// Create new ZK proof generator
     pub fn new() -> Result<Self> {
-        Ok(Self {
-            initialized: false,
-        })
+        Ok(Self { initialized: false })
     }
 
     /// Load proving keys (can take time - several MB of data)
@@ -42,7 +39,7 @@ impl ZKProofGenerator {
         // 1. Download or load proving keys from disk
         // 2. Verify key integrity
         // 3. Initialize ZK circuit parameters
-        
+
         println!("⚠️  Loading ZK proving keys (PLACEHOLDER)");
         self.initialized = true;
         Ok(())
@@ -62,7 +59,7 @@ impl ZKProofGenerator {
     ) -> Result<Vec<u8>> {
         if !self.initialized {
             return Err(CepWalletError::NotInitialized(
-                "ZK proof generator not initialized".to_string()
+                "ZK proof generator not initialized".to_string(),
             ));
         }
 
@@ -70,7 +67,7 @@ impl ZKProofGenerator {
         // 1. Build witness from inputs
         // 2. Generate proof using proving key
         // 3. Serialize proof
-        // 
+        //
         // This is computationally expensive:
         // - Shield: ~5-10 seconds
         // - Transfer: ~15-30 seconds
@@ -84,7 +81,10 @@ impl ZKProofGenerator {
             ProofType::Compliance => "Compliance",
         };
 
-        println!("🔐 Generating {} proof (this may take a while...)", proof_name);
+        println!(
+            "🔐 Generating {} proof (this may take a while...)",
+            proof_name
+        );
         println!("   Public inputs: {} items", public_inputs.len());
         println!("   Private inputs: {} items", private_inputs.len());
 
@@ -104,7 +104,7 @@ impl ZKProofGenerator {
     ) -> Result<bool> {
         if !self.initialized {
             return Err(CepWalletError::NotInitialized(
-                "ZK proof generator not initialized".to_string()
+                "ZK proof generator not initialized".to_string(),
             ));
         }
 
@@ -114,7 +114,7 @@ impl ZKProofGenerator {
         // 3. Check public inputs match
 
         println!("✅ Verifying {:?} proof", proof_type);
-        
+
         // Placeholder verification
         Ok(proof.len() == 32)
     }
@@ -165,11 +165,13 @@ mod tests {
         let mut generator = ZKProofGenerator::new().unwrap();
         generator.load_proving_keys().await.unwrap();
 
-        let proof = generator.generate_proof(
-            ProofType::Shield,
-            vec!["merkle_root".to_string()],
-            vec!["secret".to_string(), "amount".to_string()],
-        ).await;
+        let proof = generator
+            .generate_proof(
+                ProofType::Shield,
+                vec!["merkle_root".to_string()],
+                vec!["secret".to_string(), "amount".to_string()],
+            )
+            .await;
 
         assert!(proof.is_ok());
         let proof_data = proof.unwrap();
@@ -181,17 +183,18 @@ mod tests {
         let mut generator = ZKProofGenerator::new().unwrap();
         generator.load_proving_keys().await.unwrap();
 
-        let proof = generator.generate_proof(
-            ProofType::Shield,
-            vec!["root".to_string()],
-            vec!["secret".to_string()],
-        ).await.unwrap();
+        let proof = generator
+            .generate_proof(
+                ProofType::Shield,
+                vec!["root".to_string()],
+                vec!["secret".to_string()],
+            )
+            .await
+            .unwrap();
 
-        let is_valid = generator.verify_proof(
-            ProofType::Shield,
-            &proof,
-            vec!["root".to_string()],
-        ).await;
+        let is_valid = generator
+            .verify_proof(ProofType::Shield, &proof, vec!["root".to_string()])
+            .await;
 
         assert!(is_valid.is_ok());
         assert!(is_valid.unwrap());
@@ -200,12 +203,15 @@ mod tests {
     #[test]
     fn test_proof_estimates() {
         let generator = ZKProofGenerator::new().unwrap();
-        
+
         assert!(generator.estimate_proof_time(ProofType::Shield) < 15);
-        assert!(generator.estimate_proof_time(ProofType::Transfer) > 
-                generator.estimate_proof_time(ProofType::Shield));
-        
-        assert!(generator.proof_size(ProofType::Transfer) > 
-                generator.proof_size(ProofType::Shield));
+        assert!(
+            generator.estimate_proof_time(ProofType::Transfer)
+                > generator.estimate_proof_time(ProofType::Shield)
+        );
+
+        assert!(
+            generator.proof_size(ProofType::Transfer) > generator.proof_size(ProofType::Shield)
+        );
     }
 }

@@ -1,32 +1,35 @@
+pub mod contracts;
+pub mod ffi;
+pub mod privacy_pools;
 /// Privacy Module - RAILGUN & Privacy Pools Integration
-/// 
+///
 /// This module provides zero-knowledge proof based privacy features:
 /// - RAILGUN shielded transactions
 /// - Privacy Pools (compliance-friendly privacy)
 /// - ZK proof generation and verification
-/// 
+///
 /// Architecture:
 /// - railgun.rs: RAILGUN protocol implementation
 /// - privacy_pools.rs: Privacy Pools integration
 /// - zkproof.rs: Zero-knowledge proof generation
 /// - types.rs: Common types and structures
 /// - contracts.rs: Contract addresses and constants
-
 pub mod railgun;
-pub mod privacy_pools;
-pub mod zkproof;
 pub mod types;
-pub mod contracts;
-pub mod ffi;
 pub mod wallet;
+pub mod zkproof;
 
-pub use railgun::RailgunManager;
+pub use contracts::{CommonTokens, RailgunContracts};
+pub use ffi::{
+    generate_proof, generate_shield_proof, generate_transfer_proof, generate_unshield_proof,
+};
 pub use privacy_pools::PrivacyPoolManager;
-pub use zkproof::{ZKProofGenerator, ProofType};
-pub use types::{PrivacyLevel, ShieldedTransaction, PrivacyPoolOperation};
-pub use contracts::{RailgunContracts, CommonTokens};
-pub use ffi::{generate_proof, generate_shield_proof, generate_transfer_proof, generate_unshield_proof};
-pub use wallet::{create_railgun_wallet, get_shield_private_key, WalletCreateResponse, ShieldKeyResponse};
+pub use railgun::RailgunManager;
+pub use types::{PrivacyLevel, PrivacyPoolOperation, ShieldedTransaction};
+pub use wallet::{
+    create_railgun_wallet, get_shield_private_key, ShieldKeyResponse, WalletCreateResponse,
+};
+pub use zkproof::{ProofType, ZKProofGenerator};
 
 use crate::error::{CepWalletError, Result};
 
@@ -63,9 +66,7 @@ impl PrivacyManager {
 
     /// Check if privacy features are ready
     pub fn is_ready(&self) -> bool {
-        self.railgun.is_ready() 
-            && self.privacy_pools.is_ready()
-            && self.zk_generator.is_ready()
+        self.railgun.is_ready() && self.privacy_pools.is_ready() && self.zk_generator.is_ready()
     }
 
     /// Get privacy manager reference

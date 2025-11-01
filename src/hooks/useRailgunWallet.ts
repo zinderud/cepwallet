@@ -240,21 +240,11 @@ export function useRailgunWallet(
         console.log('📝 Transaction hash:', txResult.txHash);
         console.log('🔗 View on Etherscan:', `https://sepolia.etherscan.io/tx/${txResult.txHash}`);
         
-        // Trigger merkletree scan after confirmation
-        console.log('🔍 Triggering merkletree scan to update balance...');
-        try {
-          await scanMerkletreeAfterShield(
-            chainId,
-            txResult.txHash!,
-            (progress) => {
-              console.log(`📊 Scan progress: ${progress.percentage}%`);
-            }
-          );
-          console.log('✅ Balance updated after merkletree scan');
-        } catch (scanError) {
-          console.error('⚠️ Merkletree scan failed (balance may not be updated):', scanError);
-          // Don't fail the entire operation if scan fails
-        }
+        console.log('');
+        console.log('⚠️  IMPORTANT: Please wait 2-3 minutes before transferring!');
+        console.log('   The RAILGUN merkletree needs time to sync your balance.');
+        console.log('   Transaction is being mined and indexed...');
+        console.log('');
       }
 
       console.log('✅ Shield operation completed');

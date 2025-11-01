@@ -27,26 +27,32 @@ export async function scanMerkletreeAfterShield(
   console.log('🔍 Starting merkletree scan for tx:', txHash);
   
   try {
-    // Wait a bit for the transaction to be mined and indexed
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Wait longer for the transaction to be mined and indexed by RAILGUN
+    // Sepolia blocks are ~12 seconds, wait for at least 3-4 confirmations
+    console.log('⏳ Waiting 60 seconds for transaction to be mined and indexed...');
+    await new Promise(resolve => setTimeout(resolve, 60000)); // 60 seconds
     
-    // TODO: Implement actual merkletree scan via Tauri
-    // This would call the RAILGUN SDK's scan functionality
-    console.log('⏳ Merkletree scan started...');
-    
-    // Simulate progress updates
-    if (onProgress) {
-      for (let i = 0; i <= 100; i += 10) {
-        onProgress({
-          currentBlock: i,
-          targetBlock: 100,
-          percentage: i,
-        });
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+    // Get wallet ID from localStorage
+    const walletData = localStorage.getItem('railgun_wallet');
+    if (!walletData) {
+      throw new Error('No RAILGUN wallet found in localStorage');
     }
     
+    const wallet = JSON.parse(walletData);
+    if (!wallet.railgunWalletId) {
+      throw new Error('No RAILGUN wallet ID found');
+    }
+    
+    console.log('🔍 Scanning merkletree for wallet:', wallet.railgunWalletId);
+    
+    // Call Tauri API to scan merkletree
+    await tauriApi.privacy.scanMerkletree(wallet.railgunWalletId);
+    
     console.log('✅ Merkletree scan completed');
+    
+    // Wait a bit more for balance to be updated
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
   } catch (error) {
     console.error('❌ Merkletree scan failed:', error);
     throw error;

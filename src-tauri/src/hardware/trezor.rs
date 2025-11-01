@@ -39,7 +39,7 @@ impl DerivationPath {
     /// Parse from string format: m/44'/60'/0'/0/0
     pub fn from_string(path: &str) -> Result<Self> {
         let parts: Vec<&str> = path.trim_start_matches("m/").split('/').collect();
-        
+
         if parts.len() != 5 {
             return Err(anyhow!("Invalid derivation path format"));
         }
@@ -69,25 +69,25 @@ impl DerivationPath {
 /// Public key ve address bilgisi
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PublicKeyResponse {
-    pub public_key: String,      // Hex string olarak döndür
+    pub public_key: String, // Hex string olarak döndür
     pub address: String,
-    pub chain_code: String,       // Hex string olarak döndür
+    pub chain_code: String, // Hex string olarak döndür
     pub path: String,
 }
 
 /// Transaction signing response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignatureResponse {
-    pub signature: String,        // Hex string olarak döndür
+    pub signature: String, // Hex string olarak döndür
     pub v: u8,
-    pub r: String,                // Hex string olarak döndür
-    pub s: String,                // Hex string olarak döndür
+    pub r: String, // Hex string olarak döndür
+    pub s: String, // Hex string olarak döndür
 }
 
 /// Message signing response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MessageSignatureResponse {
-    pub signature: String,        // Hex string olarak döndür
+    pub signature: String, // Hex string olarak döndür
     pub address: String,
 }
 
@@ -196,7 +196,7 @@ impl TrezorManager {
     /// Çoklu address al
     pub async fn get_addresses(&self, start_index: u32, count: u32) -> Result<Vec<String>> {
         let mut addresses = Vec::new();
-        
+
         for i in start_index..(start_index + count) {
             let path = format!("m/44'/60'/0'/0/{}", i);
             match self.get_address(&path).await {
@@ -230,22 +230,18 @@ impl TrezorManager {
             signature: hex::encode(vec![0xde, 0xad, 0xbe, 0xef]),
             v: 27,
             r: hex::encode(vec![
-                0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef, 0x12, 0x34, 0x56, 0x78, 0x90,
-                0xab, 0xcd, 0xef,
+                0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab,
+                0xcd, 0xef,
             ]),
             s: hex::encode(vec![
-                0x98, 0x76, 0x54, 0x32, 0x10, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10,
-                0xfe, 0xdc, 0xba,
+                0x98, 0x76, 0x54, 0x32, 0x10, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0xfe,
+                0xdc, 0xba,
             ]),
         })
     }
 
     /// Mesajı imzala
-    pub async fn sign_message(
-        &self,
-        path: &str,
-        message: &str,
-    ) -> Result<String> {
+    pub async fn sign_message(&self, path: &str, message: &str) -> Result<String> {
         if !self.is_connected() {
             return Err(anyhow!("Device not connected"));
         }
@@ -257,11 +253,7 @@ impl TrezorManager {
     }
 
     /// EIP-712 typed data imzala
-    pub async fn sign_typed_data(
-        &self,
-        path: &str,
-        data: serde_json::Value,
-    ) -> Result<String> {
+    pub async fn sign_typed_data(&self, path: &str, data: serde_json::Value) -> Result<String> {
         if !self.is_connected() {
             return Err(anyhow!("Device not connected"));
         }

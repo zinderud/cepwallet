@@ -1,8 +1,8 @@
 use crate::hardware::{DeviceInfo, TrezorManager};
-use crate::privacy::{PrivacyManager, PrivacyLevel, ShieldedTransaction, PrivacyPoolOperation};
+use crate::privacy::{PrivacyLevel, PrivacyManager, PrivacyPoolOperation, ShieldedTransaction};
 use serde::{Deserialize, Serialize};
-use tokio::sync::Mutex;
 use tauri::State;
+use tokio::sync::Mutex;
 
 pub struct AppState {
     pub trezor: Mutex<Option<TrezorManager>>,
@@ -50,26 +50,16 @@ pub async fn disconnect_device(state: State<'_, AppState>) -> Result<(), String>
 #[tauri::command]
 pub async fn get_device_info(state: State<'_, AppState>) -> Result<DeviceInfo, String> {
     let trezor = state.trezor.lock().await;
-    let manager = trezor
-        .as_ref()
-        .ok_or("Device not connected".to_string())?;
+    let manager = trezor.as_ref().ok_or("Device not connected".to_string())?;
 
-    manager
-        .get_device_info()
-        .await
-        .map_err(|e| e.to_string())
+    manager.get_device_info().await.map_err(|e| e.to_string())
 }
 
 /// Get public key for a derivation path
 #[tauri::command]
-pub async fn get_public_key(
-    state: State<'_, AppState>,
-    path: String,
-) -> Result<String, String> {
+pub async fn get_public_key(state: State<'_, AppState>, path: String) -> Result<String, String> {
     let trezor = state.trezor.lock().await;
-    let manager = trezor
-        .as_ref()
-        .ok_or("Device not connected".to_string())?;
+    let manager = trezor.as_ref().ok_or("Device not connected".to_string())?;
 
     let pubkey = manager
         .get_public_key(&path)
@@ -81,14 +71,9 @@ pub async fn get_public_key(
 
 /// Get Ethereum address for a derivation path
 #[tauri::command]
-pub async fn get_address(
-    state: State<'_, AppState>,
-    path: String,
-) -> Result<String, String> {
+pub async fn get_address(state: State<'_, AppState>, path: String) -> Result<String, String> {
     let trezor = state.trezor.lock().await;
-    let manager = trezor
-        .as_ref()
-        .ok_or("Device not connected".to_string())?;
+    let manager = trezor.as_ref().ok_or("Device not connected".to_string())?;
 
     manager.get_address(&path).await.map_err(|e| e.to_string())
 }
@@ -101,9 +86,7 @@ pub async fn get_addresses(
     count: u32,
 ) -> Result<Vec<String>, String> {
     let trezor = state.trezor.lock().await;
-    let manager = trezor
-        .as_ref()
-        .ok_or("Device not connected".to_string())?;
+    let manager = trezor.as_ref().ok_or("Device not connected".to_string())?;
 
     manager
         .get_addresses(start_index, count)
@@ -119,9 +102,7 @@ pub async fn sign_transaction(
     tx: TransactionRequest,
 ) -> Result<String, String> {
     let trezor = state.trezor.lock().await;
-    let manager = trezor
-        .as_ref()
-        .ok_or("Device not connected".to_string())?;
+    let manager = trezor.as_ref().ok_or("Device not connected".to_string())?;
 
     // Serialize transaction to bytes (simplified)
     let tx_data = serde_json::to_vec(&tx).map_err(|e| e.to_string())?;
@@ -142,9 +123,7 @@ pub async fn sign_message(
     message: String,
 ) -> Result<String, String> {
     let trezor = state.trezor.lock().await;
-    let manager = trezor
-        .as_ref()
-        .ok_or("Device not connected".to_string())?;
+    let manager = trezor.as_ref().ok_or("Device not connected".to_string())?;
 
     manager
         .sign_message(&path, &message)
@@ -166,9 +145,7 @@ pub async fn sign_typed_data(
     data: serde_json::Value,
 ) -> Result<String, String> {
     let trezor = state.trezor.lock().await;
-    let manager = trezor
-        .as_ref()
-        .ok_or("Device not connected".to_string())?;
+    let manager = trezor.as_ref().ok_or("Device not connected".to_string())?;
 
     manager
         .sign_typed_data(&path, data)
@@ -182,12 +159,9 @@ pub async fn sign_typed_data(
 
 /// Initialize privacy features (RAILGUN + Privacy Pools)
 #[tauri::command]
-pub async fn initialize_privacy(
-    state: State<'_, AppState>,
-    chain_id: u64,
-) -> Result<(), String> {
+pub async fn initialize_privacy(state: State<'_, AppState>, chain_id: u64) -> Result<(), String> {
     let mut privacy = state.privacy.lock().await;
-    
+
     if privacy.is_some() {
         return Ok(()); // Already initialized
     }
@@ -196,8 +170,11 @@ pub async fn initialize_privacy(
     manager.initialize().await.map_err(|e| e.to_string())?;
 
     *privacy = Some(manager);
-    
-    println!("✅ Privacy features initialized for chain {} (RAILGUN + Privacy Pools)", chain_id);
+
+    println!(
+        "✅ Privacy features initialized for chain {} (RAILGUN + Privacy Pools)",
+        chain_id
+    );
     Ok(())
 }
 
@@ -205,7 +182,7 @@ pub async fn initialize_privacy(
 #[tauri::command]
 pub async fn is_privacy_ready(state: State<'_, AppState>) -> Result<bool, String> {
     let privacy = state.privacy.lock().await;
-    
+
     match privacy.as_ref() {
         Some(manager) => Ok(manager.is_ready()),
         None => Ok(false),
@@ -251,7 +228,14 @@ pub async fn unshield_transaction(
 
     manager
         .railgun()
-        .unshield(&railgun_wallet_id, &encryption_key, &mnemonic, &recipient, &token, &amount)
+        .unshield(
+            &railgun_wallet_id,
+            &encryption_key,
+            &mnemonic,
+            &recipient,
+            &token,
+            &amount,
+        )
         .await
         .map_err(|e| e.to_string())
 }
@@ -274,7 +258,14 @@ pub async fn private_transfer(
 
     manager
         .railgun()
-        .shielded_transfer(&railgun_wallet_id, &encryption_key, &mnemonic, &recipient, &token, &amount)
+        .shielded_transfer(
+            &railgun_wallet_id,
+            &encryption_key,
+            &mnemonic,
+            &recipient,
+            &token,
+            &amount,
+        )
         .await
         .map_err(|e| e.to_string())
 }
@@ -297,6 +288,24 @@ pub async fn get_shielded_balance(
         .map_err(|e| e.to_string())
 }
 
+/// Scan merkletree for wallet balance updates
+#[tauri::command]
+pub async fn scan_merkletree(
+    state: State<'_, AppState>,
+    railgun_wallet_id: String,
+) -> Result<(), String> {
+    let privacy = state.privacy.lock().await;
+    let manager = privacy
+        .as_ref()
+        .ok_or("Privacy features not initialized".to_string())?;
+
+    manager
+        .railgun()
+        .scan_merkletree(&railgun_wallet_id)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 /// Join a privacy pool
 #[tauri::command]
 pub async fn join_privacy_pool(
@@ -313,7 +322,7 @@ pub async fn join_privacy_pool(
     // Note: This returns immutable reference, but join_pool needs mutable
     // In production, we'd use RefCell or redesign the API
     // For now, this is a placeholder showing the interface
-    
+
     Err("Pool operations require mutable access - to be implemented".to_string())
 }
 
@@ -388,7 +397,7 @@ pub async fn generate_zk_proof(
 #[tauri::command]
 pub fn estimate_proof_time(proof_type: String) -> Result<u64, String> {
     use crate::privacy::ProofType;
-    
+
     let ptype = match proof_type.as_str() {
         "shield" => ProofType::Shield,
         "transfer" => ProofType::Transfer,
@@ -421,20 +430,20 @@ pub async fn create_railgun_wallet(
     mnemonic: Option<String>,
 ) -> Result<serde_json::Value, String> {
     use crate::privacy::wallet;
-    
+
     tracing::info!("Creating RAILGUN wallet");
-    tracing::debug!("Encryption key: {}...", &encryption_key[..10.min(encryption_key.len())]);
-    
-    let response = wallet::create_railgun_wallet(
-        &encryption_key,
-        mnemonic.as_deref(),
-    )
-    .await
-    .map_err(|e| {
-        tracing::error!("Wallet creation failed: {}", e);
-        e.to_string()
-    })?;
-    
+    tracing::debug!(
+        "Encryption key: {}...",
+        &encryption_key[..10.min(encryption_key.len())]
+    );
+
+    let response = wallet::create_railgun_wallet(&encryption_key, mnemonic.as_deref())
+        .await
+        .map_err(|e| {
+            tracing::error!("Wallet creation failed: {}", e);
+            e.to_string()
+        })?;
+
     Ok(serde_json::json!({
         "success": true,
         "railgunWalletId": response.railgun_wallet_id,
@@ -445,18 +454,20 @@ pub async fn create_railgun_wallet(
 
 /// Get shield private key for a RAILGUN wallet
 #[tauri::command]
-pub async fn get_shield_key(
-    railgun_wallet_id: String,
-) -> Result<serde_json::Value, String> {
+pub async fn get_shield_key(railgun_wallet_id: String) -> Result<serde_json::Value, String> {
     use crate::privacy::wallet;
-    
+
+    tracing::info!(
+        "get_shield_key called with wallet_id: {}",
+        railgun_wallet_id
+    );
+
     let response = wallet::get_shield_private_key(&railgun_wallet_id)
         .await
         .map_err(|e| e.to_string())?;
-    
+
     Ok(serde_json::json!({
         "success": true,
         "shieldPrivateKey": response.shield_private_key,
     }))
 }
-

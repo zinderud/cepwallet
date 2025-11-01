@@ -151,6 +151,13 @@ export const privacyApi = {
   },
 
   /**
+   * Scan merkletree for wallet balance updates
+   */
+  scanMerkletree: async (railgunWalletId: string): Promise<void> => {
+    return invoke('scan_merkletree', { railgunWalletId });
+  },
+
+  /**
    * Join a privacy pool
    */
   joinPool: async (params: JoinPrivacyPoolParams): Promise<PrivacyPoolOperation> => {
@@ -214,15 +221,26 @@ export const railgunWalletApi = {
   },
 
   /**
-   * Get shield private key for a RAILGUN wallet
+   * Get shield private key for wallet
    * 
    * @param railgunWalletId - RAILGUN wallet ID
    * @returns Shield private key (used for shield operations)
    */
   getShieldKey: async (params: GetShieldKeyParams): Promise<ShieldPrivateKeyResponse> => {
-    return invoke<ShieldPrivateKeyResponse>('get_shield_key', {
-      railgunWalletId: params.railgunWalletId,
-    });
+    console.log('📡 Tauri API: get_shield_key');
+    console.log('  Input params:', params);
+    console.log('  Sending to Tauri:', { railgunWalletId: params.railgunWalletId });
+    
+    try {
+      const result = await invoke<ShieldPrivateKeyResponse>('get_shield_key', {
+        railgunWalletId: params.railgunWalletId,
+      });
+      console.log('✅ Tauri response:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Tauri invoke error:', error);
+      throw error;
+    }
   },
 };
 
