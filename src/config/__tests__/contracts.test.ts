@@ -4,6 +4,7 @@
  * Tests for chain configuration and contract address utilities
  */
 
+import { describe, it, expect } from 'vitest';
 import { 
   getChainContracts, 
   isNativeToken, 
@@ -12,7 +13,7 @@ import {
   validateChainConfig,
   getSupportedChains,
   isChainSupported
-} from '../config/contracts';
+} from '../contracts';
 
 describe('Contract Configuration', () => {
   describe('getChainContracts', () => {

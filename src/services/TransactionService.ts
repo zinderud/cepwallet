@@ -102,8 +102,13 @@ export class TransactionService {
     while (Date.now() - startTime < timeout) {
       const receipt = await this.provider.getTransactionReceipt(txHash);
       
-      if (receipt && receipt.confirmations >= confirmations) {
-        return receipt;
+      if (receipt) {
+        const currentBlock = await this.provider.getBlockNumber();
+        const txConfirmations = currentBlock - receipt.blockNumber + 1;
+        
+        if (txConfirmations >= confirmations) {
+          return receipt;
+        }
       }
       
       // Wait 2 seconds before checking again
@@ -322,7 +327,7 @@ export class TransactionService {
 
       // Approve maximum amount to avoid future approvals
       const tx = await tokenContract.approve(railgunAddress, ethers.MaxUint256);
-      console.log(`  Approval transaction sent:`, tx.hash);
+      console.log('  Approval transaction sent:', tx.hash);
 
       await tx.wait(1);
       console.log(`✅ ${symbol} approval confirmed`);

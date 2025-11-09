@@ -19,18 +19,18 @@ const App = () => {
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'dashboard':
-        return <DashboardPage />;
-      case 'wallet':
-        return <WalletPage />;
-      case 'privacy':
-        return <PrivacyPage />;
-      case 'transactions':
-        return <TransactionsPage />;
-      case 'settings':
-        return <SettingsPage />;
-      default:
-        return <DashboardPage />;
+    case 'dashboard':
+      return <DashboardPage />;
+    case 'wallet':
+      return <WalletPage />;
+    case 'privacy':
+      return <PrivacyPage />;
+    case 'transactions':
+      return <TransactionsPage />;
+    case 'settings':
+      return <SettingsPage />;
+    default:
+      return <DashboardPage />;
     }
   };
 

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { TransactionService } from '../services/TransactionService';
+import { TransactionService } from '../TransactionService';
 import { ethers } from 'ethers';
 
 describe('TransactionService', () => {

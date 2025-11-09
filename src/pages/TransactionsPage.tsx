@@ -318,25 +318,25 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ transaction, isLast }) 
 
   const getTypeInfo = () => {
     switch (transaction.type) {
-      case 'shield':
-        return { icon: '🛡️', label: 'Shield', color: '#3b82f6', bg: '#eff6ff' };
-      case 'transfer':
-        return { icon: '🔄', label: 'Transfer', color: '#8b5cf6', bg: '#f5f3ff' };
-      case 'unshield':
-        return { icon: '🔓', label: 'Unshield', color: '#f59e0b', bg: '#fffbeb' };
-      default:
-        return { icon: '💸', label: 'Public', color: '#64748b', bg: '#f8fafc' };
+    case 'shield':
+      return { icon: '🛡️', label: 'Shield', color: '#3b82f6', bg: '#eff6ff' };
+    case 'transfer':
+      return { icon: '🔄', label: 'Transfer', color: '#8b5cf6', bg: '#f5f3ff' };
+    case 'unshield':
+      return { icon: '🔓', label: 'Unshield', color: '#f59e0b', bg: '#fffbeb' };
+    default:
+      return { icon: '💸', label: 'Public', color: '#64748b', bg: '#f8fafc' };
     }
   };
 
   const getStatusInfo = () => {
     switch (transaction.status) {
-      case 'confirmed':
-        return { icon: '✅', label: 'Confirmed', color: '#059669' };
-      case 'pending':
-        return { icon: '⏳', label: 'Pending', color: '#f59e0b' };
-      case 'failed':
-        return { icon: '❌', label: 'Failed', color: '#dc2626' };
+    case 'confirmed':
+      return { icon: '✅', label: 'Confirmed', color: '#059669' };
+    case 'pending':
+      return { icon: '⏳', label: 'Pending', color: '#f59e0b' };
+    case 'failed':
+      return { icon: '❌', label: 'Failed', color: '#dc2626' };
     }
   };
 

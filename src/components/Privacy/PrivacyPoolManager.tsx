@@ -59,8 +59,8 @@ export const PrivacyPoolManager: React.FC = () => {
       const tokenAddress = pool?.token === 'ETH' 
         ? '0x0000000000000000000000000000000000000000'
         : pool?.token === 'USDC'
-        ? '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
-        : '0x6B175474E89094C44Da98b954EedeAC495271d0F';
+          ? '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+          : '0x6B175474E89094C44Da98b954EedeAC495271d0F';
 
       const op = await invoke<PrivacyPoolOperation>('join_privacy_pool', {
         poolId: selectedPool,
@@ -106,14 +106,14 @@ export const PrivacyPoolManager: React.FC = () => {
       const fromTokenAddress = swapFromToken === 'ETH' 
         ? '0x0000000000000000000000000000000000000000'
         : swapFromToken === 'USDC'
-        ? '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
-        : '0x6B175474E89094C44Da98b954EedeAC495271d0F';
+          ? '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+          : '0x6B175474E89094C44Da98b954EedeAC495271d0F';
 
       const toTokenAddress = swapToToken === 'ETH' 
         ? '0x0000000000000000000000000000000000000000'
         : swapToToken === 'USDC'
-        ? '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
-        : '0x6B175474E89094C44Da98b954EedeAC495271d0F';
+          ? '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+          : '0x6B175474E89094C44Da98b954EedeAC495271d0F';
 
       const op = await invoke<PrivacyPoolOperation>('privacy_pool_swap', {
         poolId: selectedPool,

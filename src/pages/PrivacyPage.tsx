@@ -4,7 +4,7 @@
  * Shield, Transfer, and Unshield operations
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRailgunWallet } from '../hooks/useRailgunWallet';
 
 type OperationType = 'shield' | 'transfer' | 'unshield';
@@ -16,10 +16,20 @@ const TOKENS = [
   { symbol: 'DAI', address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', icon: '💎', decimals: 18 },
 ];
 
+interface TransactionHistory {
+  id: string;
+  type: OperationType;
+  token: string;
+  amount: string;
+  timestamp: Date;
+  status: 'success' | 'pending' | 'failed';
+  txHash?: string;
+}
+
 export const PrivacyPage: React.FC = () => {
   // Get encryption key from localStorage (stored during wallet creation)
   const encryptionKey = localStorage.getItem('railgun_encryption_key') || undefined;
-  const { wallet, isInitialized, shield, transfer, unshield } = useRailgunWallet(11155111, encryptionKey);
+  const { wallet, isInitialized, shield, transfer, unshield, getBalance } = useRailgunWallet(11155111, encryptionKey);
   
   const [operationType, setOperationType] = useState<OperationType>('shield');
   const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
@@ -28,6 +38,53 @@ export const PrivacyPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [balances, setBalances] = useState<Record<string, string>>({});
+  const [isLoadingBalances, setIsLoadingBalances] = useState(false);
+  const [transactionHistory, setTransactionHistory] = useState<TransactionHistory[]>([]);
+  const [showTestMode, setShowTestMode] = useState(true);
+
+  // Load balances on mount and after operations
+  useEffect(() => {
+    if (isInitialized && wallet) {
+      loadBalances();
+    }
+  }, [isInitialized, wallet]);
+
+  const loadBalances = async () => {
+    if (!isInitialized || !wallet) return;
+    
+    setIsLoadingBalances(true);
+    try {
+      const newBalances: Record<string, string> = {};
+      for (const token of TOKENS) {
+        try {
+          const balance = await getBalance(token.address);
+          newBalances[token.symbol] = balance;
+        } catch (err) {
+          console.warn(`Failed to load balance for ${token.symbol}:`, err);
+          newBalances[token.symbol] = '0';
+        }
+      }
+      setBalances(newBalances);
+    } catch (err) {
+      console.error('Failed to load balances:', err);
+    } finally {
+      setIsLoadingBalances(false);
+    }
+  };
+
+  const addToHistory = (type: OperationType, token: string, amount: string, status: 'success' | 'pending' | 'failed', txHash?: string) => {
+    const newTransaction: TransactionHistory = {
+      id: Date.now().toString(),
+      type,
+      token,
+      amount,
+      timestamp: new Date(),
+      status,
+      txHash,
+    };
+    setTransactionHistory(prev => [newTransaction, ...prev.slice(0, 9)]); // Keep last 10 transactions
+  };
 
   const handleOperation = async () => {
     setIsProcessing(true);
@@ -35,41 +92,50 @@ export const PrivacyPage: React.FC = () => {
     setErrorMessage('');
 
     try {
+      let result;
       if (operationType === 'shield') {
-        await shield({
+        result = await shield({
           token: selectedToken.address,
           amount,
         });
         setSuccessMessage(`✅ Successfully shielded ${amount} ${selectedToken.symbol}`);
+        addToHistory('shield', selectedToken.symbol, amount, 'success');
       } else if (operationType === 'transfer') {
         if (!recipientAddress) {
           throw new Error('Recipient address is required');
         }
-        await transfer({
+        result = await transfer({
           recipient: recipientAddress,
           token: selectedToken.address,
           amount,
           mnemonic: wallet?.mnemonic || '',
         });
         setSuccessMessage(`✅ Successfully transferred ${amount} ${selectedToken.symbol}`);
+        addToHistory('transfer', selectedToken.symbol, amount, 'success');
       } else if (operationType === 'unshield') {
         if (!recipientAddress) {
           throw new Error('Recipient address is required');
         }
-        await unshield({
+        result = await unshield({
           token: selectedToken.address,
           amount,
           recipient: recipientAddress,
           mnemonic: wallet?.mnemonic || '',
         });
         setSuccessMessage(`✅ Successfully unshielded ${amount} ${selectedToken.symbol}`);
+        addToHistory('unshield', selectedToken.symbol, amount, 'success');
       }
       
       // Clear form
       setAmount('');
       setRecipientAddress('');
+      
+      // Reload balances after operation
+      setTimeout(() => loadBalances(), 3000); // Wait for blockchain confirmation
+      
     } catch (error: any) {
       setErrorMessage(error.message || 'Operation failed');
+      addToHistory(operationType, selectedToken.symbol, amount, 'failed');
     } finally {
       setIsProcessing(false);
     }
@@ -78,7 +144,7 @@ export const PrivacyPage: React.FC = () => {
   const canOperate = isInitialized && wallet && amount && parseFloat(amount) > 0;
 
   return (
-    <div style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto' }}>
+    <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ marginBottom: '30px' }}>
         <h1 style={{
@@ -136,8 +202,91 @@ export const PrivacyPage: React.FC = () => {
         </div>
       )}
 
-      {/* Quick Test Section */}
+      {/* Shielded Balance Overview */}
       {isInitialized && wallet && (
+        <div style={{
+          background: 'white',
+          borderRadius: '16px',
+          padding: '24px',
+          border: '2px solid #e2e8f0',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          marginBottom: '20px'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px'
+          }}>
+            <h2 style={{
+              margin: 0,
+              fontSize: '18px',
+              fontWeight: '700',
+              color: '#1e293b'
+            }}>
+              🛡️ Shielded Balances
+            </h2>
+            <button
+              onClick={loadBalances}
+              disabled={isLoadingBalances}
+              style={{
+                padding: '8px 16px',
+                background: '#f1f5f9',
+                border: '2px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: '600',
+                color: '#475569',
+                cursor: isLoadingBalances ? 'not-allowed' : 'pointer',
+                opacity: isLoadingBalances ? 0.6 : 1,
+              }}
+            >
+              {isLoadingBalances ? '⏳ Refreshing...' : '🔄 Refresh'}
+            </button>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px'
+          }}>
+            {TOKENS.map((token) => (
+              <div
+                key={token.symbol}
+                style={{
+                  padding: '16px',
+                  background: '#f8fafc',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '12px',
+                  textAlign: 'center'
+                }}
+              >
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>
+                  {token.icon}
+                </div>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#64748b',
+                  marginBottom: '4px'
+                }}>
+                  {token.symbol}
+                </div>
+                <div style={{
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  color: '#1e293b'
+                }}>
+                  {isLoadingBalances ? '...' : (balances[token.symbol] || '0')}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Quick Test Section */}
+      {isInitialized && wallet && showTestMode && (
         <div style={{
           padding: '20px',
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -145,7 +294,29 @@ export const PrivacyPage: React.FC = () => {
           borderRadius: '12px',
           marginBottom: '30px',
           color: 'white',
+          position: 'relative'
         }}>
+          <button
+            onClick={() => setShowTestMode(false)}
+            style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '24px',
+              height: '24px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            ✕
+          </button>
+          
           <div style={{
             fontSize: '16px',
             fontWeight: '700',
@@ -231,6 +402,76 @@ export const PrivacyPage: React.FC = () => {
             >
               🔓 Test Unshield
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction History */}
+      {isInitialized && wallet && transactionHistory.length > 0 && (
+        <div style={{
+          background: 'white',
+          borderRadius: '16px',
+          padding: '24px',
+          border: '2px solid #e2e8f0',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          marginBottom: '20px'
+        }}>
+          <h2 style={{
+            margin: '0 0 20px',
+            fontSize: '18px',
+            fontWeight: '700',
+            color: '#1e293b'
+          }}>
+            📋 Recent Transactions
+          </h2>
+
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {transactionHistory.map((tx) => (
+              <div
+                key={tx.id}
+                style={{
+                  padding: '16px',
+                  background: '#f8fafc',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ fontSize: '24px' }}>
+                    {tx.type === 'shield' ? '🛡️' : tx.type === 'transfer' ? '🔄' : '🔓'}
+                  </div>
+                  <div>
+                    <div style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                      marginBottom: '2px'
+                    }}>
+                      {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)} {tx.amount} {tx.token}
+                    </div>
+                    <div style={{
+                      fontSize: '12px',
+                      color: '#64748b'
+                    }}>
+                      {tx.timestamp.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                <div style={{
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  background: tx.status === 'success' ? '#dcfce7' : tx.status === 'pending' ? '#fef3c7' : '#fee2e2',
+                  color: tx.status === 'success' ? '#166534' : tx.status === 'pending' ? '#92400e' : '#dc2626'
+                }}>
+                  {tx.status === 'success' ? '✅ Success' : tx.status === 'pending' ? '⏳ Pending' : '❌ Failed'}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -342,6 +583,13 @@ export const PrivacyPage: React.FC = () => {
                   {token.icon}
                 </div>
                 {token.symbol}
+                <div style={{
+                  fontSize: '11px',
+                  opacity: 0.8,
+                  marginTop: '2px'
+                }}>
+                  Bal: {balances[token.symbol] || '0'}
+                </div>
               </button>
             ))}
           </div>
@@ -396,6 +644,15 @@ export const PrivacyPage: React.FC = () => {
               {selectedToken.symbol}
             </div>
           </div>
+          {operationType === 'transfer' && (
+            <div style={{
+              marginTop: '8px',
+              fontSize: '12px',
+              color: '#64748b'
+            }}>
+              Available: {balances[selectedToken.symbol] || '0'} {selectedToken.symbol}
+            </div>
+          )}
         </div>
 
         {/* Recipient Address (for transfer and unshield) */}
@@ -551,7 +808,7 @@ export const PrivacyPage: React.FC = () => {
           }}>
             ⏱️ Estimated time: ~{
               operationType === 'shield' ? '8' : 
-              operationType === 'transfer' ? '20' : '10'
+                operationType === 'transfer' ? '20' : '10'
             } seconds (ZK proof generation)
           </div>
         )}

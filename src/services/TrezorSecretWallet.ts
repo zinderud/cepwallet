@@ -74,6 +74,7 @@ export class TrezorSecretWalletService {
     if (this.demoMode) {
       await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
       this.currentSession = 'demo-session-' + Date.now();
+      this.isInitialized = true; // Mark as initialized in demo mode
       console.log('🎭 Demo: Simulated Trezor connection');
       
       return {

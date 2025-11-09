@@ -359,100 +359,100 @@ export const WalletPage: React.FC = () => {
             gap: '20px',
             marginBottom: '30px',
           }}>
-          {/* Trezor Hardware Wallet Option */}
-          <div
-            onClick={() => setWalletType('trezor')}
-            style={{
-              background: 'linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 100%)',
-              borderRadius: '16px',
-              padding: '40px 30px',
-              border: '2px solid #667eea',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              textAlign: 'center',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 12px 40px rgba(102, 126, 234, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <div style={{ fontSize: '64px', marginBottom: '20px' }}>💳</div>
-            <h3 style={{ margin: '0 0 10px', color: '#fff', fontSize: '20px' }}>
+            {/* Trezor Hardware Wallet Option */}
+            <div
+              onClick={() => setWalletType('trezor')}
+              style={{
+                background: 'linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 100%)',
+                borderRadius: '16px',
+                padding: '40px 30px',
+                border: '2px solid #667eea',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                textAlign: 'center',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 12px 40px rgba(102, 126, 234, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <div style={{ fontSize: '64px', marginBottom: '20px' }}>💳</div>
+              <h3 style={{ margin: '0 0 10px', color: '#fff', fontSize: '20px' }}>
               Trezor Hardware Wallet
-              {trezorDemoMode && (
-                <span style={{
-                  marginLeft: '8px',
-                  padding: '4px 8px',
-                  background: '#fbbf24',
-                  color: '#1a1a2e',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  verticalAlign: 'middle',
-                }}>
+                {trezorDemoMode && (
+                  <span style={{
+                    marginLeft: '8px',
+                    padding: '4px 8px',
+                    background: '#fbbf24',
+                    color: '#1a1a2e',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    verticalAlign: 'middle',
+                  }}>
                   🎭 DEMO
-                </span>
-              )}
-            </h3>
-            <p style={{ margin: '0 0 20px', color: '#bbb', fontSize: '14px', lineHeight: '1.6' }}>
+                  </span>
+                )}
+              </h3>
+              <p style={{ margin: '0 0 20px', color: '#bbb', fontSize: '14px', lineHeight: '1.6' }}>
               Maximum security with Trezor device + Secret Wallet passphrase protection
-            </p>
-            <div style={{
-              background: 'rgba(16, 185, 129, 0.2)',
-              border: '1px solid #10b981',
-              borderRadius: '8px',
-              padding: '10px',
-              fontSize: '13px',
-              color: '#6ee7b7',
-            }}>
+              </p>
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.2)',
+                border: '1px solid #10b981',
+                borderRadius: '8px',
+                padding: '10px',
+                fontSize: '13px',
+                color: '#6ee7b7',
+              }}>
               ✅ Recommended for best security
+              </div>
             </div>
-          </div>
 
-          {/* Manual Wallet Option */}
-          <div
-            onClick={() => setWalletType('manual')}
-            style={{
-              background: '#1a1a2e',
-              borderRadius: '16px',
-              padding: '40px 30px',
-              border: '2px solid #2d2d44',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              textAlign: 'center',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 12px 40px rgba(102, 126, 234, 0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <div style={{ fontSize: '64px', marginBottom: '20px' }}>⌨️</div>
-            <h3 style={{ margin: '0 0 10px', color: '#fff', fontSize: '20px' }}>
+            {/* Manual Wallet Option */}
+            <div
+              onClick={() => setWalletType('manual')}
+              style={{
+                background: '#1a1a2e',
+                borderRadius: '16px',
+                padding: '40px 30px',
+                border: '2px solid #2d2d44',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                textAlign: 'center',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 12px 40px rgba(102, 126, 234, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <div style={{ fontSize: '64px', marginBottom: '20px' }}>⌨️</div>
+              <h3 style={{ margin: '0 0 10px', color: '#fff', fontSize: '20px' }}>
               Manual Wallet
-            </h3>
-            <p style={{ margin: '0 0 20px', color: '#999', fontSize: '14px', lineHeight: '1.6' }}>
+              </h3>
+              <p style={{ margin: '0 0 20px', color: '#999', fontSize: '14px', lineHeight: '1.6' }}>
               Create wallet with custom encryption key and optional mnemonic phrase
-            </p>
-            <div style={{
-              background: 'rgba(255, 165, 0, 0.1)',
-              border: '1px solid #ffa500',
-              borderRadius: '8px',
-              padding: '10px',
-              fontSize: '13px',
-              color: '#ffcc80',
-            }}>
+              </p>
+              <div style={{
+                background: 'rgba(255, 165, 0, 0.1)',
+                border: '1px solid #ffa500',
+                borderRadius: '8px',
+                padding: '10px',
+                fontSize: '13px',
+                color: '#ffcc80',
+              }}>
               ⚠️ Less secure than hardware wallet
+              </div>
             </div>
           </div>
-        </div>
         </>
       )}
 
@@ -537,498 +537,498 @@ export const WalletPage: React.FC = () => {
       {/* Manual Wallet Flow */}
       {walletType === 'manual' && (
         <>
-      {/* Status Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '16px',
-        marginBottom: '30px'
-      }}>
-        <StatusCard
-          icon="🚀"
-          label="Privacy Engine"
-          status={isInitialized ? 'Initialized' : 'Not Initialized'}
-          isActive={isInitialized}
-        />
-        <StatusCard
-          icon="👛"
-          label="Wallet"
-          status={wallet ? 'Created' : 'Not Created'}
-          isActive={!!wallet}
-        />
-        <StatusCard
-          icon="🔑"
-          label="Shield Key"
-          status={shieldPrivateKey ? 'Loaded' : 'Not Loaded'}
-          isActive={!!shieldPrivateKey}
-        />
-      </div>
-
-      {/* Step 1: Initialize Privacy */}
-      {!isInitialized && (
-        <div style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '30px',
-          border: '2px solid #e2e8f0',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-          marginBottom: '20px'
-        }}>
-          <h2 style={{
-            margin: '0 0 12px',
-            fontSize: '20px',
-            fontWeight: '700',
-            color: '#1e293b'
+          {/* Status Cards */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '16px',
+            marginBottom: '30px'
           }}>
-            Step 1: Initialize Privacy Features
-          </h2>
-          <p style={{
-            margin: '0 0 20px',
-            fontSize: '14px',
-            color: '#64748b',
-            lineHeight: '1.6'
-          }}>
-            This will initialize the RAILGUN SDK and prepare the privacy infrastructure. 
-            First-time initialization may take a few seconds.
-          </p>
-          <button
-            onClick={handleInitialize}
-            disabled={isLoading}
-            style={{
-              padding: '14px 24px',
-              background: isLoading 
-                ? '#94a3b8' 
-                : 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '15px',
-              fontWeight: '600',
-              cursor: isLoading ? 'wait' : 'pointer',
-              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-              transition: 'all 0.2s',
-              outline: 'none',
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
-              }
-            }}
-          >
-            {isLoading ? '⏳ Initializing...' : '🚀 Initialize RAILGUN'}
-          </button>
-        </div>
-      )}
-
-      {/* Step 2: Create Wallet */}
-      {isInitialized && !wallet && (
-        <div style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '30px',
-          border: '2px solid #e2e8f0',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-          marginBottom: '20px'
-        }}>
-          <h2 style={{
-            margin: '0 0 12px',
-            fontSize: '20px',
-            fontWeight: '700',
-            color: '#1e293b'
-          }}>
-            Step 2: Create RAILGUN Wallet
-          </h2>
-          <p style={{
-            margin: '0 0 24px',
-            fontSize: '14px',
-            color: '#64748b',
-            lineHeight: '1.6'
-          }}>
-            Your RAILGUN wallet will be encrypted with a secure key. Store this key safely - you'll need it to access your wallet.
-          </p>
-
-          {/* Encryption Key Input */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#475569'
-            }}>
-              Encryption Key (32 bytes)
-            </label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <input
-                type={showEncryptionKey ? 'text' : 'password'}
-                value={encryptionKey}
-                onChange={(e) => setEncryptionKey(e.target.value)}
-                placeholder="0x0000000000000000000000000000000000000000000000000000000000000000"
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontFamily: 'monospace',
-                  outline: 'none',
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#3b82f6';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e2e8f0';
-                }}
-              />
-              <button
-                onClick={() => setShowEncryptionKey(!showEncryptionKey)}
-                style={{
-                  padding: '12px 16px',
-                  background: '#f1f5f9',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                }}
-              >
-                {showEncryptionKey ? '👁️' : '👁️‍🗨️'}
-              </button>
-              <button
-                onClick={generateRandomKey}
-                style={{
-                  padding: '12px 20px',
-                  background: '#f1f5f9',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  color: '#475569',
-                }}
-              >
-                🎲 Random
-              </button>
-            </div>
-            <div style={{
-              marginTop: '6px',
-              fontSize: '12px',
-              color: '#64748b'
-            }}>
-              Must be 66 characters (0x + 64 hex characters)
-            </div>
-          </div>
-
-          {/* Optional Mnemonic */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#475569'
-            }}>
-              Mnemonic (Optional - leave empty to generate)
-            </label>
-            <input
-              type="text"
-              value={mnemonic}
-              onChange={(e) => setMnemonic(e.target.value)}
-              placeholder="word1 word2 word3 ... (12 words)"
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '2px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '14px',
-                outline: 'none',
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#3b82f6';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0';
-              }}
+            <StatusCard
+              icon="🚀"
+              label="Privacy Engine"
+              status={isInitialized ? 'Initialized' : 'Not Initialized'}
+              isActive={isInitialized}
+            />
+            <StatusCard
+              icon="👛"
+              label="Wallet"
+              status={wallet ? 'Created' : 'Not Created'}
+              isActive={!!wallet}
+            />
+            <StatusCard
+              icon="🔑"
+              label="Shield Key"
+              status={shieldPrivateKey ? 'Loaded' : 'Not Loaded'}
+              isActive={!!shieldPrivateKey}
             />
           </div>
 
-          <button
-            onClick={handleCreateWallet}
-            disabled={isLoading || !encryptionKey}
-            style={{
-              padding: '14px 24px',
-              background: (!encryptionKey || isLoading)
-                ? '#94a3b8'
-                : 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '15px',
-              fontWeight: '600',
-              cursor: (!encryptionKey || isLoading) ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-              transition: 'all 0.2s',
-              outline: 'none',
-            }}
-          >
-            {isLoading ? '⏳ Creating...' : '✨ Create Wallet'}
-          </button>
-        </div>
-      )}
-
-      {/* Wallet Info */}
-      {wallet && (
-        <div style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '30px',
-          border: '2px solid #10b981',
-          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)',
-        }}>
-          <h2 style={{
-            margin: '0 0 20px',
-            fontSize: '20px',
-            fontWeight: '700',
-            color: '#1e293b',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px'
-          }}>
-            ✅ <span>Wallet Created Successfully!</span>
-          </h2>
-
-          {/* Wallet ID */}
-          <div style={{ marginBottom: '20px' }}>
+          {/* Step 1: Initialize Privacy */}
+          {!isInitialized && (
             <div style={{
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#64748b',
-              marginBottom: '8px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
+              background: 'white',
+              borderRadius: '16px',
+              padding: '30px',
+              border: '2px solid #e2e8f0',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              marginBottom: '20px'
             }}>
-              Wallet ID
-            </div>
-            <div style={{
-              padding: '12px',
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontFamily: 'monospace',
-              color: '#1e293b',
-              wordBreak: 'break-all',
-              fontWeight: '500'
-            }}>
-              {wallet.railgunWalletId}
-            </div>
-          </div>
-
-          {/* RAILGUN Address */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#64748b',
-              marginBottom: '8px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-              RAILGUN Address
-            </div>
-            <div style={{
-              padding: '12px',
-              background: '#f0fdf4',
-              border: '1px solid #86efac',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontFamily: 'monospace',
-              color: '#059669',
-              wordBreak: 'break-all',
-              fontWeight: '500'
-            }}>
-              {wallet.railgunAddress}
-            </div>
-          </div>
-
-          {/* ETH Address (for receiving tokens) */}
-          {ethAddress && (
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{
-                fontSize: '12px',
-                fontWeight: '600',
+              <h2 style={{
+                margin: '0 0 12px',
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#1e293b'
+              }}>
+            Step 1: Initialize Privacy Features
+              </h2>
+              <p style={{
+                margin: '0 0 20px',
+                fontSize: '14px',
                 color: '#64748b',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
+                lineHeight: '1.6'
               }}>
-                <span>ETH Address</span>
-                <span style={{
-                  fontSize: '10px',
-                  padding: '2px 6px',
-                  background: '#dbeafe',
-                  color: '#1e40af',
-                  borderRadius: '4px',
-                  fontWeight: '600'
+            This will initialize the RAILGUN SDK and prepare the privacy infrastructure. 
+            First-time initialization may take a few seconds.
+              </p>
+              <button
+                onClick={handleInitialize}
+                disabled={isLoading}
+                style={{
+                  padding: '14px 24px',
+                  background: isLoading 
+                    ? '#94a3b8' 
+                    : 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: isLoading ? 'wait' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                  transition: 'all 0.2s',
+                  outline: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading) {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isLoading) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+                  }
+                }}
+              >
+                {isLoading ? '⏳ Initializing...' : '🚀 Initialize RAILGUN'}
+              </button>
+            </div>
+          )}
+
+          {/* Step 2: Create Wallet */}
+          {isInitialized && !wallet && (
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '30px',
+              border: '2px solid #e2e8f0',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              marginBottom: '20px'
+            }}>
+              <h2 style={{
+                margin: '0 0 12px',
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#1e293b'
+              }}>
+            Step 2: Create RAILGUN Wallet
+              </h2>
+              <p style={{
+                margin: '0 0 24px',
+                fontSize: '14px',
+                color: '#64748b',
+                lineHeight: '1.6'
+              }}>
+            Your RAILGUN wallet will be encrypted with a secure key. Store this key safely - you'll need it to access your wallet.
+              </p>
+
+              {/* Encryption Key Input */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#475569'
                 }}>
-                  For Receiving Test Tokens
-                </span>
+              Encryption Key (32 bytes)
+                </label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type={showEncryptionKey ? 'text' : 'password'}
+                    value={encryptionKey}
+                    onChange={(e) => setEncryptionKey(e.target.value)}
+                    placeholder="0x0000000000000000000000000000000000000000000000000000000000000000"
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontFamily: 'monospace',
+                      outline: 'none',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#3b82f6';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0';
+                    }}
+                  />
+                  <button
+                    onClick={() => setShowEncryptionKey(!showEncryptionKey)}
+                    style={{
+                      padding: '12px 16px',
+                      background: '#f1f5f9',
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                    }}
+                  >
+                    {showEncryptionKey ? '👁️' : '👁️‍🗨️'}
+                  </button>
+                  <button
+                    onClick={generateRandomKey}
+                    style={{
+                      padding: '12px 20px',
+                      background: '#f1f5f9',
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: '#475569',
+                    }}
+                  >
+                🎲 Random
+                  </button>
+                </div>
+                <div style={{
+                  marginTop: '6px',
+                  fontSize: '12px',
+                  color: '#64748b'
+                }}>
+              Must be 66 characters (0x + 64 hex characters)
+                </div>
               </div>
-              <div style={{
-                padding: '12px',
-                background: '#ecfdf5',
-                border: '1px solid #6ee7b7',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontFamily: 'monospace',
-                color: '#047857',
-                wordBreak: 'break-all',
-                fontWeight: '500',
+
+              {/* Optional Mnemonic */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#475569'
+                }}>
+              Mnemonic (Optional - leave empty to generate)
+                </label>
+                <input
+                  type="text"
+                  value={mnemonic}
+                  onChange={(e) => setMnemonic(e.target.value)}
+                  placeholder="word1 word2 word3 ... (12 words)"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3b82f6';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                  }}
+                />
+              </div>
+
+              <button
+                onClick={handleCreateWallet}
+                disabled={isLoading || !encryptionKey}
+                style={{
+                  padding: '14px 24px',
+                  background: (!encryptionKey || isLoading)
+                    ? '#94a3b8'
+                    : 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: (!encryptionKey || isLoading) ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                  transition: 'all 0.2s',
+                  outline: 'none',
+                }}
+              >
+                {isLoading ? '⏳ Creating...' : '✨ Create Wallet'}
+              </button>
+            </div>
+          )}
+
+          {/* Wallet Info */}
+          {wallet && (
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '30px',
+              border: '2px solid #10b981',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)',
+            }}>
+              <h2 style={{
+                margin: '0 0 20px',
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#1e293b',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '8px'
+                gap: '10px'
               }}>
-                <span>{ethAddress}</span>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(ethAddress);
-                    alert('ETH Address copied to clipboard!');
-                  }}
-                  style={{
-                    padding: '6px 10px',
-                    background: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '11px',
+            ✅ <span>Wallet Created Successfully!</span>
+              </h2>
+
+              {/* Wallet ID */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#64748b',
+                  marginBottom: '8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+              Wallet ID
+                </div>
+                <div style={{
+                  padding: '12px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontFamily: 'monospace',
+                  color: '#1e293b',
+                  wordBreak: 'break-all',
+                  fontWeight: '500'
+                }}>
+                  {wallet.railgunWalletId}
+                </div>
+              </div>
+
+              {/* RAILGUN Address */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#64748b',
+                  marginBottom: '8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+              RAILGUN Address
+                </div>
+                <div style={{
+                  padding: '12px',
+                  background: '#f0fdf4',
+                  border: '1px solid #86efac',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontFamily: 'monospace',
+                  color: '#059669',
+                  wordBreak: 'break-all',
+                  fontWeight: '500'
+                }}>
+                  {wallet.railgunAddress}
+                </div>
+              </div>
+
+              {/* ETH Address (for receiving tokens) */}
+              {ethAddress && (
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{
+                    fontSize: '12px',
                     fontWeight: '600',
+                    color: '#64748b',
+                    marginBottom: '8px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span>ETH Address</span>
+                    <span style={{
+                      fontSize: '10px',
+                      padding: '2px 6px',
+                      background: '#dbeafe',
+                      color: '#1e40af',
+                      borderRadius: '4px',
+                      fontWeight: '600'
+                    }}>
+                  For Receiving Test Tokens
+                    </span>
+                  </div>
+                  <div style={{
+                    padding: '12px',
+                    background: '#ecfdf5',
+                    border: '1px solid #6ee7b7',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontFamily: 'monospace',
+                    color: '#047857',
+                    wordBreak: 'break-all',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px'
+                  }}>
+                    <span>{ethAddress}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(ethAddress);
+                        alert('ETH Address copied to clipboard!');
+                      }}
+                      style={{
+                        padding: '6px 10px',
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        flexShrink: 0
+                      }}
+                    >
+                  📋 Copy
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Mnemonic */}
+              {wallet.mnemonic && showMnemonic && (
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '16px',
+                  background: '#fef3c7',
+                  border: '2px solid #fbbf24',
+                  borderRadius: '12px'
+                }}>
+                  <div style={{
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#92400e',
+                    marginBottom: '8px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}>
+                ⚠️ Recovery Phrase (Save Securely!)
+                  </div>
+                  <div style={{
+                    padding: '12px',
+                    background: 'white',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontFamily: 'monospace',
+                    color: '#1e293b',
+                    fontWeight: '600',
+                    lineHeight: '1.8'
+                  }}>
+                    {wallet.mnemonic}
+                  </div>
+                  <div style={{
+                    marginTop: '12px',
+                    fontSize: '12px',
+                    color: '#92400e',
+                    lineHeight: '1.5'
+                  }}>
+                ⚠️ <strong>Never share this phrase!</strong> Anyone with access to it can control your wallet.
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr 1fr',
+                gap: '12px',
+                marginTop: '20px'
+              }}>
+                <button
+                  onClick={() => navigateTo('dashboard')}
+                  style={{
+                    padding: '12px 20px',
+                    background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: 'white',
                     cursor: 'pointer',
-                    flexShrink: 0
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
                   }}
                 >
-                  📋 Copy
+              📊 Go to Dashboard
+                </button>
+                <button
+                  onClick={() => setShowMnemonic(!showMnemonic)}
+                  style={{
+                    padding: '12px 20px',
+                    background: '#f1f5f9',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#475569',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {showMnemonic ? '👁️ Hide' : '👁️ Show'} Recovery Phrase
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm('Are you sure? This will clear your wallet from memory.')) {
+                      clearWallet();
+                      setEncryptionKey('');
+                      setMnemonic('');
+                      setShowMnemonic(false);
+                      setEthAddress('');
+                      localStorage.removeItem('railgun_eth_address');
+                    }
+                  }}
+                  style={{
+                    padding: '12px 20px',
+                    background: '#fef2f2',
+                    border: '2px solid #fecaca',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#dc2626',
+                    cursor: 'pointer',
+                  }}
+                >
+              🗑️ Clear Wallet
                 </button>
               </div>
             </div>
           )}
-
-          {/* Mnemonic */}
-          {wallet.mnemonic && showMnemonic && (
-            <div style={{
-              marginBottom: '20px',
-              padding: '16px',
-              background: '#fef3c7',
-              border: '2px solid #fbbf24',
-              borderRadius: '12px'
-            }}>
-              <div style={{
-                fontSize: '12px',
-                fontWeight: '700',
-                color: '#92400e',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}>
-                ⚠️ Recovery Phrase (Save Securely!)
-              </div>
-              <div style={{
-                padding: '12px',
-                background: 'white',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: '#1e293b',
-                fontWeight: '600',
-                lineHeight: '1.8'
-              }}>
-                {wallet.mnemonic}
-              </div>
-              <div style={{
-                marginTop: '12px',
-                fontSize: '12px',
-                color: '#92400e',
-                lineHeight: '1.5'
-              }}>
-                ⚠️ <strong>Never share this phrase!</strong> Anyone with access to it can control your wallet.
-              </div>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr 1fr',
-            gap: '12px',
-            marginTop: '20px'
-          }}>
-            <button
-              onClick={() => navigateTo('dashboard')}
-              style={{
-                padding: '12px 20px',
-                background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
-                border: 'none',
-                borderRadius: '10px',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: 'white',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-              }}
-            >
-              📊 Go to Dashboard
-            </button>
-            <button
-              onClick={() => setShowMnemonic(!showMnemonic)}
-              style={{
-                padding: '12px 20px',
-                background: '#f1f5f9',
-                border: '2px solid #e2e8f0',
-                borderRadius: '10px',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#475569',
-                cursor: 'pointer',
-              }}
-            >
-              {showMnemonic ? '👁️ Hide' : '👁️ Show'} Recovery Phrase
-            </button>
-            <button
-              onClick={() => {
-                if (confirm('Are you sure? This will clear your wallet from memory.')) {
-                  clearWallet();
-                  setEncryptionKey('');
-                  setMnemonic('');
-                  setShowMnemonic(false);
-                  setEthAddress('');
-                  localStorage.removeItem('railgun_eth_address');
-                }
-              }}
-              style={{
-                padding: '12px 20px',
-                background: '#fef2f2',
-                border: '2px solid #fecaca',
-                borderRadius: '10px',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#dc2626',
-                cursor: 'pointer',
-              }}
-            >
-              🗑️ Clear Wallet
-            </button>
-          </div>
-        </div>
-      )}
 
           {/* Back to Selection Button */}
           <div style={{ textAlign: 'center', marginTop: '20px' }}>
